@@ -33,7 +33,10 @@ const hud = new Hud(document.getElementById("hud")!);
 const perf = new PerfOverlay(document.querySelector<HTMLElement>("#hud .perf")!);
 if (inspect) hud.hideAll();
 const game = inspect ? null : new Game(r.scene, world, rig.root, canvas);
-Object.assign(window, { __game: game, __flight: flight, __rocks: world.asteroids }); // headless tests (scripts/_*.mjs) drive the game through these
+Object.assign(window, { __game: game, __flight: flight, __rocks: world.asteroids });
+// dev hook for the capital-ship authoring pass: `?capital=1` drops one 400 m ahead (module loaded lazily so a missing file only fails when asked for)
+const capitalModule = "/src/combat/capital.ts"; // string kept out of the literal so tsc does not resolve it
+if (params.get("capital")) void import(/* @vite-ignore */ capitalModule).then((m) => { const c = new m.Capital(); c.setPose(new Vector3(0, 0, 400), new Quaternion()); r.scene.add(c.group); Object.assign(window, { __capital: c }); }); // headless tests (scripts/_*.mjs) drive the game through these
 createDebugPanel();
 
 const _p = new Vector3(), _v = new Vector3(), _q = new Quaternion();
