@@ -45,6 +45,21 @@
       #hud .card h1.lost { color: #ff6a4a; }
       #hud .card p { margin: 14px 0 0; font-size: 15px; letter-spacing: .06em; opacity: .9; white-space: pre-line; }
       #hud .card .again { margin-top: 26px; font-size: 13px; letter-spacing: .2em; opacity: .7; animation: blink 1.2s steps(2) infinite; }
+      #menu { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(4,6,12,.72); color: #cfe9ff; font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; }
+      #menu.on { display: flex; }
+      #menu .panel { width: 420px; padding: 28px 32px 24px; border: 1px solid rgba(255,217,168,.45); background: rgba(8,10,20,.92); box-shadow: 0 0 0 4px rgba(8,10,20,.6); }
+      #menu .title { margin: 0; font-size: 22px; letter-spacing: .32em; font-weight: 500; color: #ffd9a8; }
+      #menu .sub { margin: 6px 0 22px; font-size: 12px; letter-spacing: .08em; opacity: .75; }
+      #menu label { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; letter-spacing: .06em; margin: 10px 0; }
+      #menu label span { opacity: .85; }
+      #menu select, #menu input[type=range] { width: 180px; accent-color: #ffb36b; background: #0c1020; color: #cfe9ff; border: 1px solid rgba(207,233,255,.3); font: inherit; padding: 3px 6px; }
+      #menu input[type=checkbox] { width: 16px; height: 16px; accent-color: #ffb36b; margin: 0 82px 0 0; }
+      #menu .sens-v { font-size: 11px; opacity: .7; width: 34px; text-align: right; }
+      #menu .row { display: flex; gap: 10px; margin-top: 22px; }
+      #menu button { flex: 1; padding: 10px 0; font: inherit; font-size: 13px; letter-spacing: .22em; color: #ffd9a8; background: transparent; border: 1px solid #ffd9a8; cursor: pointer; }
+      #menu button.fly { background: #ffd9a8; color: #0c1020; }
+      #menu button:hover { filter: brightness(1.15); }
+      #menu .keys { margin: 18px 0 0; font-size: 11px; letter-spacing: .04em; opacity: .6; line-height: 1.6; }
       .lil-gui { --width: 300px; }
     </style>
   </head>
@@ -66,6 +81,19 @@
       <div class="throttle"><i></i></div>
       <div class="speed"><span class="v">0</span><small>m/s</small></div>
       <div class="perf"></div>
+    </div>
+    <div id="menu">
+      <div class="panel">
+        <h1 class="title">STARGATE EXPLORER</h1>
+        <p class="sub"></p>
+        <label><span>Controls</span><select name="scheme"><option value="arcade">arcade · W/S pull up, Space brake</option><option value="classic">classic · W/S throttle, Space drift</option></select></label>
+        <label><span>Flight assist (X)</span><input type="checkbox" name="assist" /></label>
+        <label><span>Mouse sensitivity</span><input type="range" name="sens" min="0.4" max="2.5" step="0.05" /><i class="sens-v"></i></label>
+        <label><span>Difficulty</span><select name="difficulty"><option value="easy">easy</option><option value="normal">normal</option><option value="hard">hard</option></select></label>
+        <label><span>Mute (M)</span><input type="checkbox" name="mute" /></label>
+        <div class="row"><button class="fly">FLY</button><button class="restart">RESTART</button><button class="hub">MISSIONS</button></div>
+        <p class="keys">mouse steers · A/D roll, double-tap barrel roll · Shift boost · LMB cannons · RMB missile once locked · C scheme · X assist · Esc pause · ` tuning</p>
+      </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

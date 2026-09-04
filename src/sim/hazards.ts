@@ -40,7 +40,7 @@ export class Hazards {
 
   tick(flight: Flight, dt: number): void {
     const p = flight.pos;
-    const R = T.arena.shipRadius;
+    const R = T.arena.shipRadius * flight.stats.size;
     for (let i = 0; i < this.rocks.count; i++) {
       const r = (this.rocks.radii[i] ?? 0) + R;
       const cx = this.rocks.centers[i * 3] ?? 0, cy = this.rocks.centers[i * 3 + 1] ?? 0, cz = this.rocks.centers[i * 3 + 2] ?? 0;
@@ -72,7 +72,7 @@ export class Hazards {
     _inv.copy(_m).invert();
     _q3.copy(flight.pos).applyMatrix4(_inv);
     const planes = this.rocks.planes[Math.floor(gi / this.rocks.per)]!;
-    const margin = T.arena.shipRadius / s;
+    const margin = (T.arena.shipRadius * flight.stats.size) / s;
     let best = -Infinity, bi = 0;
     for (let f = 0; f < planes.length; f += 4) {
       const d = (planes[f]! * _q3.x + planes[f + 1]! * _q3.y + planes[f + 2]! * _q3.z) - planes[f + 3]!;

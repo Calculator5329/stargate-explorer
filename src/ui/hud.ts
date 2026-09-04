@@ -86,7 +86,7 @@ export class Hud {
       this.lastSpeed = s;
     }
     // classic: throttle setting; arcade: speed as a fraction of boost
-    const bar = scheme.arcade ? flight.speed / T.flight.boostSpeed : flight.throttle;
+    const bar = scheme.arcade ? flight.speed / flight.topSpeed : flight.throttle;
     if (bar !== this.lastBar) {
       this.barEl.style.width = `${(Math.min(1, bar) * 100).toFixed(1)}%`;
       this.lastBar = bar;
@@ -99,8 +99,8 @@ export class Hud {
   /** Combat layer: HP, mission line, target box + lead, off-screen arrow, end cards. */
   updateCombat(combat: Combat, mission: Mission, cam: Camera, playerVel: Vector3): void {
     const P = combat.player;
-    this.hpEl.style.width = `${((P.hp / T.player.hp) * 100).toFixed(1)}%`;
-    this.hpEl.classList.toggle("hurt", P.hp < T.player.hp * 0.35);
+    this.hpEl.style.width = `${((P.hp / combat.maxHp) * 100).toFixed(1)}%`;
+    this.hpEl.classList.toggle("hurt", P.hp < combat.maxHp * 0.35);
     const obj = `${mission.line}  ·  kills ${P.kills}`;
     if (obj !== this.lastObj) {
       this.lastObj = obj;
@@ -111,7 +111,7 @@ export class Hud {
     this.cards(combat, mission);
     if (combat.ammo !== this.lastAmmo) {
       this.lastAmmo = combat.ammo;
-      this.ammoEl.textContent = "▲".repeat(combat.ammo) + "△".repeat(Math.max(0, T.missile.count - combat.ammo));
+      this.ammoEl.textContent = "▲".repeat(combat.ammo) + "△".repeat(Math.max(0, combat.maxAmmo - combat.ammo));
     }
   }
 
@@ -184,7 +184,7 @@ export class Hud {
       const acc = P.fired ? Math.round((100 * P.hits) / P.fired) : 0;
       const m = Math.floor(mission.clock / 60), s = Math.floor(mission.clock % 60);
       this.cardH.textContent = "FIELD CLEAR";
-      this.cardP.textContent = `time ${m}:${String(s).padStart(2, "0")}\nkills ${P.kills}\naccuracy ${acc}%\nhull ${Math.round(P.hp)}%`;
+      this.cardP.textContent = `time ${m}:${String(s).padStart(2, "0")}\nkills ${P.kills}\naccuracy ${acc}%\nhull ${Math.round((100 * P.hp) / combat.maxHp)}%`;
     }
   }
 }

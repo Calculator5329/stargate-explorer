@@ -11,9 +11,11 @@ const VIEWS = {
   side: "?view=side&spin=0",
   rear: "?view=rear&spin=0",
   top: "?view=top&spin=0&dist=0.55",
-  chase: "",
-  boost: "", // chase view after holding W + Shift: plumes, dust streaks, pull-back
+  menu: "", // the start/pause overlay (pointer not locked)
+  chase: "?lock=free",
+  boost: "?lock=free", // chase view after holding W + Shift: plumes, dust streaks, pull-back
   silhouette: "?view=side&spin=0&silhouette=1",
+  prometheus: "?lock=free&ship=prometheus",
   fight: "?lock=free", // two gliders spawned 160 m ahead through window.__game, guns firing
 };
 const HOLD = { boost: ["ShiftLeft"] };

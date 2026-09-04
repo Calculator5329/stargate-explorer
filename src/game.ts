@@ -21,9 +21,10 @@ export class Game {
   readonly combat: Combat;
   readonly mission: Mission;
 
-  constructor(scene: THREE.Scene, world: World, ship: THREE.Object3D, canvas: HTMLCanvasElement) {
+  constructor(scene: THREE.Scene, world: World, ship: THREE.Object3D, canvas: HTMLCanvasElement, flight: Flight) {
     this.enemies = new Enemies(GLIDER, world.asteroids);
     this.combat = new Combat(this.enemies, world.asteroids, ship, this.audio);
+    this.combat.setShip(flight);
     this.mission = new Mission(CLEAR_THE_FIELD, this.combat, world.asteroids, this.audio);
     scene.add(this.combat.group);
     canvas.addEventListener("click", () => this.audio.unlock());

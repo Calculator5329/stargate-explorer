@@ -19,8 +19,9 @@ export class Scheme {
   /** seconds since the last switch (HUD shows the new name briefly) */
   sinceSwitch = 99;
 
-  constructor(name: SchemeName) {
+  constructor(name: SchemeName, assist = true) {
     this.arcade = name === "arcade";
+    this.assist = assist;
   }
 
   get name(): SchemeName {
@@ -28,7 +29,7 @@ export class Scheme {
   }
 
   /** flight assist: velocity follows the nose. Off = drift mode (X toggles). */
-  assist = true;
+  assist: boolean;
   toggleAssist(): void {
     this.assist = !this.assist;
     this.sinceSwitch = 0;

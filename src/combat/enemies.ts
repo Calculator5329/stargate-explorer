@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { T, clamp } from "@/core/tunables";
 import { Flight } from "@/sim/flight";
+import { D } from "@/core/difficulty";
 import type { ShipDef } from "@/ships/defs";
 import { ShipRig } from "@/ships/rig";
 import type { Projectiles } from "@/combat/projectiles";
@@ -101,9 +102,9 @@ export class Enemies {
     facing(_to, e.quat);
     e.prevPos.copy(pos);
     e.prevQuat.copy(e.quat);
-    e.speed = a.cruise;
+    e.speed = a.cruise * D.enemySpeed;
     e.vel.copy(_to).multiplyScalar(e.speed);
-    e.hp = a.hp;
+    e.hp = a.hp * D.enemyHp;
     e.state = "pursue";
     e.stateT = 0;
     e.fireCd = 1 + Math.random();
@@ -159,8 +160,8 @@ export class Enemies {
         _want.copy(_lead);
         targetSpeed = dist > 400 ? a.dash : a.cruise;
         if (dist < w.range * 0.6 && _fwd.dot(_lead) > Math.cos(a.fireCone) && e.fireCd <= 0) {
-          e.fireCd = 1 / w.enemyFireRate;
-          _tmp.copy(_lead).addScaledVector(_right.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5), w.enemySpread * 2).normalize();
+          e.fireCd = 1 / (w.enemyFireRate * D.enemyFireRate);
+          _tmp.copy(_lead).addScaledVector(_right.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5), w.enemySpread * D.enemySpread * 2).normalize();
           shots.fire("enemy", _lead.copy(e.pos).addScaledVector(_fwd, 5), _tmp, e.vel);
         }
       } else {
@@ -192,6 +193,7 @@ export class Enemies {
       _right.set(-1, 0, 0).applyQuaternion(e.quat);
       const side = _want.dot(_right);
       e.quat.multiply(_q.setFromAxisAngle(_tmp.set(0, 0, 1), side * a.bank * dt));
+      targetSpeed *= D.enemySpeed;
       e.speed += clamp(targetSpeed - e.speed, -a.accel * dt, a.accel * dt);
       _fwd.set(0, 0, 1).applyQuaternion(e.quat);
       e.vel.lerp(_tmp.copy(_fwd).multiplyScalar(e.speed), 1 - Math.exp(-6 * dt));
@@ -217,7 +219,7 @@ export class Enemies {
       e.pos.addScaledVector(_tmp, r - d + 0.1);
       if (into > 0) e.vel.addScaledVector(_tmp, 2 * into).multiplyScalar(0.5);
       e.speed *= 0.5;
-      const dmg = Flight.impactDamage(into) * T.enemy.hp;
+      const dmg = Flight.impactDamage(into) * T.enemy.hp * D.enemyHp;
       if (dmg > 0 && this.damage(e, dmg)) this.crashed.push(e);
       return;
     }

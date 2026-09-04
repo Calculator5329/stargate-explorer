@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { T, clamp } from "@/core/tunables";
 import { Flight } from "@/sim/flight";
+import { D } from "@/core/difficulty";
 import type { Input } from "@/core/input";
 import { Projectiles, type Shot } from "@/combat/projectiles";
 import { Enemies, type Enemy, type RockSpheres } from "@/combat/enemies";
@@ -58,6 +59,10 @@ export class Combat {
   target: Enemy | null = null;
   lock = 0;
   ammo = T.missile.count;
+  /** rack size and hull points for the current ship (stats × T) */
+  maxAmmo = T.missile.count;
+  maxHp = T.player.hp;
+  gunDamage = T.weapons.damage;
   private missileCd = 0;
   readonly player: PlayerState = { hp: T.player.hp, alive: true, kills: 0, fired: 0, hits: 0, vel: new THREE.Vector3(), pos: new THREE.Vector3(), sinceHit: 99 };
   private fireAcc = 0;
@@ -77,14 +82,25 @@ export class Combat {
     }
   }
 
+  /** Apply the hull's multipliers; called once at start and whenever the ship changes. */
+  setShip(flight: Flight): void {
+    const S = flight.stats;
+    this.maxHp = T.player.hp * S.hull;
+    this.maxAmmo = S.missiles;
+    this.gunDamage = T.weapons.damage * S.guns;
+    this.player.hp = this.maxHp;
+    this.ammo = this.maxAmmo;
+  }
+
   tick(dt: number, flight: Flight, input: Input): void {
     const P = this.player;
     P.sinceHit += dt;
     P.pos.copy(flight.pos);
     P.vel.copy(flight.velDir).multiplyScalar(flight.speed);
-    if (P.alive && P.sinceHit > T.player.regenDelay) P.hp = Math.min(T.player.hp, P.hp + T.player.regen * dt);
+    if (P.alive && P.sinceHit > T.player.regenDelay) P.hp = Math.min(this.maxHp, P.hp + T.player.regen * dt * flight.stats.hull);
     if (flight.lastImpact > 0) {
-      const dmg = Flight.impactDamage(flight.lastImpact) * T.player.hp;
+      // a crash hurts the same fraction of hull whatever the ship: a big hull is not a crash licence
+      const dmg = Flight.impactDamage(flight.lastImpact) * this.maxHp;
       flight.lastImpact = 0;
       if (dmg > 0 && P.alive) {
         P.hp -= dmg;
@@ -190,7 +206,7 @@ export class Combat {
 
   /** Called by the mission at each wave: back to a full rack. */
   restock(): void {
-    this.ammo = T.missile.count;
+    this.ammo = this.maxAmmo;
   }
 
   private hitEnemies(s: Shot): void {
@@ -201,17 +217,17 @@ export class Combat {
       this.player.hits++;
       this.fx.spark(s.pos);
       this.audio.hit();
-      if (this.enemies.damage(e, T.weapons.damage)) this.destroy(e);
+      if (this.enemies.damage(e, this.gunDamage)) this.destroy(e);
       return;
     }
   }
 
   private hitPlayer(s: Shot, flight: Flight): void {
-    const r = T.arena.shipRadius * 0.8;
+    const r = T.arena.shipRadius * 0.8 * flight.stats.size;
     if (!this.player.alive || segDist2(_prev, s.pos, flight.pos) > r * r) return;
     this.shots.kill(s);
     this.fx.spark(s.pos);
-    this.player.hp -= T.weapons.enemyDamage;
+    this.player.hp -= T.weapons.enemyDamage * D.enemyDamage;
     this.player.sinceHit = 0;
     flight.sinceHit = 0.25; // a light shake and flash, not the rock-hit slam
     this.audio.damage();

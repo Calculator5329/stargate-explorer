@@ -1,5 +1,5 @@
 import { T, clamp } from "@/core/tunables";
-import { Scheme, type SchemeName } from "@/core/scheme";
+import type { Scheme } from "@/core/scheme";
 
 /**
  * Pointer-lock mouse + keyboard. Mouse motion accumulates between sim ticks and
@@ -29,6 +29,8 @@ export class Input {
   alt = false;
   private altPending = false;
   locked = false;
+  /** mouse sensitivity multiplier on T.flight.stickGain (settings) */
+  sens = 1;
 
   private mdx = 0;
   private mdy = 0;
@@ -40,8 +42,8 @@ export class Input {
    * `freeLock` (`?lock=free`) treats the pointer as locked from the first frame, so headless
    * captures and automated tests can fly and fire without a real pointer lock.
    */
-  constructor(el: HTMLElement, scheme: SchemeName, enabled = true, freeLock = false) {
-    this.scheme = new Scheme(scheme);
+  constructor(el: HTMLElement, scheme: Scheme, enabled = true, readonly freeLock = false) {
+    this.scheme = scheme;
     if (!enabled) return;
     this.locked = freeLock;
     el.addEventListener("click", () => {
@@ -91,8 +93,9 @@ export class Input {
     const f = T.flight;
     this.scheme.sinceSwitch += dt;
     const decay = Math.exp(-f.stickReturn * dt);
-    this.stick.x = clamp((this.stick.x + this.mdx * f.stickGain) * decay, -1, 1);
-    this.stick.y = clamp((this.stick.y - this.mdy * f.stickGain) * decay, -1, 1);
+    const gain = f.stickGain * this.sens;
+    this.stick.x = clamp((this.stick.x + this.mdx * gain) * decay, -1, 1);
+    this.stick.y = clamp((this.stick.y - this.mdy * gain) * decay, -1, 1);
     this.mdx = this.mdy = 0;
 
     const k = this.keys;

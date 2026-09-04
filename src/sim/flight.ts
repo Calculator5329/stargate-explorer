@@ -1,6 +1,7 @@
 import { Quaternion, Vector3 } from "three";
 import { T, clamp, lerp, moveToward } from "@/core/tunables";
 import type { Input } from "@/core/input";
+import type { ShipStats } from "@/ships/registry";
 
 const X = new Vector3(1, 0, 0);
 const Y = new Vector3(0, 1, 0);
@@ -50,6 +51,13 @@ export class Flight {
   barrelLeft = 0;
   /** seconds since the last collision, for camera shake / HUD flash */
   sinceHit = 99;
+  /** per-hull multipliers on the shared T.flight numbers (ships/registry.ts) */
+  stats: ShipStats = { speed: 1, agility: 1, hull: 1, guns: 1, missiles: 6, size: 1 };
+
+  /** top speed this hull can hold (boost) */
+  get topSpeed(): number {
+    return T.flight.boostSpeed * this.stats.speed;
+  }
 
   tick(dt: number, input: Input): void {
     this.prevPos.copy(this.pos);
@@ -64,11 +72,14 @@ export class Flight {
     this.boostEnergy = clamp(this.boostEnergy + (this.boosting ? -f.boostDrain : f.boostRecharge) * dt, 0, 1);
     this.drifting = !arcade && input.space;
     this.braking = arcade && input.space && !this.boosting;
+    const S = this.stats;
     let targetSpeed = lerp(f.minSpeed, f.maxSpeed, this.throttle);
     let rate = this.drifting ? f.driftDecel : f.accel;
     if (arcade) (targetSpeed = this.braking ? f.brakeSpeed : f.cruiseSpeed), (rate = this.braking ? f.brakeDecel : f.accel);
     if (this.boosting) (targetSpeed = f.boostSpeed), (rate = f.boostAccel);
-    const snap = arcade ? input.pitchKey * f.snapPitchRate : 0;
+    targetSpeed *= S.speed;
+    rate *= S.speed;
+    const snap = arcade ? input.pitchKey * f.snapPitchRate * S.agility : 0;
 
     if (input.barrel !== 0 && this.barrelLeft === 0) this.barrelLeft = input.barrel * Math.PI * 2;
 
@@ -82,9 +93,9 @@ export class Flight {
 
     // Rotations below are about local axes; signs follow from +X being port:
     //   +X rotation drops the nose, +Y rotation yaws the nose to port, +Z rotation rolls right.
-    const pitch = -(input.stick.y * f.pitchRate + snap) * dt;
-    const yaw = -input.stick.x * f.yawRate * dt;
-    let roll = (input.roll * f.rollRate + levelRoll) * dt;
+    const pitch = -(input.stick.y * f.pitchRate * S.agility + snap) * dt;
+    const yaw = -input.stick.x * f.yawRate * S.agility * dt;
+    let roll = (input.roll * f.rollRate * S.agility + levelRoll) * dt;
     if (this.barrelLeft !== 0) {
       const step = clamp(this.barrelLeft, -f.barrelRate * dt, f.barrelRate * dt);
       this.barrelLeft -= step;
@@ -115,12 +126,12 @@ export class Flight {
         if (input.boost && this.boostEnergy > 0) vf += f.thrust * 2 * dt;
         else if (input.space) vf = moveToward(vf, 0, f.thrust * dt), _lat.multiplyScalar(Math.exp(-f.thrust * 0.02 * dt));
         else if (!arcade) vf += input.pitchKey * f.thrust * dt;
-        vf = clamp(vf, -f.maxSpeed * 0.5, f.boostSpeed);
+        vf = clamp(vf, -f.maxSpeed * 0.5, this.topSpeed);
         _lat.multiplyScalar(Math.exp(-f.latDampOff * dt));
       }
       this.vel.copy(_fwd).multiplyScalar(vf).add(_lat);
       const total = this.vel.length();
-      if (total > f.boostSpeed) this.vel.multiplyScalar(f.boostSpeed / total);
+      if (total > this.topSpeed) this.vel.multiplyScalar(this.topSpeed / total);
     }
     this.speed = this.vel.length();
     if (this.speed > 1e-3) this.velDir.copy(this.vel).divideScalar(this.speed);

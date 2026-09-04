@@ -68,6 +68,10 @@ export class Audio {
     src.start();
   }
 
+  setMute(v: boolean): void {
+    if (v !== this.muted) this.toggleMute();
+  }
+
   toggleMute(): void {
     this.muted = !this.muted;
     if (this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : 0.5, this.ctx.currentTime, 0.05);

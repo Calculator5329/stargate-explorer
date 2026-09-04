@@ -25,12 +25,12 @@ export class ChaseCamera {
 
   constructor(readonly cam: PerspectiveCamera) {}
 
-  update(frameDt: number, shipPos: Vector3, shipQuat: Quaternion, speed: number, stick: { x: number; y: number }, boost: boolean, sinceHit: number): void {
+  update(frameDt: number, shipPos: Vector3, shipQuat: Quaternion, speed: number, stick: { x: number; y: number }, boost: boolean, sinceHit: number, size = 1): void {
     const c = T.camera;
     const dt = Math.min(frameDt, 1 / 30); // keep the spring stable on hitches
     this.boostFrac += ((boost ? 1 : 0) - this.boostFrac) * (1 - Math.exp(-3 * dt));
 
-    _off.set(stick.x * c.swayYaw, c.height - stick.y * c.swayPitch, -c.distance - c.distanceBoost * this.boostFrac); // +X is port
+    _off.set(stick.x * c.swayYaw, (c.height - stick.y * c.swayPitch) * size, (-c.distance - c.distanceBoost * this.boostFrac) * size); // +X is port
     _desired.copy(_off).applyQuaternion(shipQuat);
     if (!this.initialised) {
       this.off.copy(_desired);
