@@ -99,6 +99,12 @@ Ethan on round 2: "fantastic ... especially the graphics"; plumes still glitch (
 
 **Exit:** round-3 captures plus a chat rundown for Ethan's return.
 
+### M1.8 — Feedback round 4 (2026-09-04, Ethan playing the M2 build)
+Ethan: "the ship look has degraded from last time", "boosters are really bad now too", everything else looks and feels good; unsure whether gliders are too hard or just fast.
+- [x] (2026-09-04) Ship likeness pass 3, from Ethan's two reference images: slender faceted fuselage, one huge thin delta (LE z 3 → -5.5, straight TE at -7), two round intake nacelles above the wing aft, wingtip plates, no tail fins. `docs/shots/f302-pass8-*.png`.
+- [x] (2026-09-04) Plumes: no chevron cut-outs (read as torn holes), cones taper to a point instead of a 0.22 tube, shorter (4.5 m cruise / 11 m boost), base 0.78 of nozzle radius.
+- [ ] Glider difficulty: Ethan is playing to find out whether it is speed (dash 190 vs cruise 150) or tracking. Do not touch `T.enemy` until he reports. Candidates: slower dash, longer break-off, a target-lock arrow that persists, slower enemy rounds.
+
 ### M2 — First playable level ("Clear the field")
 Rewritten 2026-09-04 from the pre-M1 sketch. One mission you can play start to finish in 5–10 minutes: you are already in the field; gliders arrive in waves; clear them; a mission-complete card with time and accuracy; restart. Gate transit, hub and mission select are M4.
 - [x] <!-- workspace:id=work:7b8a8fda-764e-5a7a-ab08-c8e32aaada66 --> (2026-09-04, `combat/projectiles.ts` + `combat/combat.ts`, no muzzle-flash mesh beyond a glow disc) Guns: twin fast projectiles (pooled, instanced), muzzle flash, tracer, impact spark. Fire on LMB (`input.fire` already exists). Fire rate and spread in `T.weapons`.

@@ -17,11 +17,11 @@ void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
 }`;
 
-// Hard-banded plume: three brightness bands along the length, angled chevron
-// notches cut right out, a flickering end. Both cones are opaque (normal
-// blending, depth written): a cel flame is a solid shape, and Ethan read the
-// old additive sheath as a glitch ("you shouldn't really be able to see through
-// the boosters", 2026-09-04). The core cone (uCoreCone = 1) is plain and hot.
+// Cel flame: an opaque tapering tongue (normal blending, depth written) in two
+// brightness bands with a flickering tip, plus a hot inner core. No notches: the
+// 2026-09-04 chevron cut-outs read as torn holes in Ethan's screenshot, and the
+// fat 0.22 tip radius made the flames read as tubes. Reference: thin blue jets
+// with a white core, shorter than the nacelle.
 const FRAG = /* glsl */ `
 uniform vec3 uColor, uCore;
 uniform float uBoost, uTime, uFlicker, uCoreCone;
@@ -30,10 +30,9 @@ void main() {
   float t = vT;
   float end = 1.0 - uFlicker * (0.5 + 0.5 * sin(uTime * 37.0 + vAng * 2.0));
   float body = step(t, end);
-  float chev = mix(step(0.16, fract(t * 3.0 + 0.3 * abs(sin(vAng * 1.5)))), 1.0, uCoreCone);
-  float band = 1.0 - 0.3 * step(0.45, t) - 0.3 * step(0.8, t);
-  vec3 col = mix(uColor * band, uCore, max(uCoreCone, step(t, 0.12 + 0.2 * uBoost)));
-  if (body * chev < 0.5) discard;
+  float band = 1.0 - 0.28 * step(0.55, t);
+  vec3 col = mix(uColor * band, uCore, max(uCoreCone, step(t, 0.1 + 0.2 * uBoost)));
+  if (body < 0.5) discard;
   gl_FragColor = vec4(col, 1.0);
 }`;
 
@@ -74,11 +73,11 @@ export class Plume {
     };
     this.outer = shared;
     this.inner = { uLength: { value: 1 }, uBoost: shared.uBoost };
-    const outerGeo = cone(0.22);
-    const innerGeo = cone(0.1);
+    const outerGeo = cone(0.03);
+    const innerGeo = cone(0.02);
     for (const e of engines) {
       const o = noEdge(new THREE.Mesh(outerGeo, mat(0, 1)));
-      const i = noEdge(new THREE.Mesh(innerGeo, mat(1, 0.45)));
+      const i = noEdge(new THREE.Mesh(innerGeo, mat(1, 0.5)));
       // the inner cone has its own length uniform (shorter) but shares everything else
       (i.material as THREE.ShaderMaterial).uniforms.uLength = this.inner.uLength;
       for (const m of [o, i]) {
@@ -99,7 +98,7 @@ export class Plume {
     const target = boost ? p.boostLength : p.length * (0.35 + 0.65 * throttle);
     this.length += (target - this.length) * Math.min(1, dt * 6);
     this.outer.uLength.value = this.length;
-    this.inner.uLength.value = this.length * 0.72;
+    this.inner.uLength.value = this.length * 0.6;
     this.outer.uWidth.value = p.width;
     this.outer.uFlicker.value = p.flicker;
     this.outer.uTime.value = this.time;

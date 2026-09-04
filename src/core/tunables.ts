@@ -149,10 +149,11 @@ export const T = {
   },
   plume: {
     /** metres at full throttle */
-    length: 7,
-    boostLength: 16,
-    width: 1.0,
-    flicker: 0.12,
+    length: 4.5,
+    boostLength: 11,
+    /** nozzle-radius multiplier of the flame base */
+    width: 0.78,
+    flicker: 0.18,
   },
   sky: {
     starDensity: 1.0,
