@@ -11,16 +11,17 @@ const _size = new Vector3();
 
 /**
  * `?view=side|top|front|rear`: static camera framed on the ship at the origin,
- * ship turntables slowly (`&spin=0` to hold it still for repeatable captures).
+ * ship turntables slowly (`&spin=0` to hold it still for repeatable captures;
+ * `&dist=0.5` halves the framing distance for close-ups).
  * Flight input is disabled in this mode.
  */
 export class InspectView {
   private readonly spin: boolean;
 
-  constructor(cam: PerspectiveCamera, private readonly ship: Object3D, mode: ViewMode, spin = true) {
+  constructor(cam: PerspectiveCamera, private readonly ship: Object3D, mode: ViewMode, spin = true, dist = 1) {
     this.spin = spin;
     new Box3().setFromObject(ship).getSize(_size);
-    const d = Math.max(_size.x, _size.y, _size.z) * 1.7;
+    const d = Math.max(_size.x, _size.y, _size.z) * 1.7 * dist;
     cam.up.set(0, 1, 0);
     switch (mode) {
       case "side":

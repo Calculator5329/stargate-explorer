@@ -1,32 +1,35 @@
 import * as THREE from "three";
 import { Skybox, type SkyName } from "@/world/skybox";
-import { Planet } from "@/world/planet";
+import { PALETTE_DESERT, Planet } from "@/world/planet";
 import { Sun } from "@/world/sun";
-import { Debris } from "@/world/debris";
+import { Asteroids } from "@/world/asteroids";
 
 export interface WorldOptions {
   sky: SkyName;
   planetSegments: number;
+  shadowMap: number;
 }
 
-/** The one system we have: sky, sun, a planet, a placeholder debris field. */
+/** The one system we have: sky, sun, a planet, an asteroid belt. Everything visible hangs off `root`; lights go on the scene. */
 export class World {
+  readonly root = new THREE.Group();
   readonly sky: Skybox;
   readonly sun: Sun;
   readonly planet: Planet;
-  readonly debris: Debris;
+  readonly asteroids: Asteroids;
 
   constructor(scene: THREE.Scene, o: WorldOptions) {
     this.sky = new Skybox(o.sky);
-    this.sun = new Sun(scene, new THREE.Vector3(0.6, 0.35, -0.7));
-    this.planet = new Planet({ radius: 1800, segments: o.planetSegments, seed: 4.2, sunDir: this.sun.dir });
+    this.sun = new Sun(scene, new THREE.Vector3(0.6, 0.35, -0.7), o.shadowMap);
+    this.planet = new Planet({ radius: 1800, segments: o.planetSegments, seed: 4.2, sunDir: this.sun.dir, palette: PALETTE_DESERT });
     this.planet.group.position.set(-2600, -900, 3800);
-    this.debris = new Debris({ count: 120, seed: 1337, inner: 250, outer: 1400 });
-    scene.add(this.sky.mesh, this.planet.group, this.debris.mesh);
+    this.asteroids = new Asteroids({ count: 240, seed: 1337, inner: 120, outer: 1500, thickness: 220, shapes: 6 });
+    this.root.add(this.sky.mesh, this.sun.glare, this.planet.group, this.asteroids.group);
+    scene.add(this.root);
   }
 
   tick(dt: number): void {
-    this.debris.tick(dt);
+    this.asteroids.tick(dt);
   }
 
   update(camPos: THREE.Vector3): void {

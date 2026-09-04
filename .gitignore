@@ -6,3 +6,6 @@ dist/
 # large reference/capture folders — keep small files, ignore bulk
 docs/refs/*.mp4
 docs/shots/*.mp4
+
+# agent-orchestrator local state
+.orc/

@@ -38,9 +38,41 @@ export const T = {
   },
   render: {
     exposure: 1.0,
-    bloomStrength: 0.65,
-    bloomRadius: 0.35,
-    bloomThreshold: 0.35,
+    bloomStrength: 0.5,
+    bloomRadius: 0.3,
+    /** linear HDR luminance; diffuse toon shading stays under 1.0, emissives sit at 1.5+ */
+    bloomThreshold: 1.0,
+    vignette: 0.32,
+    saturation: 1.08,
+  },
+  outline: {
+    /** inverted-hull shell width on ships, in screen pixels */
+    hullWidth: 1.8,
+    /** sobel sample radius of the post edge pass, in pixels */
+    edgeWidth: 1.0,
+    /** relative view-depth discontinuity that counts as a silhouette */
+    depthThreshold: 0.05,
+    /** 1 - dot(n0, n1) that counts as a crease */
+    normalThreshold: 0.45,
+    /** crease lines fade out between these view distances (silhouettes never fade) */
+    fadeNear: 500,
+    fadeFar: 4000,
+  },
+  toon: {
+    /** key light irradiance; lit albedo ≈ key / π */
+    keyIntensity: 2.7,
+    fillIntensity: 0.6,
+    /** ramp value in shadow (0..1 of lit) */
+    shadowStep: 0.36,
+    /** ramp value in the half-lit band */
+    midStep: 0.68,
+  },
+  plume: {
+    /** metres at full throttle */
+    length: 7,
+    boostLength: 16,
+    width: 1.0,
+    flicker: 0.12,
   },
   sky: {
     starDensity: 1.0,
@@ -48,8 +80,10 @@ export const T = {
   },
   planet: {
     atmosphereStrength: 1.4,
-    seaLevel: 0.05,
+    seaLevel: -0.04,
     iceLine: 0.78,
+    /** width of the crisp limb line as a fraction of fresnel */
+    rimWidth: 0.1,
   },
 } satisfies Record<string, Record<string, number>>;
 
