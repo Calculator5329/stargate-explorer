@@ -38,7 +38,7 @@ Bomber-scale enemy hull, gate transit / multiple systems (a deeper map), a race 
 
 ## Known issues
 - **Nothing beyond "Clear the field" has been flown by a human** (2026-09-04 overnight). Gauntlet timing (90 s, 360 m spacing), escort hull (600), turret range/cadence (1 km, 1.6 s) and the difficulty multipliers are guesses. The Ha'tak fight's "shoot this next" legibility is untested.
-- Prometheus: no plumes light up at cruise in the capture (rig throttle path), and the escort version in *Cover the Prometheus* has no rock avoidance beyond a slide.
+- Prometheus: the escort version in *Cover the Prometheus* has no rock avoidance beyond a slide.
 - Ha'tak: a single bounding sphere for player collision (0.72 × radius), no collision for gliders or rounds against the hull itself; missiles only hurt the hull once the nodes are down (by design, but not signposted beyond the mission line).
 - **Awaiting Ethan's verdict on M2** (2026-09-04): play "Clear the field" once; the fight capture is `docs/shots/2026-09-04d-fight.png`. Ethan's two reference frames are still not in `docs/refs/`.
 - Headless SwiftShader runs the sim at ~0.5× real time, so a headless fight is slow motion; timing judgments need a real GPU.

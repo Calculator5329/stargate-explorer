@@ -12,7 +12,7 @@ export class ShipRig {
 
   constructor(def: ShipDef) {
     this.root = buildShip(def);
-    this.plume = new Plume(def.engines, def.palette.glow);
+    this.plume = new Plume(def.engines, def.palette.glow, def.plumeScale ?? 1);
     this.root.add(this.plume.group);
   }
 

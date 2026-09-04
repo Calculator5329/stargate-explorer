@@ -4,6 +4,7 @@ Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
 ## 2026-09-04 (overnight) — Mines, death sequence
 
+- **Prometheus plumes** (`ShipDef.plumeScale`, 3.5 on the Prometheus): plume lengths are fighter metres, so big hulls scale them; six long jets on boost (`docs/shots/2026-09-04-prometheus-boost.png`).
 - **Proximity mines** (`mission/mines.ts`): dark faceted shell with a pulsing red core; fly within 24 m (more for a big hull) and it takes 45 hull off you; shoot it or missile it (they lock) and it goes off where it sits, and any glider inside 60 m eats double. The Gauntlet lays two on every gate rim (`minesPerGate`), the Ha'tak sits inside a ring of fourteen (`mines`).
 - **Death sequence**: every source of player damage now goes through `Combat.hurt`; at zero hull `Flight.dead` kills the controls, the ship tumbles on its last velocity and throws a small burst every quarter second for 1.6 s, then the big burst hides it and the mission reads lost. Gun and missile muzzle offsets scale with the hull's `size`, so the Prometheus fires from its own bow.
 

@@ -51,7 +51,7 @@ export class Plume {
   private length = 0;
   private time = 0;
 
-  constructor(engines: EngineDef[], glow: number) {
+  constructor(engines: EngineDef[], glow: number, private readonly scale = 1) {
     const shared = {
       uLength: { value: 1 },
       uWidth: { value: 1 },
@@ -95,7 +95,7 @@ export class Plume {
   update(dt: number, throttle: number, boost: boolean): void {
     this.time += dt;
     const p = T.plume;
-    const target = boost ? p.boostLength : p.length * (0.35 + 0.65 * throttle);
+    const target = (boost ? p.boostLength : p.length * (0.35 + 0.65 * throttle)) * this.scale;
     this.length += (target - this.length) * Math.min(1, dt * 6);
     this.outer.uLength.value = this.length;
     this.inner.uLength.value = this.length * 0.6;

@@ -57,6 +57,7 @@ export const PROMETHEUS: ShipDef = {
     // sensor mast on the bridge
     { root: [0, DECK + 7.4, 6.0], height: 3.0, rootChord: 1.4, tipChord: 0.5, sweep: 0.5, angle: Math.PI / 2, thickness: 0.3 },
   ],
+  plumeScale: 3.5,
   engines: [
     // three round mains per stern block, exhausts a metre proud of the block face
     { pos: [11.9, 0.3, -31.5], radius: 1.15, length: 4.0 },

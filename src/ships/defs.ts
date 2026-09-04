@@ -122,6 +122,8 @@ export interface ShipDef {
   wings: AirfoilDef[];
   fins: FinDef[];
   engines: EngineDef[];
+  /** plume length multiplier for hulls far bigger than the fighter (T.plume lengths are fighter metres) */
+  plumeScale?: number;
   /** engine-shaped bodies with no plume (booster pods, tanks) */
   pods?: EngineDef[];
   hatches: HatchDef[];
