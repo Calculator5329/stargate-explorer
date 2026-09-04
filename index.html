@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stargate Explorer</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #000; overflow: hidden; font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; }
+      canvas { display: block; }
+      #hud { position: fixed; inset: 0; pointer-events: none; color: #cfe9ff; text-shadow: 0 0 4px rgba(0,0,0,.8); }
+      #hud .speed { position: absolute; left: 24px; bottom: 24px; font-size: 28px; letter-spacing: .04em; }
+      #hud .speed small { font-size: 12px; opacity: .7; margin-left: 6px; }
+      #hud .throttle { position: absolute; left: 24px; bottom: 64px; width: 160px; height: 6px; background: rgba(120,160,200,.25); }
+      #hud .throttle > i { display: block; height: 100%; width: 0; background: #7fd4ff; }
+      #hud .hint { position: absolute; left: 0; right: 0; top: 40%; text-align: center; font-size: 14px; opacity: .85; }
+      #hud .hint.hidden { display: none; }
+      #hud .perf { position: absolute; right: 24px; top: 16px; font-size: 12px; text-align: right; white-space: pre; opacity: .8; }
+      .lil-gui { --width: 300px; }
+    </style>
+  </head>
+  <body>
+    <div id="hud">
+      <div class="hint">click to fly &middot; mouse steers &middot; W/S throttle &middot; Q/E roll &middot; Shift boost &middot; ` tuning</div>
+      <div class="throttle"><i></i></div>
+      <div class="speed"><span class="v">0</span><small>m/s</small></div>
+      <div class="perf"></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

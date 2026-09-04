@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.vite/
+*.local
+.DS_Store
+# large reference/capture folders — keep small files, ignore bulk
+docs/refs/*.mp4
+docs/shots/*.mp4
