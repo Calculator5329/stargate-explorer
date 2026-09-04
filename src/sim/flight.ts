@@ -33,6 +33,8 @@ export class Flight {
   speed = T.flight.minSpeed;
   throttle = 0.5;
   boosting = false;
+  /** 0..1, drains while boosting; boost cannot re-engage below `boostMinEngage` (Ethan: "not overpowered") */
+  boostEnergy = 1;
   drifting = false;
   braking = false;
   /** remaining barrel-roll angle (signed, rad); 0 when not rolling */
@@ -48,7 +50,9 @@ export class Flight {
 
     const arcade = input.scheme.arcade;
     if (!arcade) this.throttle = clamp(this.throttle + input.pitchKey * f.throttleRate * dt, 0, 1);
-    this.boosting = input.boost;
+    const canBoost = this.boostEnergy > 0 && (this.boosting || this.boostEnergy >= f.boostMinEngage);
+    this.boosting = input.boost && canBoost;
+    this.boostEnergy = clamp(this.boostEnergy + (this.boosting ? -f.boostDrain : f.boostRecharge) * dt, 0, 1);
     this.drifting = !arcade && input.space;
     this.braking = arcade && input.space && !this.boosting;
     let targetSpeed = lerp(f.minSpeed, f.maxSpeed, this.throttle);

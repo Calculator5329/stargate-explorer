@@ -7,7 +7,7 @@ Living document. Milestones are ordered; each has an exit criterion so "done" is
 ## Vision (Ethan, 2026-09-03)
 A browser space-combat game in the *tone* of late-90s/2000s space sims (Freespace, X-Wing, Wing Commander) with Stargate-flavoured structure. You start out, go through a Stargate, and arrive at a mission. Missions come in types; the first type built is the **flying mission**: you pilot a spacecraft in the spirit of the SG-1 fighters and fight death-glider-style enemies, with a mothership or two as the big target, like the show. Short sessions (5–15 min), mouse + keyboard, no install.
 
-**Graphics first.** M0 and M1 are about making the graphics look good before building the game out, because how good they get decides how far the game can be pushed. Milestones from M2 on are sketches written before this ruling and will be rewritten after Ethan's M1 feedback; do not build against them yet.
+**Graphics first.** M0 and M1 were about making the graphics look good before building the game out, because how good they get decides how far the game can be pushed. Ethan called the round-2 result "good enough to start on some of the next phases" (2026-09-04); M2 was rewritten then as the first playable level. M3–M5 are still pre-M1 sketches.
 
 ## Pillars
 1. **Flight feel first.** If flying around an empty system isn't fun, nothing else matters. Every milestone re-validates this.
@@ -89,13 +89,27 @@ Ethan, on the round-1 shots: try W as a sharp pull-up and S as a dive with a con
 
 **Exit:** Ethan's verdict on the arcade scheme and the 2026-09-04b shots.
 
-### M2 — Combat loop
-- [ ] <!-- workspace:id=work:7b8a8fda-764e-5a7a-ab08-c8e32aaada66 --> Guns: hitscan-or-fast-projectile, muzzle flash, tracer, impact spark. Fire on LMB (`input.fire` already exists).
-- [ ] <!-- workspace:id=work:cd7ab24a-d901-5d00-b5ca-ff2d953a304a --> Target: one enemy fighter with a simple pursue/evade state machine.
-- [ ] <!-- workspace:id=work:4d78adab-7972-573f-8f27-f2317ecaeaeb --> Damage: HP, hit flash, destruction explosion (particles + light flash + debris chunks).
-- [ ] <!-- workspace:id=work:ff1206d5-01e6-5dfc-b447-bb6eb76d3219 --> HUD: targeting reticle, lead indicator, target box, HP bars, radar/compass.
-- [ ] <!-- workspace:id=work:aff1406c-5afc-5dd4-8ca5-a6fe6b36ea16 --> Player death + restart.
-- **Exit:** a 1v1 that's fun for 3 minutes.
+### M1.7 — Feedback round 3 (Ethan, 2026-09-04)
+Ethan on round 2: "fantastic ... especially the graphics"; plumes still glitch ("you shouldn't really be able to see through the boosters"); the ship "still doesn't look enough like an SG-1 ship"; keep **both** control schemes for now; boost needs a cooldown "so it's not overpowered"; rock collision triggers on a close fly-by without a hit. Then: "good enough to start on some of the next phases".
+- [x] Plumes: both cones opaque with the chevron notches cut out (a cel flame is a solid shape), base seated inside the nozzle. Verified on `2026-09-04c-{rear,chase}.png`. *(2026-09-04)*
+- [x] Boost energy: `Flight.boostEnergy` drains while boosting, recharges when not, cannot re-engage below a floor; thin orange bar above the throttle bar. Tunables `boostDrain`, `boostRecharge`, `boostMinEngage`. *(2026-09-04)*
+- [x] Rock collision narrow phase: bounding sphere, then the ship point against the rock's face planes in rock space (`Asteroids.planes`, `Hazards.narrow`). *(2026-09-04, untested by a human)*
+- [ ] Ship likeness pass 2: longer slender nose, canopy further forward, boxy side intakes under the wing roots, wing notch, canted twin tails, two large rocket exhausts, flatter hull. Top and side captures against the show's fighter.
+- [x] DECISIONS: both schemes stay (supersedes "the loser is deleted"). *(2026-09-04)*
+
+**Exit:** round-3 captures plus a chat rundown for Ethan's return.
+
+### M2 — First playable level ("Clear the field")
+Rewritten 2026-09-04 from the pre-M1 sketch. One mission you can play start to finish in 5–10 minutes: you are already in the field; gliders arrive in waves; clear them; a mission-complete card with time and accuracy; restart. Gate transit, hub and mission select are M4.
+- [ ] <!-- workspace:id=work:7b8a8fda-764e-5a7a-ab08-c8e32aaada66 --> Guns: twin fast projectiles (pooled, instanced), muzzle flash, tracer, impact spark. Fire on LMB (`input.fire` already exists). Fire rate and spread in `T.weapons`.
+- [ ] <!-- workspace:id=work:cd7ab24a-d901-5d00-b5ca-ff2d953a304a --> Target: a death-glider-style enemy hull from the builder (crescent wings, central pod) with a pursue / fire-when-aligned / break-off / evade-when-hit state machine, rough rock avoidance, waves of 3–6.
+- [ ] <!-- workspace:id=work:4d78adab-7972-573f-8f27-f2317ecaeaeb --> Damage: HP for player and enemies, hit flash, destruction explosion (flash + debris chunks + glow), enemy shots that hurt the player.
+- [ ] <!-- workspace:id=work:ff1206d5-01e6-5dfc-b447-bb6eb76d3219 --> HUD: reticle, target box with lead indicator, off-screen target arrows, HP bar, kill counter, wave/objective line.
+- [ ] <!-- workspace:id=work:aff1406c-5afc-5dd4-8ca5-a6fe6b36ea16 --> Player death → "ship lost" card → restart; mission complete card (time, kills, accuracy) → restart.
+- [ ] Mission script (`src/mission/`): intro line, 3 waves, a final heavier target (bomber-scale hull) as the finale; all counts and timings in data, not code.
+- [ ] Sound, minimal WebAudio synthesis (pulled forward from M5 because it carries most of the "dogfight" feel): engine hum by speed, cannon, hit, explosion, boost. Mute key.
+- [ ] Captures of a fight (`scripts/capture-shots.mjs` gains a `fight` view that lets a wave spawn), STATUS/changelog/DECISIONS updated, chat rundown.
+- **Exit:** Ethan plays "Clear the field" through once and has feedback that is about the game, not the tooling.
 
 ### M3 — Fleet & factions
 - [ ] <!-- workspace:id=work:fbd1c463-3000-5d78-830c-2a559fa5d2a3 --> 3 player hulls, 3 enemy hulls, distinct silhouettes (see GRAPHICS.md silhouette test).

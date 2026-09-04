@@ -105,3 +105,7 @@ Append-only log. One entry per decision that constrains future work. Format: dat
 ### 2026-09-04 — Palette follows Ethan's second reference frame
 **Why:** "the planet, asteroids, and nebula should all look a little bit more like this": orange/violet painterly nebula with dark negative space, plum rocks with rust-lit facets, saturated orange/blue planet with a coloured night side, no ice caps.
 **Consequences:** rock albedo is rust and a flat violet emissive owns the shadow side (MeshToonMaterial cannot hue-shift per band, so the emissive stands in for the cool shadow); the planet shader mixes a `night` colour on the dark side instead of darkening albedo; nebula posterisation is 65 % smooth now, with a fine stipple. The earlier "cream/red fighter, white caps" reference is superseded where the two differ.
+
+### 2026-09-04 — Both control schemes stay (supersedes "the loser is deleted")
+**Why:** Ethan flew both: "honestly, I really like both. And I think I'd like to keep both as options for now."
+**Consequences:** the scheme switch is a feature, not a trial. New flight mechanics must work under both (or state which they belong to); the M5 keybind/settings screen gets the toggle. Arcade stays the default.

@@ -15,6 +15,7 @@ export class Hud {
   private readonly warnEl: HTMLElement;
   private readonly flashEl: HTMLElement;
   private readonly schemeEl: HTMLElement;
+  private readonly boostEl: HTMLElement;
   private lastSpeed = -1;
   private lastBar = -1;
   private lastScheme = "";
@@ -26,6 +27,7 @@ export class Hud {
     this.warnEl = must(root.querySelector<HTMLElement>(".warn"));
     this.flashEl = must(root.querySelector<HTMLElement>(".flash"));
     this.schemeEl = must(root.querySelector<HTMLElement>(".scheme"));
+    this.boostEl = must(root.querySelector<HTMLElement>(".boost > i"));
   }
 
   hideHint(): void {
@@ -53,6 +55,8 @@ export class Hud {
       this.barEl.style.width = `${(Math.min(1, bar) * 100).toFixed(1)}%`;
       this.lastBar = bar;
     }
+    this.boostEl.style.width = `${(flight.boostEnergy * 100).toFixed(1)}%`;
+    this.boostEl.classList.toggle("low", flight.boostEnergy < T.flight.boostMinEngage && !flight.boosting);
     this.hintEl.classList.toggle("hidden", input.locked);
   }
 }

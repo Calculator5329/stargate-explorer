@@ -49,8 +49,8 @@ const loop = new Loop({
       flight.sample(alpha, _p, _q);
       rig.root.position.copy(_p);
       rig.root.quaternion.copy(_q);
-      rig.update(dt, flight.throttle, input.boost);
-      chase.update(dt, _p, _q, flight.speed, input.stick, input.boost, flight.sinceHit);
+      rig.update(dt, flight.throttle, flight.boosting);
+      chase.update(dt, _p, _q, flight.speed, input.stick, flight.boosting, flight.sinceHit);
       world.dust.update(_p, _v.copy(flight.velDir).multiplyScalar(flight.speed), flight.speed);
       hud.update(flight, input, hazards.outside);
     }

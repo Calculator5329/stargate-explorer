@@ -41,6 +41,10 @@ export const T = {
     /** arcade scheme: extra pitch rate while W/S is held (rad/s) and the velFollow multiplier during it */
     snapPitchRate: 2.4,
     snapSlide: 0.45,
+    /** boost energy (0..1): drain per second while boosting, recharge per second otherwise, floor to re-engage */
+    boostDrain: 0.32,
+    boostRecharge: 0.18,
+    boostMinEngage: 0.3,
   },
   camera: {
     distance: 16,
@@ -58,6 +62,21 @@ export const T = {
     /** shake amplitude (m) right after a collision, and the constant boost rumble */
     hitShake: 0.7,
     boostShake: 0.05,
+  },
+  weapons: {
+    /** player cannon: rounds per second (both guns together), muzzle speed and reach (m) */
+    fireRate: 9,
+    muzzleSpeed: 900,
+    range: 1400,
+    /** spread in radians per shot */
+    spread: 0.006,
+    damage: 12,
+    /** tracer length = speed × this (s) */
+    tracerSec: 0.014,
+    enemyFireRate: 3,
+    enemyMuzzleSpeed: 700,
+    enemyDamage: 7,
+    enemySpread: 0.02,
   },
   arena: {
     /** play-field radius; beyond it a soft current turns you back */

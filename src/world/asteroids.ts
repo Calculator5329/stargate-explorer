@@ -48,6 +48,27 @@ function rockGeometry(rnd: () => number): THREE.BufferGeometry {
   return g;
 }
 
+/**
+ * Face planes of one unit rock, packed (nx, ny, nz, d) with n·x = d on the face.
+ * Collision treats the rock as the convex hull of its facets: a point is inside
+ * when it is behind every plane. The icosahedron with mild radial jitter is
+ * convex enough for a fighter-sized probe (2026-09-04, close fly-bys used to
+ * bounce off the bounding sphere).
+ */
+function facePlanes(rock: THREE.BufferGeometry): Float32Array {
+  const pos = rock.getAttribute("position");
+  const out = new Float32Array((pos.count / 3) * 4);
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), n = new THREE.Vector3();
+  for (let f = 0; f < pos.count / 3; f++) {
+    a.fromBufferAttribute(pos, f * 3);
+    b.fromBufferAttribute(pos, f * 3 + 1);
+    c.fromBufferAttribute(pos, f * 3 + 2);
+    n.subVectors(b, a).cross(c.clone().sub(a)).normalize();
+    out.set([n.x, n.y, n.z, n.dot(a)], f * 4);
+  }
+  return out;
+}
+
 const CREASE_DEG = 55;
 // Crease lines: facet edges sharper than CREASE_DEG, drawn as instanced line segments that share
 // the rock's instanceMatrix. Pushed out a hair so they win the depth test.
@@ -82,6 +103,10 @@ export class Asteroids {
   readonly count: number;
   readonly centers: Float32Array;
   readonly radii: Float32Array;
+  /** per base shape: packed face planes of the unit rock (see `facePlanes`) */
+  readonly planes: Float32Array[] = [];
+  /** instances per shape; global index gi → shape gi / per, slot gi % per */
+  readonly per: number;
   private readonly meshes: THREE.InstancedMesh[] = [];
   private readonly rates: Float32Array[] = [];
   private readonly axes: Float32Array[] = [];
@@ -89,11 +114,13 @@ export class Asteroids {
   constructor(o: AsteroidOptions) {
     const rnd = mulberry32(o.seed);
     const per = Math.ceil(o.count / o.shapes);
+    this.per = per;
     this.count = per * o.shapes;
     this.centers = new Float32Array(this.count * 3);
     this.radii = new Float32Array(this.count);
     for (let s = 0; s < o.shapes; s++) {
       const rock = rockGeometry(rnd);
+      this.planes.push(facePlanes(rock));
       const mesh = new THREE.InstancedMesh(rock, toonMaterial(TINTS[s % TINTS.length]!, { emissive: ROCK_GLOW, emissiveIntensity: 1.3 }), per);
       const rates = new Float32Array(per);
       const axes = new Float32Array(per * 3);
@@ -124,6 +151,11 @@ export class Asteroids {
       this.axes.push(axes);
       this.group.add(mesh, shell, creaseLines(rock, mesh.instanceMatrix, per));
     }
+  }
+
+  /** World matrix of rock `gi` (position, tumble, uniform scale). */
+  matrixAt(gi: number, out: THREE.Matrix4): void {
+    this.meshes[Math.floor(gi / this.per)]!.getMatrixAt(gi % this.per, out);
   }
 
   tick(dt: number): void {

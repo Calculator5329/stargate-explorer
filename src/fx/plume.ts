@@ -18,7 +18,10 @@ void main() {
 }`;
 
 // Hard-banded plume: three brightness bands along the length, angled chevron
-// notches, a flickering end. The core cone (uCoreCone = 1) is plain and hot.
+// notches cut right out, a flickering end. Both cones are opaque (normal
+// blending, depth written): a cel flame is a solid shape, and Ethan read the
+// old additive sheath as a glitch ("you shouldn't really be able to see through
+// the boosters", 2026-09-04). The core cone (uCoreCone = 1) is plain and hot.
 const FRAG = /* glsl */ `
 uniform vec3 uColor, uCore;
 uniform float uBoost, uTime, uFlicker, uCoreCone;
@@ -30,8 +33,8 @@ void main() {
   float chev = mix(step(0.16, fract(t * 3.0 + 0.3 * abs(sin(vAng * 1.5)))), 1.0, uCoreCone);
   float band = 1.0 - 0.3 * step(0.45, t) - 0.3 * step(0.8, t);
   vec3 col = mix(uColor * band, uCore, max(uCoreCone, step(t, 0.12 + 0.2 * uBoost)));
-  float a = body * chev * (0.55 + 0.25 * uCoreCone);
-  gl_FragColor = vec4(col * a, a);
+  if (body * chev < 0.5) discard;
+  gl_FragColor = vec4(col, 1.0);
 }`;
 
 function cone(tipRadius: number): THREE.BufferGeometry {
@@ -53,22 +56,22 @@ export class Plume {
     const shared = {
       uLength: { value: 1 },
       uWidth: { value: 1 },
-      uColor: { value: new THREE.Color(glow).multiplyScalar(1.7) },
-      uCore: { value: new THREE.Color(0xf4f8ff).multiplyScalar(2.2) },
+      uColor: { value: new THREE.Color(glow).multiplyScalar(1.35) },
+      uCore: { value: new THREE.Color(0xf4f8ff).multiplyScalar(2.0) },
       uBoost: { value: 0 },
       uTime: { value: 0 },
       uFlicker: { value: T.plume.flicker },
     };
-    const mat = (coreCone: number, radius: number) =>
-      new THREE.ShaderMaterial({
+    const mat = (coreCone: number, radius: number) => {
+      const m = new THREE.ShaderMaterial({
         vertexShader: VERT,
         fragmentShader: FRAG,
         uniforms: { ...shared, uCoreCone: { value: coreCone }, uRadius: { value: radius } },
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
         side: THREE.DoubleSide,
       });
+      m.toneMapped = false;
+      return m;
+    };
     this.outer = shared;
     this.inner = { uLength: { value: 1 }, uBoost: shared.uBoost };
     const outerGeo = cone(0.22);
@@ -79,7 +82,8 @@ export class Plume {
       // the inner cone has its own length uniform (shorter) but shares everything else
       (i.material as THREE.ShaderMaterial).uniforms.uLength = this.inner.uLength;
       for (const m of [o, i]) {
-        m.position.set(e.pos[0], e.pos[1], e.pos[2] - e.length / 2 - 0.3);
+        // base sits 0.35 m inside the nozzle throat, so the seam is hidden by the lip
+        m.position.set(e.pos[0], e.pos[1], e.pos[2] - e.length / 2 + 0.35);
         m.scale.setScalar(e.radius);
         m.scale.z = 1; // length stays in metres
         m.frustumCulled = false;
