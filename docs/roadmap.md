@@ -130,7 +130,9 @@ Ethan asked for momentum, lethal rock hits, a canon secondary weapon, then "all 
 - [x] (2026-09-04, `mission/mines.ts`) First new obstacle type: proximity mines. Two on every Gauntlet gate rim, a ring of fourteen around the Ha'tak. 45 hull in the blast, lockable and shootable (a hit sets them off in place, hurting gliders too).
 - [x] (2026-09-04, `Combat.hurt`/`dieTick`, `Flight.dead`) Player death sequence: controls die, the ship tumbles and burns for 1.6 s with small bursts before the final one; the loss card waits for it.
 - [x] (2026-09-04, Ethan's first play: "quite good") Ethan played. His asks and what landed the same morning: cannon 13/s; camera attitude lag so pull-ups and barrel rolls read on screen; Gauntlet rebuilt as a rock-pocket obstacle course with two-way gates and 620 m spacing; kill replay (`replay/`). Ship look: variant gallery for him to pick (`docs/design/ship-variants.html`).
-- [ ] Ethan picks a ship look from the variant gallery (or none), and reports on the new gauntlet spacing, the camera lag numbers and whether the replay picks the right kill.
+- [x] (2026-09-04) Ethan picked variant A (Facet) from the gallery; it is the shipped hull (`PLAYER_HULL`), `?variant=original` flies the old one.
+- [ ] Ethan reports on the new gauntlet spacing, the camera lag numbers and whether the replay picks the right kill.
+- [ ] Dogfight feel: gliders joust (head-on pass, break, turn straight back) instead of dogfighting. Ethan 2026-09-04. Options written up in chat; pick one and rebuild the brain in `combat/enemies.ts`.
 - [ ] Ethan plays the four missions and the Prometheus and reports: difficulty preset that fits, gate count/time for the Gauntlet, whether the Ha'tak fight is legible (which part to shoot next).
 - [ ] Not done tonight: a "race" mission distinct from the gauntlet (needs AI racers), a deeper map (multiple systems, gate travel), obstacle types beyond rocks, mines and the hull, a heavier enemy hull (bomber), gamepad.
 - **Exit:** Ethan's feedback on the four missions is about the game, not the tooling.

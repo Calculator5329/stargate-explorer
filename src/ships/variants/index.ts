@@ -208,10 +208,13 @@ const LANCE: ShipDef = {
   palette: { body: 0x3f444c, accent: 0xf2b134, dark: 0x1a1c20, glow: 0x8fd8ff, canopy: 0x0e1c2c },
 };
 
-export const VARIANTS: Record<string, ShipDef> = { a: FACET, b: BRAWLER, c: LANCE };
+export const VARIANTS: Record<string, ShipDef> = { a: FACET, b: BRAWLER, c: LANCE, original: F11_HALBERD };
 
-/** `?variant=a|b|c` swaps the player fighter's def; other hulls and unknown keys pass through. */
+/** The shipped player hull: Ethan picked A on 2026-09-04 ("a"). */
+export const PLAYER_HULL = FACET;
+
+/** `?variant=a|b|c|original` swaps the player fighter's def; other hulls and unknown keys pass through. */
 export function pickVariant(def: ShipDef, params: URLSearchParams): ShipDef {
-  if (def !== F11_HALBERD) return def;
+  if (def !== PLAYER_HULL) return def;
   return VARIANTS[params.get("variant") ?? ""] ?? def;
 }

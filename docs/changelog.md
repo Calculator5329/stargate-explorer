@@ -2,6 +2,10 @@
 
 Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
+## 2026-09-04 (midday) — Facet hull is the player fighter
+
+Ethan picked variant A from the gallery. `PLAYER_HULL` in `ships/variants` is the shipped def; `?variant=original` flies the previous loft. Enemy gliders unchanged.
+
 ## 2026-09-04 (morning, Ethan's first play) — Kill replay, camera reveal, faster guns, gauntlet as obstacle course
 
 Ethan flew the overnight build: "quite good". Five asks, four landed here, the fifth (the ship's look) is a variant gallery for him to pick from.

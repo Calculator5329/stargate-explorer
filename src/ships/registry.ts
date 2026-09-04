@@ -1,5 +1,5 @@
 import type { ShipDef } from "@/ships/defs";
-import { F11_HALBERD } from "@/ships/defs";
+import { PLAYER_HULL } from "@/ships/variants";
 import { PROMETHEUS } from "@/ships/prometheus-def";
 
 /**
@@ -29,7 +29,7 @@ export interface PlayerShip {
 }
 
 export const SHIPS: Record<string, PlayerShip> = {
-  f11: { id: "f11", def: F11_HALBERD, stats: { speed: 1, agility: 1, hull: 1, guns: 1, missiles: 6, size: 1 }, blurb: "Space-superiority fighter. Fast, nimble, six missiles." },
+  f11: { id: "f11", def: PLAYER_HULL, stats: { speed: 1, agility: 1, hull: 1, guns: 1, missiles: 6, size: 1 }, blurb: "Space-superiority fighter. Fast, nimble, six missiles." },
   prometheus: { id: "prometheus", def: PROMETHEUS, stats: { speed: 0.7, agility: 0.45, hull: 6, guns: 2.2, missiles: 16, size: 5 }, blurb: "Deep-space carrier. Slow, armoured, heavy rail guns and a full magazine." },
 };
 
