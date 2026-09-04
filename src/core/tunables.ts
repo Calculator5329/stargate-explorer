@@ -87,6 +87,25 @@ export const T = {
     enemyDamage: 7,
     enemySpread: 0.02,
   },
+  missile: {
+    /** rounds per sortie, restocked to this each wave */
+    count: 6,
+    speed: 520,
+    accel: 300,
+    /** homing turn rate (rad/s) */
+    turnRate: 3.2,
+    life: 7,
+    damage: 60,
+    /** proximity fuse radius on top of the target radius (m) */
+    fuse: 4,
+    /** seconds the target must sit inside the lock cone */
+    lockTime: 0.9,
+    /** half-angle of the lock cone (rad) and its reach (m) */
+    lockCone: 0.12,
+    lockRange: 1300,
+    /** seconds between launches */
+    cooldown: 0.8,
+  },
   enemy: {
     hp: 40,
     cruise: 130,

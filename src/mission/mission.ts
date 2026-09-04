@@ -111,6 +111,7 @@ export class Mission {
     const w = this.def.waves[this.wave]!;
     this.wave++;
     this.phase = "wave";
+    this.combat.restock();
     _fwd.set(0, 0, 1).applyQuaternion(playerQuat);
     for (let i = 0; i < w.count; i++) {
       // within ~50° of the nose, spread around it; re-roll up to 8 times if the spot is inside a rock

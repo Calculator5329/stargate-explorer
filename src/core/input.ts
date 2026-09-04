@@ -25,6 +25,9 @@ export class Input {
   boost = false;
   /** LMB held (only while pointer-locked) */
   fire = false;
+  /** RMB pressed this tick (edge), for the secondary */
+  alt = false;
+  private altPending = false;
   locked = false;
 
   private mdx = 0;
@@ -56,7 +59,9 @@ export class Input {
     });
     document.addEventListener("mousedown", (e) => {
       if (this.locked && e.button === 0) this.fire = true;
+      if (this.locked && e.button === 2) this.altPending = true;
     });
+    el.addEventListener("contextmenu", (e) => e.preventDefault());
     document.addEventListener("mouseup", (e) => {
       if (e.button === 0) this.fire = false;
     });
@@ -81,6 +86,8 @@ export class Input {
 
   /** Once per sim tick: integrate mouse motion into the stick, decay it, read keys. */
   tick(dt: number): void {
+    this.alt = this.altPending;
+    this.altPending = false;
     const f = T.flight;
     this.scheme.sinceSwitch += dt;
     const decay = Math.exp(-f.stickReturn * dt);

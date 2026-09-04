@@ -5,6 +5,7 @@ import type { Input } from "@/core/input";
 import { Projectiles, type Shot } from "@/combat/projectiles";
 import { Enemies, type Enemy, type RockSpheres } from "@/combat/enemies";
 import { Explosions } from "@/fx/explosion";
+import { Missiles } from "@/combat/missiles";
 import type { Audio } from "@/audio/audio";
 import { noEdge } from "@/render/layers";
 import { glowMaterial } from "@/render/toon";
@@ -32,6 +33,8 @@ const _d = new THREE.Vector3();
 const _prev = new THREE.Vector3();
 const _seg = new THREE.Vector3();
 const _n = new THREE.Vector3();
+const _fwdv = new THREE.Vector3();
+const ZEROV = new THREE.Vector3();
 
 /** Closest approach of the segment a→b to point c, squared. */
 function segDist2(a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3): number {
@@ -50,6 +53,12 @@ export class Combat {
   readonly group = new THREE.Group();
   readonly shots = new Projectiles();
   readonly fx = new Explosions();
+  readonly missiles = new Missiles();
+  /** nearest glider inside the lock cone, and how far along the lock is (0..1) */
+  target: Enemy | null = null;
+  lock = 0;
+  ammo = T.missile.count;
+  private missileCd = 0;
   readonly player: PlayerState = { hp: T.player.hp, alive: true, kills: 0, fired: 0, hits: 0, vel: new THREE.Vector3(), pos: new THREE.Vector3(), sinceHit: 99 };
   private fireAcc = 0;
   private gun = 0;
@@ -57,7 +66,7 @@ export class Combat {
   private muzzleT = 0;
 
   constructor(readonly enemies: Enemies, private readonly rocks: RockSpheres, private readonly ship: THREE.Object3D, private readonly audio: Audio) {
-    this.group.add(this.shots.group, this.fx.group, enemies.group);
+    this.group.add(this.shots.group, this.fx.group, enemies.group, this.missiles.group);
     const geo = new THREE.CircleGeometry(0.55, 10);
     for (const g of GUNS) {
       const m = noEdge(new THREE.Mesh(geo, glowMaterial(0xdff2ff, 3)));
@@ -102,6 +111,7 @@ export class Combat {
       }
     } else this.fireAcc = Math.min(this.fireAcc, 0.999);
     this.muzzleT -= dt;
+    this.lockAndLaunch(dt, flight, input);
 
     this.enemies.tick(dt, P, this.shots);
     for (const e of this.enemies.crashed) this.destroy(e, false);
@@ -120,6 +130,67 @@ export class Combat {
       else this.hitPlayer(s, flight);
       if (s.alive) this.hitRocks(s);
     }
+  }
+
+  /** Track the nearest glider inside the lock cone; RMB launches once the lock is full. */
+  private lockAndLaunch(dt: number, flight: Flight, input: Input): void {
+    const M = T.missile;
+    this.missileCd -= dt;
+    _fwdv.set(0, 0, 1).applyQuaternion(flight.quat);
+    let best: Enemy | null = null, bd = Infinity;
+    const cosCone = Math.cos(M.lockCone);
+    for (const e of this.enemies.list) {
+      if (!e.alive) continue;
+      _d.subVectors(e.pos, flight.pos);
+      const d = _d.length();
+      if (d > M.lockRange || d < 1e-3 || _d.dot(_fwdv) / d < cosCone) continue;
+      if (d < bd) (bd = d), (best = e);
+    }
+    if (best !== this.target) this.lock = 0;
+    this.target = best;
+    if (best) {
+      const was = this.lock;
+      this.lock = Math.min(1, this.lock + dt / M.lockTime);
+      if (was < 1 && this.lock >= 1) this.audio.lock();
+    }
+    if (input.alt && this.player.alive && this.ammo > 0 && this.missileCd <= 0 && best && this.lock >= 1) {
+      _p.set(0, -0.6, 2.0).applyQuaternion(flight.quat).add(flight.pos);
+      if (this.missiles.fire(_p, _fwdv, this.player.vel, best)) {
+        this.ammo--;
+        this.missileCd = M.cooldown;
+        this.audio.launch();
+      }
+    }
+    this.missiles.tick(dt);
+    for (const m of this.missiles.list) {
+      if (!m.alive) continue;
+      for (const e of this.enemies.list) {
+        if (!e.alive) continue;
+        const r = T.enemy.radius + M.fuse;
+        if (m.pos.distanceToSquared(e.pos) > r * r) continue;
+        m.alive = false;
+        this.fx.spawn(m.pos, e.vel, 3);
+        this.audio.explosion(0.6);
+        if (this.enemies.damage(e, M.damage)) this.destroy(e);
+        break;
+      }
+      if (m.alive) {
+        for (let i = 0; i < this.rocks.count; i++) {
+          const dx = m.pos.x - this.rocks.centers[i * 3]!, dy = m.pos.y - this.rocks.centers[i * 3 + 1]!, dz = m.pos.z - this.rocks.centers[i * 3 + 2]!;
+          const r = this.rocks.radii[i]! * 0.9;
+          if (dx * dx + dy * dy + dz * dz < r * r) {
+            m.alive = false;
+            this.fx.spawn(m.pos, ZEROV, 2.5);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  /** Called by the mission at each wave: back to a full rack. */
+  restock(): void {
+    this.ammo = T.missile.count;
   }
 
   private hitEnemies(s: Shot): void {
@@ -176,6 +247,7 @@ export class Combat {
   render(alpha: number, dt: number, camPos: THREE.Vector3): void {
     void alpha;
     this.shots.update();
+    this.missiles.update();
     this.enemies.render(alpha, dt);
     this.fx.update(dt, camPos);
     const on = this.muzzleT > 0;

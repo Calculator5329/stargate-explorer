@@ -138,6 +138,16 @@ export class Audio {
     this.burst(900, 1.5, 0.3, 0.25);
   }
 
+  lock(): void {
+    this.blip(1320, 0.12, 0.09, "square");
+    setTimeout(() => this.blip(1320, 0.12, 0.09, "square"), 90);
+  }
+
+  launch(): void {
+    this.burst(600, 0.8, 0.4, 0.5, "bandpass");
+    this.blip(220, 0.15, 0.4, "sawtooth");
+  }
+
   ui(): void {
     this.blip(880, 0.08, 0.12, "sine");
   }

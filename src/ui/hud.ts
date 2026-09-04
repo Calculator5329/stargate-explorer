@@ -31,6 +31,8 @@ export class Hud {
   private readonly cardH: HTMLElement;
   private readonly cardP: HTMLElement;
   private lastObj = "";
+  private lastAmmo = -1;
+  private readonly ammoEl: HTMLElement;
   private cardShown = "";
   private lastSpeed = -1;
   private lastBar = -1;
@@ -55,6 +57,7 @@ export class Hud {
     this.cardEl = must(root.querySelector<HTMLElement>(".card"));
     this.cardH = must(root.querySelector<HTMLElement>(".card h1"));
     this.cardP = must(root.querySelector<HTMLElement>(".card p"));
+    this.ammoEl = must(root.querySelector<HTMLElement>(".ammo"));
   }
 
   /** Inspect views: no flight HUD at all. */
@@ -106,16 +109,22 @@ export class Hud {
     }
     this.target(combat, cam, playerVel);
     this.cards(combat, mission);
+    if (combat.ammo !== this.lastAmmo) {
+      this.lastAmmo = combat.ammo;
+      this.ammoEl.textContent = "▲".repeat(combat.ammo) + "△".repeat(Math.max(0, T.missile.count - combat.ammo));
+    }
   }
 
   private target(combat: Combat, cam: Camera, playerVel: Vector3): void {
-    // nearest live enemy
-    let best: (typeof combat.enemies.list)[number] | null = null, bd = Infinity;
-    for (const e of combat.enemies.list) {
-      if (!e.alive) continue;
-      const d = e.pos.distanceToSquared(combat.player.pos);
-      if (d < bd) (bd = d), (best = e);
-    }
+    // the lock candidate if there is one, else the nearest live enemy
+    let best: (typeof combat.enemies.list)[number] | null = combat.target, bd = Infinity;
+    if (best) bd = best.pos.distanceToSquared(combat.player.pos);
+    else
+      for (const e of combat.enemies.list) {
+        if (!e.alive) continue;
+        const d = e.pos.distanceToSquared(combat.player.pos);
+        if (d < bd) (bd = d), (best = e);
+      }
     if (!best) {
       this.tgtEl.classList.remove("on");
       this.leadEl.classList.remove("on");
@@ -131,8 +140,14 @@ export class Hud {
       const dist = Math.sqrt(bd);
       this.tgtEl.style.left = `${((_s.x + 1) * 0.5 * w).toFixed(0)}px`;
       this.tgtEl.style.top = `${((1 - _s.y) * 0.5 * h).toFixed(0)}px`;
-      this.tgtEl.classList.toggle("locked", dist < T.weapons.range * 0.6);
-      this.tgtLabel.textContent = `${Math.round(dist)} m`;
+      const locking = combat.target === best;
+      this.tgtEl.classList.toggle("locked", locking && combat.lock >= 1);
+      this.tgtEl.classList.toggle("locking", locking && combat.lock < 1);
+      // the box shrinks onto the target as the lock builds
+      const size = locking ? 44 + 40 * (1 - combat.lock) : 44;
+      this.tgtEl.style.width = this.tgtEl.style.height = `${size.toFixed(0)}px`;
+      this.tgtEl.style.margin = `${(-size / 2).toFixed(0)}px 0 0 ${(-size / 2).toFixed(0)}px`;
+      this.tgtLabel.textContent = locking && combat.lock >= 1 ? `LOCK · ${Math.round(dist)} m` : `${Math.round(dist)} m`;
       // lead: where a round fired now meets the target (first-order)
       const closing = Math.max(120, T.weapons.muzzleSpeed);
       const t = dist / closing;
