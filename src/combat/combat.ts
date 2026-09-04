@@ -30,6 +30,8 @@ export interface PlayerState {
   sinceHit: number;
   /** seconds left in the death sequence; 0 when not dying */
   dying: number;
+  /** nose direction, so gliders can tell whether they are being looked at */
+  fwd: THREE.Vector3;
 }
 
 const _p = new THREE.Vector3();
@@ -75,7 +77,7 @@ export class Combat {
   maxHp = T.player.hp;
   gunDamage = T.weapons.damage;
   private missileCd = 0;
-  readonly player: PlayerState = { hp: T.player.hp, alive: true, kills: 0, fired: 0, hits: 0, vel: new THREE.Vector3(), pos: new THREE.Vector3(), sinceHit: 99, dying: 0 };
+  readonly player: PlayerState = { hp: T.player.hp, alive: true, kills: 0, fired: 0, hits: 0, vel: new THREE.Vector3(), pos: new THREE.Vector3(), sinceHit: 99, dying: 0, fwd: new THREE.Vector3(0, 0, 1) };
   private fireAcc = 0;
   private gun = 0;
   private readonly muzzle: THREE.Mesh[] = [];
@@ -110,6 +112,7 @@ export class Combat {
     P.sinceHit += dt;
     P.pos.copy(flight.pos);
     P.vel.copy(flight.velDir).multiplyScalar(flight.speed);
+    P.fwd.set(0, 0, 1).applyQuaternion(flight.quat);
     if (P.alive && P.sinceHit > T.player.regenDelay) P.hp = Math.min(this.maxHp, P.hp + T.player.regen * dt * flight.stats.hull);
     if (flight.lastImpact > 0) {
       // a crash hurts the same fraction of hull whatever the ship: a big hull is not a crash licence

@@ -24,6 +24,7 @@ Snapshot of what actually works. This is the project state snapshot, not the wor
 - **Menu / settings:** Esc pauses and opens the menu (scheme, assist, sensitivity, difficulty, mute, restart, missions); all persisted in localStorage.
 - **Missions:** Clear the Field, The Gauntlet (12 gates, 90 s), Cover the Prometheus (escort), Bring Down the Ha'tak (turrets → nodes → hull). Hub with lock chain, best times, ship choice. Ha'tak clear unlocks the Prometheus. All four verified headless end to end (playwright: teleport through gates, `extras[i].damage()` on the Ha'tak parts, read `mission.phase`).
 - **Kill replay** (`replay/replay.ts`): 10 s pose ring buffer, best-kill clip, two-shot slow-motion playback from the end card (`V`) or the pause menu. Verified headless (`docs/shots/2026-09-04-replay-shotA/B.png`).
+- **Dogfight brain** (`combat/enemies.ts` saddle + flinch, 2026-09-04): measured headless, not flown by a human; kill difficulty may have moved.
 - **Camera attitude lag** on pull-ups and barrel rolls (`T.camera.followRate`, `barrelFollow`); untested by a human, the numbers are guesses.
 - **Mines** (`mission/mines.ts`): proximity mines on the Gauntlet gate rims and in a ring around the Ha'tak; lockable, shootable, 45 hull in the blast. **Death sequence**: tumble + burning bursts for 1.6 s before the final burst and the loss card.
 - **Prometheus** flyable: slower, heavier, bigger camera pull-back and collision radius.

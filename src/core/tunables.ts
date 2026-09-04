@@ -129,6 +129,22 @@ export const T = {
     /** clearance kept from rock surfaces */
     avoidDist: 90,
     radius: 5.5,
+    /** dogfight brain (2026-09-04): inside this range the geometry matters */
+    saddleDist: 340,
+    /** target's nose within this half-angle of the glider = head-on threat; go for the tail instead (rad) */
+    noseCone: 0.9,
+    /** the saddle aim point sits this far behind the target, and this far to the side */
+    saddleBehind: 90,
+    saddleSide: 45,
+    /** give up on a saddle after this long and just pursue */
+    saddleMax: 4.5,
+    /** target's nose within this half-angle at closer than flinchDist makes the glider jink before the shot (rad) */
+    flinchCone: 0.14,
+    flinchDist: 280,
+    flinchT: 0.7,
+    flinchCd: 3.2,
+    /** chance a look-down-the-throat actually triggers a flinch; the rest stay and get shot */
+    flinchChance: 0.7,
   },
   player: {
     hp: 100,

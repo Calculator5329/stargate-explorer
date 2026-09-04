@@ -132,7 +132,8 @@ Ethan asked for momentum, lethal rock hits, a canon secondary weapon, then "all 
 - [x] (2026-09-04, Ethan's first play: "quite good") Ethan played. His asks and what landed the same morning: cannon 13/s; camera attitude lag so pull-ups and barrel rolls read on screen; Gauntlet rebuilt as a rock-pocket obstacle course with two-way gates and 620 m spacing; kill replay (`replay/`). Ship look: variant gallery for him to pick (`docs/design/ship-variants.html`).
 - [x] (2026-09-04) Ethan picked variant A (Facet) from the gallery; it is the shipped hull (`PLAYER_HULL`), `?variant=original` flies the old one.
 - [ ] Ethan reports on the new gauntlet spacing, the camera lag numbers and whether the replay picks the right kill.
-- [ ] Dogfight feel: gliders joust (head-on pass, break, turn straight back) instead of dogfighting. Ethan 2026-09-04. Options written up in chat; pick one and rebuild the brain in `combat/enemies.ts`.
+- [x] (2026-09-04) Dogfight feel: gliders jousted. Ethan picked "get on the tail" + "fear the guns" from four options; landed as `saddle` and `flinch` states in `combat/enemies.ts`. Roles per glider (shooter + wingmen) held until he has flown this.
+- [ ] Ethan flies the dogfight brain and reports: does it feel like a fight, and is it now too hard to get a kill? Then decide on per-glider roles.
 - [ ] Ethan plays the four missions and the Prometheus and reports: difficulty preset that fits, gate count/time for the Gauntlet, whether the Ha'tak fight is legible (which part to shoot next).
 - [ ] Not done tonight: a "race" mission distinct from the gauntlet (needs AI racers), a deeper map (multiple systems, gate travel), obstacle types beyond rocks, mines and the hull, a heavier enemy hull (bomber), gamepad.
 - **Exit:** Ethan's feedback on the four missions is about the game, not the tooling.

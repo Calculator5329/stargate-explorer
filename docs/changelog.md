@@ -2,6 +2,13 @@
 
 Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
+## 2026-09-04 (midday) — Gliders dogfight instead of jousting
+
+Ethan: the fight was "stopping and turning around and going straight at the enemy ship, over and over". Two new brain states in `combat/enemies.ts`, existing `T.enemy` numbers untouched:
+- **saddle**: a glider inside 340 m that the player is facing refuses the head-on pass and steers, at cruise, for a point 90 m behind and 45 m beside the player on the flank it is already on, until it is on the tail or 4.5 s pass. From the cockpit something is trying to get behind you and you have to break to shake it.
+- **flinch**: a glider inside the player's fire cone (8°) closer than 280 m jinks out sideways and up or down before the shot, 70 % of the time, on a 3.2 s cooldown. Evade still fires on a hit.
+The player state now carries its nose direction (`PlayerState.fwd`, optional `Target.fwd`); the escort has none, so gliders still joust the escort. Headless measure with an ideal nose-tracking player over 40 s: nose-to-nose passes 22 → 1–6 samples, glider-behind-player samples 3 → 8–14, and 40–60 % of glider time in saddle. Not yet flown by a human.
+
 ## 2026-09-04 (midday) — Facet hull is the player fighter
 
 Ethan picked variant A from the gallery. `PLAYER_HULL` in `ships/variants` is the shipped def; `?variant=original` flies the previous loft. Enemy gliders unchanged.
