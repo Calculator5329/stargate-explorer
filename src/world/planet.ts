@@ -43,6 +43,21 @@ export const PALETTE_DESERT: PlanetPalette = {
   night: 0x2a1d5c,
 };
 
+/** A named planet: palette, noise seed, optional ring. Systems pick one; `?planet=<key>` previews it. */
+export interface PlanetPreset {
+  palette: PlanetPalette;
+  seed: number;
+  ring?: RingDef;
+}
+
+export const PLANET_PRESETS: Record<string, PlanetPreset> = {
+  desert: { palette: PALETTE_DESERT, seed: 4.2 },
+};
+
+export function parsePlanetPreset(v: string | null): string {
+  return v !== null && v in PLANET_PRESETS ? v : "desert";
+}
+
 const SURFACE_VERT = /* glsl */ `
 varying vec3 vN;
 varying vec3 vObj;
