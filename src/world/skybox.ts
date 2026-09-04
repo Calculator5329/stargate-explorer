@@ -90,14 +90,15 @@ void main() {
   float swirl = fbm(d * 5.5 + n1 * 1.8);
   float m1 = smoothstep(-0.3, 0.85, dot(d, uDir1));
   float m2 = smoothstep(-0.2, 0.85, dot(d, uDir2));
-  // sparse lobes: only the fbm peaks survive, then 4 lightness bands of the lobe colour
-  float a = clamp((n1 - 0.50 + 0.10 * swirl) * 3.2, 0.0, 1.0) * m1;
-  float b = clamp((n2 - 0.52 + 0.08 * swirl) * 3.2, 0.0, 1.0) * m2;
-  float pa = posterize(a, 4.0);
-  float pb = posterize(b, 4.0);
+  // sparse lobes: only the fbm peaks survive. Mostly banded (hard steps) with a little smooth
+  // gradation underneath so the clouds read as lit volumes, not paper cut-outs.
+  float a = clamp((n1 - 0.53 + 0.10 * swirl) * 4.5, 0.0, 1.0) * m1;
+  float b = clamp((n2 - 0.55 + 0.08 * swirl) * 4.5, 0.0, 1.0) * m2;
+  float pa = mix(posterize(a, 5.0), a, 0.35);
+  float pb = mix(posterize(b, 5.0), b, 0.35);
   float hot = posterize(min(a, b) * 1.4, 3.0);
   float grain = 0.86 + 0.14 * swirl;
-  vec3 neb = (uCol1 * mix(0.16, 0.9, pa) * step(0.01, pa) + uCol2 * mix(0.16, 0.85, pb) * step(0.01, pb)) * grain + uCore * hot * 0.45;
+  vec3 neb = (uCol1 * mix(0.12, 0.9, pa) * step(0.06, a) + uCol2 * mix(0.12, 0.85, pb) * step(0.06, b)) * grain + uCore * hot * 0.45;
   neb = min(neb, vec3(0.92));
   vec3 s = starLayer(d, 55.0, 0.88, 0.10, 1.0) * 1.7
          + starLayer(d, 140.0, 0.93, 0.06, 0.0) * 0.8

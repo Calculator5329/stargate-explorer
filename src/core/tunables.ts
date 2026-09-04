@@ -25,8 +25,8 @@ export const T = {
     autoLevel: 1.2,
   },
   camera: {
-    distance: 12,
-    height: 2.8,
+    distance: 16,
+    height: 3.4,
     lookAhead: 90,
     stiffness: 40,
     damping: 10,

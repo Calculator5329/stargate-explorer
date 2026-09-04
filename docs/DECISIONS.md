@@ -60,4 +60,24 @@ Append-only log. One entry per decision that constrains future work. Format: dat
 **Why:** the earlier entry says "+Z forward / +Y up / +X right". Three.js is right-handed, so with those forward and up axes right = forward × up = −X. Building to the written "+X right" produced inverted yaw and roll (Ethan, first flight).
 **Consequences:** the convention is +Z forward, +Y up, +X port. Flight, camera sway and inspect views are written against that; `sim/flight.ts` states the rotation signs. A glTF export still needs +Z forward / +Y up; nothing else changes.
 
+### 2026-09-03 — Vision: gate → mission; flying missions first; graphics before game
+**Why:** Ethan's ruling in chat: "you start out and go into a Stargate, it'll be different missions, the first type are flying missions piloting a spacecraft that looks like one of the SG-1 ships, fighting death gliders or a mothership or two." M0 and M1 are about the graphics because their quality decides how far the game can be pushed.
+**Consequences:** M2–M5 in `roadmap.md` are placeholders to be rewritten after M1 feedback. Player hull stays an original design *in the spirit of* the show's fighter (wedge nose, forward canopy, twin engines, canted tails); enemy hulls will be evocative of gliders and a mothership the same way. The "no copied hulls" rule above stands; "looks like" means silhouette family, not likeness.
+
+### 2026-09-03 — Outlines: inverted hull on ships + screen-space edge pass, layer 1 opts out
+**Why:** inverted hull alone gives clean ship silhouettes but nothing for rocks, planets or creases; a depth+normal sobel gives everything but needs an extra scene render. Doing both matches row A: thick clean ship outline, thinner crease lines everywhere.
+**Consequences:** `EdgePass` renders layer 0 once more with a `MeshNormalMaterial` override into a normal+depth target. Anything on layer 1 (`render/layers.ts`, `noEdge()`) is excluded: sky, glare, atmosphere shell, plumes, glow discs, outline shells. New transparent or additive objects must go on layer 1 or they get outlines. Low tier drops the pass and keeps the shells.
+
+### 2026-09-03 — Bloom is emissive-only by HDR threshold, not by a second render
+**Why:** the composer buffers are HalfFloat linear; tone mapping happens in `OutputPass`. Keeping every diffuse toon result under 1.0 and every emissive at 1.5+ makes a threshold of 1.0 select emissives for free. A darkening pass would cost a third scene render per frame.
+**Consequences:** light intensities are budgeted: albedo × (key + fill) / π must stay under 1.0 (`T.toon.keyIntensity` 2.7, `fillIntensity` 0.6, brightest albedo ≈ 0.92). Anything that should glow uses `glowMaterial()` or an HDR colour, never a bright albedo. Nebula and planet are clamped below 0.95.
+
+### 2026-09-03 — Ship parts are one triangle soup per slot, orientation fixed geometrically
+**Why:** hand-wound quads broke every time a part was mirrored or a fin angle went negative. Testing each triangle's normal against an interior reference (loft axis or ring centre) is cheap at build time and makes mirroring a one-line `x = -x`.
+**Consequences:** `ships/builder.ts` buckets triangles by palette slot (5 draw calls per ship regardless of part count) and emits one outline shell per solid. Parts must be convex-ish per ring pair or the interior-point test misfires; recesses and throats pass an explicit direction or `inward`. A glTF hull would bypass all of this and only needs a shell (`outlineShell(positions)`).
+
+### 2026-09-03 — Shots are captured headless with `playwright-core` (dev dependency); the browser pane cannot measure fps
+**Why:** the in-app preview pane runs hidden, so rAF is throttled and the overlay reads 0 fps; region zoom is unsupported. Headless Chromium renders WebGL through SwiftShader, which is fine for pixels and useless for timing. `playwright-cli` insisted on a Google Chrome channel that is not installed, so the repo carries a 20-line script on `playwright-core` instead (the only dev dependency beyond the toolchain; it downloads no browser by itself, `npx playwright install chromium` once).
+**Consequences:** `node scripts/capture-shots.mjs [date]` writes the five standard views to `docs/shots/` at 1280×720 with the dev server running. Frame timing must come from a visible tab on real hardware; STATUS.md keeps that row as "unmeasured" until then.
+
 <!-- next entry below -->
