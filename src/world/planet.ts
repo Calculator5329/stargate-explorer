@@ -11,6 +11,8 @@ export interface PlanetPalette {
   high: number;
   ice: number;
   rim: number;
+  /** night-side tint (the dark side is coloured, not black) */
+  night: number;
 }
 
 export interface RingDef {
@@ -29,15 +31,16 @@ export interface PlanetOptions {
   ring?: RingDef;
 }
 
-/** Ethan's reference frame: orange land, two-tone blue sea, white caps, blue limb. */
+/** Ethan's 2026-09-04 reference frame: saturated orange land, two-tone blue sea, indigo night side, pale limb. No caps (T.planet.iceLine ≥ 1). */
 export const PALETTE_DESERT: PlanetPalette = {
-  deep: 0x163f8f,
-  shallow: 0x2d6ccc,
-  low: 0xe0a24a,
-  mid: 0xc4762a,
-  high: 0x84401a,
+  deep: 0x1b3d9e,
+  shallow: 0x2f66d8,
+  low: 0xe4803a,
+  mid: 0xc4602a,
+  high: 0x8f3f1c,
   ice: 0xf3efe6,
-  rim: 0x5fb6ff,
+  rim: 0x9fdcff,
+  night: 0x2a1d5c,
 };
 
 const SURFACE_VERT = /* glsl */ `
@@ -51,7 +54,7 @@ void main() {
 
 // Hard steps everywhere: land/sea, 3 land tones, 2 sea tones, 3 light steps.
 const SURFACE_FRAG = /* glsl */ `
-uniform vec3 uSunDir, uDeep, uShallow, uLow, uMid, uHigh, uIce;
+uniform vec3 uSunDir, uDeep, uShallow, uLow, uMid, uHigh, uIce, uNight;
 uniform float uSeaLevel, uIceLine, uSeed;
 varying vec3 vN;
 varying vec3 vObj;
@@ -69,8 +72,10 @@ void main() {
   float ice = step(uIceLine, abs(n.y) + 0.06 * (detail - 0.5));
   alb = mix(alb, uIce, ice);
   float ndl = dot(normalize(vN), uSunDir);
-  float lit = 0.12 + 0.38 * smoothstep(-0.03, 0.03, ndl) + 0.45 * smoothstep(0.36, 0.42, ndl);
-  gl_FragColor = vec4(alb * lit, 1.0);
+  float day = smoothstep(-0.03, 0.03, ndl);
+  float lit = 0.5 + 0.45 * smoothstep(0.36, 0.42, ndl);
+  vec3 night = uNight * mix(0.55, 0.9, land);
+  gl_FragColor = vec4(mix(night, alb * lit, day), 1.0);
 }`;
 
 const ATMO_VERT = /* glsl */ `
@@ -136,6 +141,7 @@ export class Planet {
       uMid: c(p.mid),
       uHigh: c(p.high),
       uIce: c(p.ice),
+      uNight: c(p.night),
     };
     const surface = new THREE.Mesh(
       new THREE.SphereGeometry(o.radius, o.segments, Math.max(8, o.segments >> 1)),

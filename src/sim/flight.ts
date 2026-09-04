@@ -15,9 +15,13 @@ const _n = new Vector3();
 /**
  * Kinematic arcade-sim flight. The nose (+Z) is steered by the stick; the
  * velocity direction `velDir` chases the nose with a little inertia, freezes
- * while drifting (Space), and gets reflected by collisions. Roll is manual
- * (A/D) plus bank-into-turn and a soft-horizon auto-level; a double-tap on A/D
- * fires a fast 360° barrel roll with a sideways hop.
+ * while drifting (classic Space), and gets reflected by collisions. Roll is
+ * manual (A/D) plus bank-into-turn and a soft-horizon auto-level; a double-tap
+ * on A/D fires a fast 360° barrel roll with a sideways hop.
+ *
+ * Two control schemes share this model (`input.scheme`, see core/scheme.ts):
+ * classic drives speed from a W/S throttle; arcade holds `cruiseSpeed`, W/S are
+ * a hard pull-up / dive on top of the mouse, and Space is a brake.
  * Keeps the previous tick's pose so render can interpolate via `sample()`.
  */
 export class Flight {
@@ -30,6 +34,7 @@ export class Flight {
   throttle = 0.5;
   boosting = false;
   drifting = false;
+  braking = false;
   /** remaining barrel-roll angle (signed, rad); 0 when not rolling */
   barrelLeft = 0;
   /** seconds since the last collision, for camera shake / HUD flash */
@@ -41,11 +46,17 @@ export class Flight {
     const f = T.flight;
     this.sinceHit += dt;
 
-    this.throttle = clamp(this.throttle + input.throttleDelta * f.throttleRate * dt, 0, 1);
+    const arcade = input.scheme.arcade;
+    if (!arcade) this.throttle = clamp(this.throttle + input.pitchKey * f.throttleRate * dt, 0, 1);
     this.boosting = input.boost;
-    this.drifting = input.drift;
-    const targetSpeed = this.boosting ? f.boostSpeed : lerp(f.minSpeed, f.maxSpeed, this.throttle);
-    this.speed = moveToward(this.speed, targetSpeed, (this.boosting ? f.boostAccel : this.drifting ? f.driftDecel : f.accel) * dt);
+    this.drifting = !arcade && input.space;
+    this.braking = arcade && input.space && !this.boosting;
+    let targetSpeed = lerp(f.minSpeed, f.maxSpeed, this.throttle);
+    let rate = this.drifting ? f.driftDecel : f.accel;
+    if (arcade) (targetSpeed = this.braking ? f.brakeSpeed : f.cruiseSpeed), (rate = this.braking ? f.brakeDecel : f.accel);
+    if (this.boosting) (targetSpeed = f.boostSpeed), (rate = f.boostAccel);
+    this.speed = moveToward(this.speed, targetSpeed, rate * dt);
+    const snap = arcade ? input.pitchKey * f.snapPitchRate : 0;
 
     if (input.barrel !== 0 && this.barrelLeft === 0) this.barrelLeft = input.barrel * Math.PI * 2;
 
@@ -59,7 +70,7 @@ export class Flight {
 
     // Rotations below are about local axes; signs follow from +X being port:
     //   +X rotation drops the nose, +Y rotation yaws the nose to port, +Z rotation rolls right.
-    const pitch = -input.stick.y * f.pitchRate * dt;
+    const pitch = -(input.stick.y * f.pitchRate + snap) * dt;
     const yaw = -input.stick.x * f.yawRate * dt;
     let roll = (input.roll * f.rollRate + levelRoll) * dt;
     if (this.barrelLeft !== 0) {
@@ -77,7 +88,8 @@ export class Flight {
 
     _fwd.copy(Z).applyQuaternion(this.quat);
     if (!this.drifting) {
-      const k = 1 - Math.exp(-f.velFollow * dt);
+      // a hard pull leaves the velocity behind for a moment, so the ship visibly slides through the turn
+      const k = 1 - Math.exp(-f.velFollow * (snap !== 0 ? f.snapSlide : 1) * dt);
       this.velDir.lerp(_fwd, k).normalize();
     }
     this.pos.addScaledVector(this.velDir, this.speed * dt);

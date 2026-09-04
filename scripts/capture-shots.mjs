@@ -15,7 +15,7 @@ const VIEWS = {
   boost: "", // chase view after holding W + Shift: plumes, dust streaks, pull-back
   silhouette: "?view=side&spin=0&silhouette=1",
 };
-const HOLD = { boost: ["KeyW", "ShiftLeft"] };
+const HOLD = { boost: ["ShiftLeft"] };
 
 mkdirSync("docs/shots", { recursive: true });
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });

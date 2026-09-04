@@ -2,6 +2,12 @@
 
 Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
+## 2026-09-04 — Feedback round 2
+
+- `core/scheme.ts`: arcade/classic control switch (`C`, `?controls=`), arcade default. Arcade = constant cruise (`cruiseSpeed`), W pull-up / S dive (`snapPitchRate`, `snapSlide`), Space brake (`brakeSpeed`, `brakeDecel`), Shift boost. Classic unchanged. HUD hint + mode tag per scheme; the bar shows speed/boost in arcade.
+- Look toward Ethan's second reference: rust rock tints with a violet shadow emissive; planet palette saturated orange/blue with an indigo night side and no caps; nebula softer, denser, stippled, violet wash, dimmer hot core.
+- `capture-shots.mjs`: `boost` holds Shift only.
+
 ## 2026-09-03 — Feedback round 1
 
 - Controls: A/D roll; Space drift; double-tap A/D barrel roll. Q/E freed.

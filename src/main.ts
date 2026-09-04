@@ -1,6 +1,7 @@
 import { Quaternion, Vector3 } from "three";
 import { Loop } from "@/core/loop";
 import { Input } from "@/core/input";
+import { parseScheme } from "@/core/scheme";
 import { Flight } from "@/sim/flight";
 import { Hazards } from "@/sim/hazards";
 import { QUALITY, Renderer, parseQuality } from "@/render/renderer";
@@ -22,7 +23,7 @@ const world = new World(r.scene, { sky, planetSegments: QUALITY[quality].planetS
 const rig = new ShipRig(F11_HALBERD);
 r.scene.add(rig.root);
 world.sun.follow(rig.root);
-const input = new Input(canvas, view === null), flight = new Flight(), hazards = new Hazards(world.asteroids);
+const input = new Input(canvas, parseScheme(params.get("controls")), view === null), flight = new Flight(), hazards = new Hazards(world.asteroids);
 const chase = new ChaseCamera(r.camera);
 const inspect = view ? new InspectView(r.camera, rig.root, view, params.get("spin") !== "0", Number(params.get("dist") ?? 1) || 1) : null;
 if (params.get("silhouette") === "1") (r.setSilhouette(true), rig.setSilhouette(true), (world.root.visible = false));
@@ -51,7 +52,7 @@ const loop = new Loop({
       rig.update(dt, flight.throttle, input.boost);
       chase.update(dt, _p, _q, flight.speed, input.stick, input.boost, flight.sinceHit);
       world.dust.update(_p, _v.copy(flight.velDir).multiplyScalar(flight.speed), flight.speed);
-      hud.update(flight.speed, flight.throttle, input.locked, hazards.outside, flight.sinceHit);
+      hud.update(flight, input, hazards.outside);
     }
     world.update(r.camera.position);
     r.render();

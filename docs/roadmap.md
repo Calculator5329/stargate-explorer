@@ -79,6 +79,16 @@ Ethan's notes on the M1 captures, in his words where it matters: "very good star
 - [x] Stars: dim 1 px points with a warm/white/blue spread, flares only on the rare bright ones, faint milky-way band with haze; no sub-pixel sparkle. *(2026-09-03)*
 - **Exit:** Ethan's second look at `docs/shots/2026-09-04-*.png` (boost view added). Open feel questions are listed in STATUS.md.
 
+### M1.6 — Feedback round 2 (Ethan, 2026-09-04)  *(done 2026-09-04, awaiting his look)*
+Ethan, on the round-1 shots: try W as a sharp pull-up and S as a dive with a constant cruise speed, Shift boost, Space brake, "as a switcher so we could try this mode out and then potentially go back"; planet, asteroids and nebula should look "a little bit more like" his second reference frame (orange/violet painterly nebula with dark negative space, plum rocks with rust-lit facets, saturated orange/blue planet with an indigo night side, no ice caps).
+- [x] Control scheme switch: `core/scheme.ts`, arcade by default, `C` toggles live, `?controls=classic|arcade`; HUD hint and a fading mode tag follow it. *(2026-09-04)*
+- [x] Arcade scheme: `cruiseSpeed` held, W/S add `snapPitchRate` on top of the mouse and let the velocity slide (`snapSlide`), Space brakes to `brakeSpeed` at `brakeDecel`, Shift boosts. Classic (W/S throttle, Space drift) unchanged. *(2026-09-04)*
+- [x] Palette pass toward the reference: rock tints rust with a violet emissive for the shadow side; planet palette saturated orange/blue, coloured night side (`night`), caps off (`T.planet.iceLine` 1.05); nebula thresholds lowered, posterisation softened, fine stipple grain, violet wash, hot core dimmed. *(2026-09-04, `docs/shots/2026-09-04b-*.png`)*
+- [x] Capture `boost` view holds Shift only (W is a pull-up in arcade). *(2026-09-04)*
+- [ ] Ethan flies both schemes and picks one (or keeps both). Reference PNGs still want dropping into `docs/refs/`.
+
+**Exit:** Ethan's verdict on the arcade scheme and the 2026-09-04b shots.
+
 ### M2 — Combat loop
 - [ ] <!-- workspace:id=work:7b8a8fda-764e-5a7a-ab08-c8e32aaada66 --> Guns: hitscan-or-fast-projectile, muzzle flash, tracer, impact spark. Fire on LMB (`input.fire` already exists).
 - [ ] <!-- workspace:id=work:cd7ab24a-d901-5d00-b5ca-ff2d953a304a --> Target: one enemy fighter with a simple pursue/evade state machine.

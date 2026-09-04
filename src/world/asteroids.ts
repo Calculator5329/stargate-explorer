@@ -14,7 +14,10 @@ export interface AsteroidOptions {
   shapes: number;
 }
 
-const TINTS = [0x6f6976, 0x7a6d60, 0x5e626c, 0x716a5e];
+// Ethan's 2026-09-04 reference: plum bodies whose sun-facing facets go rust-orange. The warm key
+// lights a terracotta albedo; a flat violet emissive owns the shadow side.
+const TINTS = [0x8a4a32, 0x7a4030, 0x925438, 0x6e3c3a];
+const ROCK_GLOW = 0x140a2a;
 const _obj = new THREE.Object3D();
 const _axis = new THREE.Vector3();
 const _q = new THREE.Quaternion();
@@ -91,7 +94,7 @@ export class Asteroids {
     this.radii = new Float32Array(this.count);
     for (let s = 0; s < o.shapes; s++) {
       const rock = rockGeometry(rnd);
-      const mesh = new THREE.InstancedMesh(rock, toonMaterial(TINTS[s % TINTS.length]!), per);
+      const mesh = new THREE.InstancedMesh(rock, toonMaterial(TINTS[s % TINTS.length]!, { emissive: ROCK_GLOW, emissiveIntensity: 1.3 }), per);
       const rates = new Float32Array(per);
       const axes = new Float32Array(per * 3);
       for (let i = 0; i < per; i++) {

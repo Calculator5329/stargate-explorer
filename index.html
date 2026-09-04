@@ -17,6 +17,7 @@
       #hud .warn { position: absolute; left: 0; right: 0; top: 18%; text-align: center; font-size: 18px; letter-spacing: .2em; color: #ffb36b; animation: blink 0.8s steps(2) infinite; }
       @keyframes blink { to { opacity: .35; } }
       #hud .flash { position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse at center, rgba(255,80,40,0) 45%, rgba(255,80,40,.9) 100%); }
+      #hud .scheme { position: absolute; right: 24px; bottom: 24px; font-size: 13px; letter-spacing: .18em; color: #ffd9a8; opacity: 0; }
       #hud .perf { position: absolute; right: 24px; top: 16px; font-size: 12px; text-align: right; white-space: pre; opacity: .8; }
       .lil-gui { --width: 300px; }
     </style>
@@ -25,7 +26,8 @@
     <div id="hud">
       <div class="flash"></div>
       <div class="warn hidden">LEAVING THE FIELD &middot; TURN BACK</div>
-      <div class="hint">click to fly &middot; mouse steers &middot; W/S throttle &middot; A/D roll (double-tap: barrel roll) &middot; Space drift &middot; Shift boost &middot; ` tuning</div>
+      <div class="hint"></div>
+      <div class="scheme"></div>
       <div class="throttle"><i></i></div>
       <div class="speed"><span class="v">0</span><small>m/s</small></div>
       <div class="perf"></div>

@@ -34,6 +34,13 @@ export const T = {
     barrelHop: 28,
     /** fraction of speed kept after bouncing off a rock */
     bounceKeep: 0.45,
+    /** arcade scheme: held speed, brake floor and how fast the brake bites */
+    cruiseSpeed: 150,
+    brakeSpeed: 45,
+    brakeDecel: 160,
+    /** arcade scheme: extra pitch rate while W/S is held (rad/s) and the velFollow multiplier during it */
+    snapPitchRate: 2.4,
+    snapSlide: 0.45,
   },
   camera: {
     distance: 16,
@@ -112,7 +119,8 @@ export const T = {
   planet: {
     atmosphereStrength: 1.4,
     seaLevel: -0.04,
-    iceLine: 0.78,
+    /** |latitude| where ice caps start; ≥1 disables them (the reference frame has none) */
+    iceLine: 1.05,
     /** width of the crisp limb line as a fraction of fresnel */
     rimWidth: 0.1,
   },

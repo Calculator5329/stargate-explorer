@@ -21,7 +21,7 @@ Backtick (`) toggles the lil-gui tuning panel.
 - **Sim/render split:** `core/loop.ts` runs sim at fixed 1/60 s; render interpolates (`Flight.sample(alpha,…)`). Never read `flight.pos/quat` directly in render code — sample.
 - **Tunables:** every feel/number constant goes in `core/tunables.ts` and gets bound in `ui/debug.ts`. No magic numbers in sim/camera code.
 - **Outlines are geometry:** ship solids and rocks get inverted-hull shells (`render/outline.ts`, instancing-aware), rocks also get baked crease lines. The screen-space `EdgePass` is off in every tier (DECISIONS 2026-09-03); anything that must never be outlined still goes on layer 1 via `noEdge()`.
-- **Movement goes through `Flight.velDir`/`pos`:** the nose and the velocity are separate; drift, bounce and the barrel hop rely on it. Controls: mouse steers, W/S throttle, A/D roll (double-tap = barrel roll), Space drift, Shift boost.
+- **Movement goes through `Flight.velDir`/`pos`:** the nose and the velocity are separate; drift, bounce and the barrel hop rely on it. Controls: mouse steers, A/D roll (double-tap = barrel roll), Shift boost; W/S and Space mean different things per `core/scheme.ts` (arcade: pull-up/dive + brake; classic: throttle + drift). `C` toggles, `?controls=` picks. Read keys through the scheme, never `Input.keys`.
 - **Bloom budget:** diffuse stays under 1.0 linear (albedo × (key + fill) / π); anything that should glow uses `glowMaterial()` or an HDR colour. The bloom threshold is 1.0, not a separate emissive render.
 - **Allocation:** no `new THREE.Vector3()` / `.clone()` inside per-frame or per-tick paths. Use module-level or instance scratch vars (`_p`, `_q`, `_tmp` pattern already in use).
 - **Path alias:** import via `@/…`, never relative `../../`.
@@ -30,7 +30,7 @@ Backtick (`) toggles the lil-gui tuning panel.
 ## Layout
 ```
 src/
-  core/    loop, input, tunables, random
+  core/    loop, input, scheme (arcade/classic), tunables, random
   sim/     flight model (kinematic arcade-sim), hazards (rock collision, arena edge)
   render/  renderer + post stack, chase camera, inspect views, perf overlay
   world/   procedural skybox, planet, sun, asteroids, World composition
@@ -39,7 +39,7 @@ src/
   ui/      DOM HUD, debug panel
 docs/      roadmap, STATUS, DECISIONS, GRAPHICS, changelog, refs/, shots/
 ```
-New systems get their own folder under `src/` (e.g. `src/combat/`, `src/ai/`, `src/fx/`). Keep `main.ts` as wiring only (59 lines today; the M0 exit says under 60).
+New systems get their own folder under `src/` (e.g. `src/combat/`, `src/ai/`, `src/fx/`). Keep `main.ts` as wiring only (61 lines today; the M0 exit said under 60, treat it as a ceiling to trend back to).
 
 ## Working style
 - Small, verifiable steps. After any visual change, capture `?view=side&spin=0`, `?view=rear&spin=0` and the chase view into `docs/shots/YYYY-MM-DD-view.png` and compare against the previous one. Captures come from `node scripts/capture-shots.mjs` (headless Chromium via `playwright-core`, see `docs/shots/README.md`); the in-app preview pane cannot zoom or measure fps.

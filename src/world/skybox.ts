@@ -41,7 +41,7 @@ const preset = (p: PresetIn): SkyPreset => ({
 /** `?sky=abydos|deepSpace|chulak`. Placeholder franchise names, see DECISIONS.md. */
 export const SKY_PRESETS = {
   // Ethan's reference frame: vivid orange + purple lobes, hot pink core.
-  abydos: preset({ base: 0x06040a, c1: 0xe8712c, d1: [0.35, 0.15, 0.9], c2: 0x6a2bb0, d2: [-0.6, -0.1, 0.5], core: 0xffb08a, nebula: 1.0, grade: grade(0xf2ecff, 0xfff4e6) }),
+  abydos: preset({ base: 0x09051a, c1: 0xe8712c, d1: [0.35, 0.15, 0.9], c2: 0x6a2bb0, d2: [-0.6, -0.1, 0.5], core: 0xffb08a, nebula: 1.0, grade: grade(0xf2ecff, 0xfff4e6) }),
   deepSpace: preset({ base: 0x020308, c1: 0x1e2c8a, d1: [0.2, 0.7, 0.1], c2: 0x4a1a6e, d2: [-0.5, -0.3, 0.6], core: 0x8fb4ff, nebula: 0.7, grade: grade(0xe8ecff, 0xf4f6ff) }),
   chulak: preset({ base: 0x030603, c1: 0x2b8a44, d1: [0.6, 0.1, 0.5], c2: 0xb07a20, d2: [-0.3, 0.6, -0.6], core: 0xe8ffb0, nebula: 0.9, grade: grade(0xecf5e6, 0xfff8dc) }),
 } satisfies Record<string, SkyPreset>;
@@ -97,15 +97,17 @@ void main() {
   float swirl = fbm(d * 5.5 + n1 * 1.8);
   float m1 = smoothstep(-0.3, 0.85, dot(d, uDir1));
   float m2 = smoothstep(-0.2, 0.85, dot(d, uDir2));
-  // sparse lobes: only the fbm peaks survive. Mostly banded (hard steps) with a little smooth
-  // gradation underneath so the clouds read as lit volumes, not paper cut-outs.
-  float a = clamp((n1 - 0.53 + 0.10 * swirl) * 4.5, 0.0, 1.0) * m1;
-  float b = clamp((n2 - 0.55 + 0.08 * swirl) * 4.5, 0.0, 1.0) * m2;
-  float pa = mix(posterize(a, 5.0), a, 0.35);
-  float pb = mix(posterize(b, 5.0), b, 0.35);
+  // Ethan's 2026-09-04 reference: broad soft clouds with a painterly stipple, a few hard bands
+  // inside them, and a dim violet wash so the sky never drops to pure black near a lobe.
+  float a = clamp((n1 - 0.51 + 0.10 * swirl) * 3.8, 0.0, 1.0) * m1;
+  float b = clamp((n2 - 0.49 + 0.08 * swirl) * 3.6, 0.0, 1.0) * m2;
+  float pa = mix(posterize(a, 5.0), a, 0.65);
+  float pb = mix(posterize(b, 5.0), b, 0.65);
   float hot = posterize(min(a, b) * 1.4, 3.0);
-  float grain = 0.86 + 0.14 * swirl;
-  vec3 neb = (uCol1 * mix(0.12, 0.9, pa) * step(0.06, a) + uCol2 * mix(0.12, 0.85, pb) * step(0.06, b)) * grain + uCore * hot * 0.45;
+  float fine = vnoise(d * 160.0) + 0.5 * vnoise(d * 330.0 + 3.0);
+  float grain = 0.80 + 0.20 * swirl + 0.16 * (fine - 0.75);
+  vec3 wash = (uCol2 * m2 * (0.35 + 0.65 * n2) * 0.14 + uCol1 * m1 * n1 * 0.02);
+  vec3 neb = (uCol1 * mix(0.12, 0.9, pa) * smoothstep(0.02, 0.14, a) + uCol2 * mix(0.12, 0.85, pb) * smoothstep(0.02, 0.14, b)) * grain + uCore * hot * 0.28 + wash;
   neb = min(neb, vec3(0.92));
   float mw = exp(-pow(dot(d, uBandN), 2.0) * 20.0);
   vec3 s = starLayer(d, 45.0, 0.90, 0.10, 1.0, 0.0) * 1.5
