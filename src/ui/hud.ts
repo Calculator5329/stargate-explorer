@@ -34,9 +34,12 @@ export class Hud {
   private lastObj = "";
   private lastAmmo = -1;
   private readonly ammoEl: HTMLElement;
+  private readonly againEl: HTMLElement;
   private cardShown = "";
   private lastSpeed = -1;
   private lastBar = -1;
+  private replaying = false;
+  private lastAgain = "";
   private lastScheme = "";
   private lastAssist = true;
 
@@ -59,6 +62,7 @@ export class Hud {
     this.cardH = must(root.querySelector<HTMLElement>(".card h1"));
     this.cardP = must(root.querySelector<HTMLElement>(".card p"));
     this.ammoEl = must(root.querySelector<HTMLElement>(".ammo"));
+    this.againEl = must(root.querySelector<HTMLElement>(".card .again"));
   }
 
   /** Inspect views: no flight HUD at all. */
@@ -98,7 +102,14 @@ export class Hud {
   }
 
   /** Combat layer: HP, mission line, target box + lead, off-screen arrow, end cards. */
-  updateCombat(combat: Combat, mission: Mission, cam: Camera, playerVel: Vector3): void {
+  /** Replay mode: everything but the REPLAY tag hides. */
+  setReplay(on: boolean): void {
+    if (on === this.replaying) return;
+    this.replaying = on;
+    this.root.classList.toggle("replaying", on);
+  }
+
+  updateCombat(combat: Combat, mission: Mission, cam: Camera, playerVel: Vector3, hasReplay = false): void {
     const P = combat.player;
     this.hpEl.style.width = `${((P.hp / combat.maxHp) * 100).toFixed(1)}%`;
     this.hpEl.classList.toggle("hurt", P.hp < combat.maxHp * 0.35);
@@ -110,6 +121,11 @@ export class Hud {
     }
     this.target(combat, mission, cam, playerVel);
     this.cards(mission);
+    const again = hasReplay ? "R · FLY AGAIN      V · REPLAY THE KILL" : "R · FLY AGAIN";
+    if (again !== this.lastAgain) {
+      this.lastAgain = again;
+      this.againEl.textContent = again;
+    }
     if (combat.ammo !== this.lastAmmo) {
       this.lastAmmo = combat.ammo;
       this.ammoEl.textContent = "▲".repeat(combat.ammo) + "△".repeat(Math.max(0, combat.maxAmmo - combat.ammo));

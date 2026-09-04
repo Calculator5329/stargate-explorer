@@ -12,6 +12,7 @@ import type { LevelDef } from "@/mission/levels";
 import { Audio } from "@/audio/audio";
 import { T } from "@/core/tunables";
 import { writeSave, type Save } from "@/core/save";
+import { Replay } from "@/replay/replay";
 
 /**
  * The game layer above flight: enemies, weapons, the mission script, sound and
@@ -23,21 +24,40 @@ export class Game {
   readonly enemies: Enemies;
   readonly combat: Combat;
   readonly mission: Mission;
+  readonly replay = new Replay();
+  private lastStick = { x: 0, y: 0 };
+  private flight: Flight;
+  private cam: THREE.PerspectiveCamera | null = null;
 
   constructor(scene: THREE.Scene, world: World, ship: THREE.Object3D, canvas: HTMLCanvasElement, flight: Flight, private readonly save: Save, level: LevelDef) {
     this.enemies = new Enemies(GLIDER, world.asteroids);
     this.combat = new Combat(this.enemies, world.asteroids, ship, this.audio);
     this.combat.setShip(flight);
+    this.flight = flight;
+    this.combat.onKill = (pos, vel) => this.replay.markKill(pos, vel, this.flight, this.lastStick);
     this.mission = createMission(level, { combat: this.combat, rocks: world.asteroids, audio: this.audio, flight });
     scene.add(this.combat.group, this.mission.group);
     canvas.addEventListener("click", () => this.audio.unlock());
     window.addEventListener("keydown", (e) => {
+      if (this.replay.playing) {
+        if (e.code === "KeyV" || e.code === "Escape") this.replay.stop(this.cam!, this.enemies.list);
+        return;
+      }
       if (e.code === "KeyR" && this.mission.done) location.reload();
+      if (e.code === "KeyV" && this.mission.done && this.cam) this.replay.play(this.cam);
     });
   }
 
+  /** Start the highlight replay if there is one (pause menu button, end card). */
+  playReplay(): boolean {
+    return this.cam ? this.replay.play(this.cam) : false;
+  }
+
   tick(dt: number, flight: Flight, input: Input): void {
+    this.lastStick.x = input.stick.x;
+    this.lastStick.y = input.stick.y;
     this.combat.tick(dt, flight, input);
+    this.replay.record(dt, flight, this.enemies.list);
     this.mission.tick(dt);
     if (this.mission.phase === "complete" && !this.mission.recorded) this.record();
   }
@@ -55,9 +75,12 @@ export class Game {
   }
 
   render(alpha: number, dt: number, cam: THREE.PerspectiveCamera, hud: Hud, flight: Flight): void {
+    this.cam = cam;
     this.combat.render(alpha, dt, cam.position);
     this.mission.render(dt);
     this.audio.update(flight.speed / T.flight.boostSpeed, flight.boosting);
-    hud.updateCombat(this.combat, this.mission, cam, this.combat.player.vel);
+    hud.updateCombat(this.combat, this.mission, cam, this.combat.player.vel, this.replay.hasHighlight);
+    const playing = this.replay.playing && this.replay.update(dt, cam, this.combat.ship, this.enemies.list, (p, v, s) => this.combat.burst(p, v, s, 0.6));
+    hud.setReplay(playing);
   }
 }

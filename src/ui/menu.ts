@@ -10,6 +10,9 @@ export interface MenuHooks {
   restart(): void;
   /** back to mission select (optional until the hub exists) */
   hub?(): void;
+  /** play the sortie's highlight; shown only while `hasReplay()` is true */
+  replay?(): void;
+  hasReplay?(): boolean;
 }
 
 /**
@@ -25,10 +28,15 @@ export class Menu {
   private readonly title: HTMLElement;
   private readonly sub: HTMLElement;
 
+  private readonly replayBtn: HTMLElement;
+  private readonly hasReplay: () => boolean;
+
   constructor(root: HTMLElement, canvas: HTMLElement, save: Save, hooks: MenuHooks, enabled = true, private readonly missionTitle = "") {
     this.el = root;
     this.title = q(root, ".title");
     this.sub = q(root, ".sub");
+    this.replayBtn = q(root, ".replay");
+    this.hasReplay = hooks.hasReplay ?? (() => false);
     if (!enabled) {
       root.style.display = "none";
       return;
@@ -62,6 +70,7 @@ export class Menu {
     const hub = q(root, ".hub");
     if (hooks.hub) hub.addEventListener("click", () => hooks.hub?.());
     else hub.style.display = "none";
+    this.replayBtn.addEventListener("click", () => hooks.replay?.());
     document.addEventListener("pointerlockchange", () => this.set(document.pointerLockElement !== canvas));
     // the overlay swallows keys meant for the game; only Esc/Enter matter here
     root.addEventListener("keydown", (e) => {
@@ -73,6 +82,7 @@ export class Menu {
 
   /** Show or hide; `first` is the start screen (no "paused" wording). */
   private set(open: boolean, first = false): void {
+    this.replayBtn.style.display = open && this.hasReplay() ? "" : "none";
     this.open = open;
     this.el.classList.toggle("on", open);
     if (!open) return;

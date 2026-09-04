@@ -36,6 +36,7 @@ src/
   world/   procedural skybox, planet, sun, asteroids, World composition
   ships/   parametric builder, ship defs, palettes, rig (ship + plumes), GLTF loader
   fx/      engine plumes, speed dust, explosions
+  replay/  kill replay: pose ring buffer, highlight cut, cinematic playback
   combat/  projectiles (pooled tracers), enemies (glider AI), combat (weapons + hit resolution), missiles, targets (Tracked/Lockable), glider-def (enemy hull), capital (Ha'tak)
   mission/ levels (data), mission (base + Waves), runners clear/run/protect/strike, index (factory)
   audio/   WebAudio synth (no assets)

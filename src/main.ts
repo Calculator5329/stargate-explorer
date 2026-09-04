@@ -16,6 +16,7 @@ import { World } from "@/world/world";
 import { SKY_PRESETS, parseSkyPreset } from "@/world/skybox";
 import { ShipRig } from "@/ships/rig";
 import { parseShip } from "@/ships/registry";
+import { pickVariant } from "@/ships/variants";
 import { Hud } from "@/ui/hud";
 import { createDebugPanel } from "@/ui/debug";
 import { Game } from "@/game";
@@ -28,7 +29,7 @@ const canvas = document.body.appendChild(document.createElement("canvas"));
 const r = new Renderer(canvas, quality);
 r.setGrade(SKY_PRESETS[sky].grade);
 const world = new World(r.scene, { sky, planetSegments: QUALITY[quality].planetSegments, shadowMap: r.tier.shadows });
-const ship = parseShip(params.get("ship") ?? save.progress.ship), rig = new ShipRig(ship.def);
+const ship = parseShip(params.get("ship") ?? save.progress.ship), rig = new ShipRig(pickVariant(ship.def, params));
 r.scene.add(rig.root);
 world.sun.follow(rig.root);
 const scheme = new Scheme(params.has("controls") ? parseScheme(params.get("controls")) : S.scheme, S.assist);
@@ -48,6 +49,10 @@ const menu = new Menu(document.getElementById("menu")!, canvas, save, {
   apply: (s) => ((scheme.arcade = s.scheme === "arcade"), (scheme.assist = s.assist), (input.sens = s.sens), setDifficulty(s.difficulty), game?.audio.setMute(s.mute)),
   restart: () => location.reload(),
   hub: () => hub.show(),
+  replay: () => {
+    if (game?.playReplay()) void canvas.requestPointerLock();
+  },
+  hasReplay: () => game?.replay.hasHighlight ?? false,
 }, game !== null && !input.freeLock, level.title);
 Object.assign(window, { __game: game, __flight: flight, __rocks: world.asteroids });
 // headless tests (scripts/_*.mjs) drive the game through these
@@ -56,7 +61,7 @@ createDebugPanel();
 const _p = new Vector3(), _v = new Vector3(), _q = new Quaternion();
 const loop = new Loop({
   sim(dt) {
-    if (inspect || menu.open) return;
+    if (inspect || menu.open || game?.replay.playing) return;
     input.tick(dt);
     flight.tick(dt, input);
     hazards.tick(flight, dt);

@@ -42,6 +42,11 @@
       #hud .arrow.on { display: block; }
       #hud .card { position: absolute; left: 0; right: 0; top: 34%; text-align: center; display: none; }
       #hud .card.on { display: block; }
+      #hud .card .again { white-space: pre; }
+      #hud .replay { display: none; position: absolute; left: 0; right: 0; top: 6%; text-align: center; letter-spacing: .4em; font-size: 22px; color: #ffd9a8; }
+      #hud .replay small { display: block; letter-spacing: .12em; font-size: 12px; opacity: .7; margin-top: 8px; }
+      #hud.replaying > *:not(.replay):not(.perf) { display: none !important; }
+      #hud.replaying .replay { display: block; }
       #hud .card h1 { margin: 0; font-size: 34px; letter-spacing: .3em; font-weight: 500; color: #ffd9a8; }
       #hud .card h1.lost { color: #ff6a4a; }
       #hud .card p { margin: 14px 0 0; font-size: 15px; letter-spacing: .06em; opacity: .9; white-space: pre-line; }
@@ -103,6 +108,7 @@
       <div class="hp"><i></i></div>
       <div class="ammo"></div>
       <div class="card"><h1></h1><p></p><div class="again">R · FLY AGAIN</div></div>
+      <div class="replay"><span>REPLAY</span><small>V · skip</small></div>
       <div class="boost"><i></i></div>
       <div class="throttle"><i></i></div>
       <div class="speed"><span class="v">0</span><small>m/s</small></div>
@@ -117,7 +123,7 @@
         <label><span>Mouse sensitivity</span><input type="range" name="sens" min="0.4" max="2.5" step="0.05" /><i class="sens-v"></i></label>
         <label><span>Difficulty</span><select name="difficulty"><option value="easy">easy</option><option value="normal">normal</option><option value="hard">hard</option></select></label>
         <label><span>Mute (M)</span><input type="checkbox" name="mute" /></label>
-        <div class="row"><button class="fly">FLY</button><button class="restart">RESTART</button><button class="hub">MISSIONS</button></div>
+        <div class="row"><button class="fly">FLY</button><button class="restart">RESTART</button><button class="replay">REPLAY THE KILL</button><button class="hub">MISSIONS</button></div>
         <p class="keys">mouse steers · A/D roll, double-tap barrel roll · Shift boost · LMB cannons · RMB missile once locked · C scheme · X assist · Esc pause · ` tuning</p>
       </div>
     </div>

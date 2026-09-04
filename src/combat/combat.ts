@@ -59,6 +59,8 @@ export class Combat {
   readonly group = new THREE.Group();
   readonly shots = new Projectiles();
   readonly fx = new Explosions();
+  /** a glider the player destroyed (pos, vel); the replay hooks this */
+  onKill: ((pos: THREE.Vector3, vel: THREE.Vector3) => void) | null = null;
   readonly missiles = new Missiles();
   /** nearest glider inside the lock cone, and how far along the lock is (0..1) */
   target: Tracked | null = null;
@@ -79,7 +81,7 @@ export class Combat {
   private readonly muzzle: THREE.Mesh[] = [];
   private muzzleT = 0;
 
-  constructor(readonly enemies: Enemies, private readonly rocks: RockSpheres, private readonly ship: THREE.Object3D, private readonly audio: Audio) {
+  constructor(readonly enemies: Enemies, private readonly rocks: RockSpheres, readonly ship: THREE.Object3D, private readonly audio: Audio) {
     this.group.add(this.shots.group, this.fx.group, enemies.group, this.missiles.group);
     enemies.targets.push(this.player);
     enemies.onCrash = (pos, n, speed) => this.fx.crash(pos, n, speed);
@@ -327,7 +329,10 @@ export class Combat {
   }
 
   private destroy(e: Enemy, byPlayer = true): void {
-    if (byPlayer) this.player.kills++;
+    if (byPlayer) {
+      this.player.kills++;
+      this.onKill?.(e.pos, e.vel);
+    }
     this.fx.spawn(e.pos, e.vel, 5);
     this.audio.explosion(0.8);
   }

@@ -2,6 +2,14 @@
 
 Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
+## 2026-09-04 (morning, Ethan's first play) — Kill replay, camera reveal, faster guns, gauntlet as obstacle course
+
+Ethan flew the overnight build: "quite good". Five asks, four landed here, the fifth (the ship's look) is a variant gallery for him to pick from.
+- **Kill replay** (`replay/replay.ts`): every sim tick records the ship and up to ten gliders into a 10 s ring buffer; a kill schedules a cut of `[kill − 4.5 s, kill + 1.6 s]`, scored by the stick deflection, speed, boost and a barrel roll in the last 3 s, and the sortie keeps its best. `V` on the end card or REPLAY THE KILL in the pause menu plays it at 0.55× with two shots: a drone parked beside the ship's line a third of the way in, then a close orbit through the kill; bursts replay at their moment. HUD hides except a REPLAY tag; `V`/Esc skip. Sim is paused during playback; gliders' visibility is restored after.
+- **Camera reveals the manoeuvre** (`render/camera.ts`, `T.camera.followRate` 7 / `barrelFollow` 4.5 / `barrelFov` 8 / `barrelDistance` 2.5): the camera's attitude now chases the ship's with a lag instead of copying it, so a pull-up or dive shows the ship pitching against the view and a barrel roll spins the hull most of the way round on screen, with an FOV kick and a small pull-back.
+- **Cannon** `T.weapons.fireRate` 9 → 13 rounds/s.
+- **The Gauntlet rebuilt** (`mission/run.ts`, level data): ten gates 620 m apart (was twelve at 360 m); each gate is placed at the best of fourteen candidate headings, scored by how much rock sits within 240 m while the hoop itself stays clear, so the run threads rock pockets instead of open space; the chain steers back toward the centre near the arena edge. Gates count from **either direction**. Hoops carry four rim pylons so they read edge-on. 120 s window, gliders at gate 4.
+
 ## 2026-09-04 (overnight) — Mines, death sequence
 
 - **Prometheus plumes** (`ShipDef.plumeScale`, 3.5 on the Prometheus): plume lengths are fighter metres, so big hulls scale them; six long jets on boost (`docs/shots/2026-09-04-prometheus-boost.png`).
