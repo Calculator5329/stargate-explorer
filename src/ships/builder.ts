@@ -281,44 +281,74 @@ function fin(soup: Soup, f: FinDef): void {
   loft(soup, [transformed(a, q, root, false), transformed(b, q, root, false)], (n, _c, k) => (n.z > 0.6 || k === -1 ? "accent" : "body"), { capStart: 0, capEnd: 0.02 });
 }
 
-/** Nacelle body (boxy-round loft), a stack of nozzle rings, and an inward throat. */
-function engine(soup: Soup, e: EngineDef): void {
-  const [x, y, z] = e.pos;
-  const r = e.radius;
+/**
+ * Section factory shared by engines and pods. `aspect` makes the tube wider than
+ * it is tall (or the reverse) and `boxiness` raises the superellipse exponent, so
+ * one nacelle can be a round bell and the next a rectangular intake box.
+ */
+function nacelleSections(e: EngineDef, defaultN: number): (dz: number, k: number, n?: number) => HullSection {
+  const [, y, z] = e.pos;
+  const [ax, ay] = e.aspect ?? [1, 1];
+  const base = e.boxiness ?? defaultN;
+  return (dz, k, n = base) => ({ z: z + dz, w: e.radius * k * ax, h: e.radius * k * ay, n, yOff: y });
+}
+
+type SectionFn = (dz: number, k: number, n?: number) => HullSection;
+
+/** Superellipse exponent of an intake mouth: at least as hard-edged as the body it feeds. */
+const lipExponent = (e: EngineDef): number => Math.max(e.boxiness ?? 0, 3.6);
+
+/** Open intake at the +Z end of a nacelle: a dark lip ring stack plus an inward duct. */
+function intakeMouth(soup: Soup, e: EngineDef, sec: SectionFn, nv: number): void {
+  const x = e.pos[0];
   const L = e.length;
-  const sec = (dz: number, k: number, n = 2.6): HullSection => ({ z: z + dz, w: r * k, h: r * k, n, yOff: y });
+  const p = lipExponent(e);
+  const shift = (rings: THREE.Vector3[][]) => rings.map((rg) => rg.map((v) => v.setX(v.x + x)));
+  soup.begin();
+  loft(soup, shift([sec(L / 2, 0.98, p), sec(L / 2 + 0.08, 1.02, p), sec(L / 2, 0.86, p)].map((s) => ring(s, nv))), () => "dark");
+  soup.begin();
+  loft(soup, shift([sec(L / 2, 0.86, p), sec(L / 2 - 1.1, 0.5, p)].map((s) => ring(s, nv))), () => "dark", { inward: true });
+}
+
+/** Nacelle body (round or boxy loft), a stack of nozzle rings, and an inward throat. */
+function engine(soup: Soup, e: EngineDef): void {
+  const x = e.pos[0];
+  const L = e.length;
+  const nv = e.segments ?? 12;
+  const sec = nacelleSections(e, 2.6);
+  const lipN = lipExponent(e);
   const shift = (rings: THREE.Vector3[][]) => rings.map((rg) => rg.map((p) => p.setX(p.x + x)));
 
   soup.begin();
-  const front = e.intake ? [sec(L / 2 - 0.6, 1, 3.4), sec(L / 2, 1.0, 3.6)] : [sec(L / 2 - 0.7, 1), sec(L / 2, 0.78)];
-  loft(soup, shift([sec(-L / 2, 0.92), sec(-L / 2 + 0.5, 1), ...front].map((s) => ring(s, 12))), underside, e.intake ? {} : { capEnd: 0.3 });
-  if (e.intake) {
-    soup.begin();
-    const lip = [sec(L / 2, 0.98, 3.6), sec(L / 2 + 0.08, 1.02, 3.6), sec(L / 2, 0.86, 3.6)];
-    loft(soup, shift(lip.map((s) => ring(s, 12))), () => "dark");
-    soup.begin();
-    loft(soup, shift([sec(L / 2, 0.86, 3.6), sec(L / 2 - 0.9, 0.5, 3.0)].map((s) => ring(s, 12))), () => "dark", { inward: true });
-  }
+  const front = e.intake ? [sec(L / 2 - 0.6, 1, lipN), sec(L / 2, 1.0, lipN)] : [sec(L / 2 - 0.7, 1), sec(L / 2, 0.78)];
+  loft(soup, shift([sec(-L / 2, 0.92), sec(-L / 2 + 0.5, 1), ...front].map((s) => ring(s, nv))), underside, e.intake ? {} : { capEnd: 0.3 });
+  if (e.intake) intakeMouth(soup, e, sec, nv);
 
   soup.begin();
   const rear = -L / 2;
   const nozzle = [sec(rear, 0.92, 2.2), sec(rear - 0.12, 1.08, 2.2), sec(rear - 0.28, 0.94, 2.2), sec(rear - 0.42, 1.04, 2.2), sec(rear - 0.56, 0.82, 2.2)];
-  loft(soup, shift(nozzle.map((s) => ring(s, 12))), () => "dark");
+  loft(soup, shift(nozzle.map((s) => ring(s, nv))), () => "dark");
 
   soup.begin();
   const throat = [sec(rear - 0.56, 0.8, 2.2), sec(rear - 0.1, 0.52, 2.2)];
-  loft(soup, shift(throat.map((s) => ring(s, 12))), () => "dark", { inward: true });
+  loft(soup, shift(throat.map((s) => ring(s, nv))), () => "dark", { inward: true });
 }
 
-/** Plume-less nacelle: body-coloured tube, dark rear cap, pointed nose. */
+/**
+ * Plume-less nacelle: body-coloured tube with a dark rear cap. `intake` swaps the
+ * pointed nose for an open duct mouth, which is how the boxy side intakes are built.
+ */
 function pod(soup: Soup, e: EngineDef): void {
-  const [x, y, z] = e.pos;
-  const r = e.radius;
+  const x = e.pos[0];
   const L = e.length;
-  const sec = (dz: number, k: number): HullSection => ({ z: z + dz, w: r * k, h: r * k, n: 2.4, yOff: y });
+  const nv = e.segments ?? 12;
+  const sec = nacelleSections(e, 2.4);
+  const lipN = lipExponent(e);
   soup.begin();
-  const rings = [sec(-L / 2, 0.85), sec(-L / 2 + 0.3, 1), sec(L / 2 - 1.0, 1), sec(L / 2, 0.6)].map((s) => ring(s, 12).map((p) => p.setX(p.x + x)));
-  loft(soup, rings, (n, _c, k) => (k === -1 && n.z < -0.5 ? "dark" : underside(n)), { capStart: 0.05, capEnd: 0.7 });
+  const front = e.intake ? [sec(L / 2 - 0.8, 1, lipN), sec(L / 2, 1, lipN)] : [sec(L / 2 - 1.0, 1), sec(L / 2, 0.6)];
+  const rings = [sec(-L / 2, 0.85), sec(-L / 2 + 0.3, 1), ...front].map((s) => ring(s, nv).map((p) => p.setX(p.x + x)));
+  loft(soup, rings, (n, _c, k) => (k === -1 && n.z < -0.5 ? "dark" : underside(n)), e.intake ? { capStart: 0.05 } : { capStart: 0.05, capEnd: 0.7 });
+  if (e.intake) intakeMouth(soup, e, sec, nv);
 }
 
 function canopy(soup: Soup, c: CanopyDef): void {

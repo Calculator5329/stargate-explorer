@@ -1,6 +1,10 @@
 import type { Flight } from "@/sim/flight";
 import type { Input } from "@/core/input";
 import { T } from "@/core/tunables";
+import type { Camera, Vector3 } from "three";
+import { Vector3 as V3 } from "three";
+import type { Combat } from "@/combat/combat";
+import type { Mission } from "@/mission/mission";
 
 const HINTS = {
   arcade: "click to fly · mouse steers · W pull up / S dive · A/D roll (double-tap: barrel roll) · Shift boost · Space brake · C classic controls · ` tuning",
@@ -16,11 +20,23 @@ export class Hud {
   private readonly flashEl: HTMLElement;
   private readonly schemeEl: HTMLElement;
   private readonly boostEl: HTMLElement;
+  private readonly hpEl: HTMLElement;
+  private readonly titleEl: HTMLElement;
+  private readonly objEl: HTMLElement;
+  private readonly tgtEl: HTMLElement;
+  private readonly tgtLabel: HTMLElement;
+  private readonly leadEl: HTMLElement;
+  private readonly arrowEl: HTMLElement;
+  private readonly cardEl: HTMLElement;
+  private readonly cardH: HTMLElement;
+  private readonly cardP: HTMLElement;
+  private lastObj = "";
+  private cardShown = "";
   private lastSpeed = -1;
   private lastBar = -1;
   private lastScheme = "";
 
-  constructor(root: HTMLElement) {
+  constructor(private readonly root: HTMLElement) {
     this.speedEl = must(root.querySelector<HTMLElement>(".speed .v"));
     this.barEl = must(root.querySelector<HTMLElement>(".throttle > i"));
     this.hintEl = must(root.querySelector<HTMLElement>(".hint"));
@@ -28,6 +44,21 @@ export class Hud {
     this.flashEl = must(root.querySelector<HTMLElement>(".flash"));
     this.schemeEl = must(root.querySelector<HTMLElement>(".scheme"));
     this.boostEl = must(root.querySelector<HTMLElement>(".boost > i"));
+    this.hpEl = must(root.querySelector<HTMLElement>(".hp > i"));
+    this.titleEl = must(root.querySelector<HTMLElement>(".mission .title"));
+    this.objEl = must(root.querySelector<HTMLElement>(".mission .obj"));
+    this.tgtEl = must(root.querySelector<HTMLElement>(".tgt"));
+    this.tgtLabel = must(root.querySelector<HTMLElement>(".tgt small"));
+    this.leadEl = must(root.querySelector<HTMLElement>(".lead"));
+    this.arrowEl = must(root.querySelector<HTMLElement>(".arrow"));
+    this.cardEl = must(root.querySelector<HTMLElement>(".card"));
+    this.cardH = must(root.querySelector<HTMLElement>(".card h1"));
+    this.cardP = must(root.querySelector<HTMLElement>(".card p"));
+  }
+
+  /** Inspect views: no flight HUD at all. */
+  hideAll(): void {
+    for (const el of this.root.querySelectorAll<HTMLElement>(":scope > *:not(.perf)")) el.style.display = "none";
   }
 
   hideHint(): void {
@@ -59,7 +90,90 @@ export class Hud {
     this.boostEl.classList.toggle("low", flight.boostEnergy < T.flight.boostMinEngage && !flight.boosting);
     this.hintEl.classList.toggle("hidden", input.locked);
   }
+
+  /** Combat layer: HP, mission line, target box + lead, off-screen arrow, end cards. */
+  updateCombat(combat: Combat, mission: Mission, cam: Camera, playerVel: Vector3): void {
+    const P = combat.player;
+    this.hpEl.style.width = `${((P.hp / T.player.hp) * 100).toFixed(1)}%`;
+    this.hpEl.classList.toggle("hurt", P.hp < T.player.hp * 0.35);
+    const obj = `${mission.line}  ·  kills ${P.kills}`;
+    if (obj !== this.lastObj) {
+      this.lastObj = obj;
+      this.titleEl.textContent = mission.def.title;
+      this.objEl.textContent = obj;
+    }
+    this.target(combat, cam, playerVel);
+    this.cards(combat, mission);
+  }
+
+  private target(combat: Combat, cam: Camera, playerVel: Vector3): void {
+    // nearest live enemy
+    let best: (typeof combat.enemies.list)[number] | null = null, bd = Infinity;
+    for (const e of combat.enemies.list) {
+      if (!e.alive) continue;
+      const d = e.pos.distanceToSquared(combat.player.pos);
+      if (d < bd) (bd = d), (best = e);
+    }
+    if (!best) {
+      this.tgtEl.classList.remove("on");
+      this.leadEl.classList.remove("on");
+      this.arrowEl.classList.remove("on");
+      return;
+    }
+    const w = window.innerWidth, h = window.innerHeight;
+    _s.copy(best.pos).project(cam);
+    const onScreen = _s.z < 1 && Math.abs(_s.x) < 1 && Math.abs(_s.y) < 1;
+    this.tgtEl.classList.toggle("on", onScreen);
+    this.arrowEl.classList.toggle("on", !onScreen);
+    if (onScreen) {
+      const dist = Math.sqrt(bd);
+      this.tgtEl.style.left = `${((_s.x + 1) * 0.5 * w).toFixed(0)}px`;
+      this.tgtEl.style.top = `${((1 - _s.y) * 0.5 * h).toFixed(0)}px`;
+      this.tgtEl.classList.toggle("locked", dist < T.weapons.range * 0.6);
+      this.tgtLabel.textContent = `${Math.round(dist)} m`;
+      // lead: where a round fired now meets the target (first-order)
+      const closing = Math.max(120, T.weapons.muzzleSpeed);
+      const t = dist / closing;
+      _l.copy(best.pos).addScaledVector(best.vel, t).addScaledVector(playerVel, -t).project(cam);
+      const leadOn = _l.z < 1 && Math.abs(_l.x) < 1 && Math.abs(_l.y) < 1;
+      this.leadEl.classList.toggle("on", leadOn);
+      if (leadOn) {
+        this.leadEl.style.left = `${((_l.x + 1) * 0.5 * w).toFixed(0)}px`;
+        this.leadEl.style.top = `${((1 - _l.y) * 0.5 * h).toFixed(0)}px`;
+      }
+    } else {
+      this.leadEl.classList.remove("on");
+      // behind or off the edge: arrow on a ring around the reticle, pointing the way
+      let x = _s.x, y = _s.y;
+      if (_s.z >= 1) (x = -x), (y = -y);
+      const a = Math.atan2(x, y);
+      const R = Math.min(w, h) * 0.22;
+      this.arrowEl.style.transform = `translate(${(Math.sin(a) * R).toFixed(0)}px, ${(-Math.cos(a) * R).toFixed(0)}px) rotate(${a.toFixed(3)}rad)`;
+    }
+  }
+
+  private cards(combat: Combat, mission: Mission): void {
+    const P = combat.player;
+    const key = mission.phase === "complete" || mission.phase === "lost" ? mission.phase : "";
+    if (key === this.cardShown) return;
+    this.cardShown = key;
+    this.cardEl.classList.toggle("on", key !== "");
+    if (key === "") return;
+    this.cardH.classList.toggle("lost", key === "lost");
+    if (key === "lost") {
+      this.cardH.textContent = "SHIP LOST";
+      this.cardP.textContent = `${P.kills} gliders down before the belt took you.`;
+    } else {
+      const acc = P.fired ? Math.round((100 * P.hits) / P.fired) : 0;
+      const m = Math.floor(mission.clock / 60), s = Math.floor(mission.clock % 60);
+      this.cardH.textContent = "FIELD CLEAR";
+      this.cardP.textContent = `time ${m}:${String(s).padStart(2, "0")}\nkills ${P.kills}\naccuracy ${acc}%\nhull ${Math.round(P.hp)}%`;
+    }
+  }
 }
+
+const _s = new V3();
+const _l = new V3();
 
 function must<T>(v: T | null): T {
   if (v === null) throw new Error("HUD element missing from index.html");

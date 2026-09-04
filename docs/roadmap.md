@@ -94,21 +94,21 @@ Ethan on round 2: "fantastic ... especially the graphics"; plumes still glitch (
 - [x] Plumes: both cones opaque with the chevron notches cut out (a cel flame is a solid shape), base seated inside the nozzle. Verified on `2026-09-04c-{rear,chase}.png`. *(2026-09-04)*
 - [x] Boost energy: `Flight.boostEnergy` drains while boosting, recharges when not, cannot re-engage below a floor; thin orange bar above the throttle bar. Tunables `boostDrain`, `boostRecharge`, `boostMinEngage`. *(2026-09-04)*
 - [x] Rock collision narrow phase: bounding sphere, then the ship point against the rock's face planes in rock space (`Asteroids.planes`, `Hazards.narrow`). *(2026-09-04, untested by a human)*
-- [ ] Ship likeness pass 2: longer slender nose, canopy further forward, boxy side intakes under the wing roots, wing notch, canted twin tails, two large rocket exhausts, flatter hull. Top and side captures against the show's fighter.
+- [x] Ship likeness pass 2: longer slender nose, canopy further forward, boxy side intakes under the wing roots, wing notch, canted twin tails, two large rocket exhausts, flatter hull. Top and side captures against the show's fighter. (2026-09-04: F-11 rebuilt after the F-302: blunt drooped nose, tandem canopy, boxy side intakes, cropped delta, four engines, canted fins; `docs/shots/f302-pass7-*.png` vs `f302-pass0-*`. Still missing: intake taper, gun ports, weapons bay.)
 - [x] DECISIONS: both schemes stay (supersedes "the loser is deleted"). *(2026-09-04)*
 
 **Exit:** round-3 captures plus a chat rundown for Ethan's return.
 
 ### M2 — First playable level ("Clear the field")
 Rewritten 2026-09-04 from the pre-M1 sketch. One mission you can play start to finish in 5–10 minutes: you are already in the field; gliders arrive in waves; clear them; a mission-complete card with time and accuracy; restart. Gate transit, hub and mission select are M4.
-- [ ] <!-- workspace:id=work:7b8a8fda-764e-5a7a-ab08-c8e32aaada66 --> Guns: twin fast projectiles (pooled, instanced), muzzle flash, tracer, impact spark. Fire on LMB (`input.fire` already exists). Fire rate and spread in `T.weapons`.
-- [ ] <!-- workspace:id=work:cd7ab24a-d901-5d00-b5ca-ff2d953a304a --> Target: a death-glider-style enemy hull from the builder (crescent wings, central pod) with a pursue / fire-when-aligned / break-off / evade-when-hit state machine, rough rock avoidance, waves of 3–6.
-- [ ] <!-- workspace:id=work:4d78adab-7972-573f-8f27-f2317ecaeaeb --> Damage: HP for player and enemies, hit flash, destruction explosion (flash + debris chunks + glow), enemy shots that hurt the player.
-- [ ] <!-- workspace:id=work:ff1206d5-01e6-5dfc-b447-bb6eb76d3219 --> HUD: reticle, target box with lead indicator, off-screen target arrows, HP bar, kill counter, wave/objective line.
-- [ ] <!-- workspace:id=work:aff1406c-5afc-5dd4-8ca5-a6fe6b36ea16 --> Player death → "ship lost" card → restart; mission complete card (time, kills, accuracy) → restart.
-- [ ] Mission script (`src/mission/`): intro line, 3 waves, a final heavier target (bomber-scale hull) as the finale; all counts and timings in data, not code.
-- [ ] Sound, minimal WebAudio synthesis (pulled forward from M5 because it carries most of the "dogfight" feel): engine hum by speed, cannon, hit, explosion, boost. Mute key.
-- [ ] Captures of a fight (`scripts/capture-shots.mjs` gains a `fight` view that lets a wave spawn), STATUS/changelog/DECISIONS updated, chat rundown.
+- [x] <!-- workspace:id=work:7b8a8fda-764e-5a7a-ab08-c8e32aaada66 --> (2026-09-04, `combat/projectiles.ts` + `combat/combat.ts`, no muzzle-flash mesh beyond a glow disc) Guns: twin fast projectiles (pooled, instanced), muzzle flash, tracer, impact spark. Fire on LMB (`input.fire` already exists). Fire rate and spread in `T.weapons`.
+- [x] <!-- workspace:id=work:cd7ab24a-d901-5d00-b5ca-ff2d953a304a --> (2026-09-04, `combat/enemies.ts` + `combat/glider-def.ts`; waves of 2/3/5, AI verified headless: it closes, shoots, hurts) Target: a death-glider-style enemy hull from the builder (crescent wings, central pod) with a pursue / fire-when-aligned / break-off / evade-when-hit state machine, rough rock avoidance, waves of 3–6.
+- [x] <!-- workspace:id=work:4d78adab-7972-573f-8f27-f2317ecaeaeb --> (2026-09-04, `fx/explosion.ts`; 4 hits kills a glider) Damage: HP for player and enemies, hit flash, destruction explosion (flash + debris chunks + glow), enemy shots that hurt the player.
+- [x] <!-- workspace:id=work:ff1206d5-01e6-5dfc-b447-bb6eb76d3219 --> (2026-09-04, `ui/hud.ts` `updateCombat`; one arrow for the nearest target, not one per target) HUD: reticle, target box with lead indicator, off-screen target arrows, HP bar, kill counter, wave/objective line.
+- [x] <!-- workspace:id=work:aff1406c-5afc-5dd4-8ca5-a6fe6b36ea16 --> (2026-09-04, cards in `index.html`, R reloads) Player death → "ship lost" card → restart; mission complete card (time, kills, accuracy) → restart.
+- [x] (2026-09-04, `mission/mission.ts`, `CLEAR_THE_FIELD` data) Mission script (`src/mission/`): intro line, 3 waves; all counts and timings in data, not code. **Dropped from this pass:** the heavier finale hull, the third wave is 5 gliders instead. Bomber-scale target moves to M3 (fleet).
+- [x] (2026-09-04, `audio/audio.ts`, unheard by anyone yet: headless has no speakers) Sound, minimal WebAudio synthesis (pulled forward from M5 because it carries most of the "dogfight" feel): engine hum by speed, cannon, hit, explosion, boost. Mute key.
+- [x] (2026-09-04, `docs/shots/2026-09-04d-fight.png`) Captures of a fight (`scripts/capture-shots.mjs` gains a `fight` view that lets a wave spawn), STATUS/changelog/DECISIONS updated, chat rundown.
 - **Exit:** Ethan plays "Clear the field" through once and has feedback that is about the game, not the tooling.
 
 ### M3 — Fleet & factions

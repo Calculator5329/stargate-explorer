@@ -22,6 +22,27 @@
       #hud .flash { position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse at center, rgba(255,80,40,0) 45%, rgba(255,80,40,.9) 100%); }
       #hud .scheme { position: absolute; right: 24px; bottom: 24px; font-size: 13px; letter-spacing: .18em; color: #ffd9a8; opacity: 0; }
       #hud .perf { position: absolute; right: 24px; top: 16px; font-size: 12px; text-align: right; white-space: pre; opacity: .8; }
+      #hud .hp { position: absolute; left: 24px; bottom: 90px; width: 160px; height: 4px; background: rgba(255,120,120,.2); }
+      #hud .hp > i { display: block; height: 100%; width: 100%; background: #9fe3a0; }
+      #hud .hp > i.hurt { background: #ff6a4a; }
+      #hud .mission { position: absolute; left: 24px; top: 16px; font-size: 13px; letter-spacing: .12em; color: #ffd9a8; }
+      #hud .mission .obj { display: block; color: #cfe9ff; letter-spacing: .04em; margin-top: 4px; font-size: 14px; opacity: .9; }
+      #hud .reticle { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 1.5px solid rgba(207,233,255,.75); border-radius: 50%; }
+      #hud .reticle::after { content: ""; position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px; background: #cfe9ff; }
+      #hud .tgt { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; border: 1.5px solid #ffb36b; display: none; }
+      #hud .tgt.on { display: block; }
+      #hud .tgt.locked { border-color: #ff5a3a; }
+      #hud .tgt small { position: absolute; left: 0; top: 100%; margin-top: 4px; font-size: 11px; color: #ffd9a8; white-space: nowrap; }
+      #hud .lead { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border: 1.5px solid #ffb36b; border-radius: 50%; display: none; }
+      #hud .lead.on { display: block; }
+      #hud .arrow { position: absolute; left: 50%; top: 50%; width: 0; height: 0; margin: -8px 0 0 -8px; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 16px solid #ffb36b; display: none; transform-origin: 50% 50%; }
+      #hud .arrow.on { display: block; }
+      #hud .card { position: absolute; left: 0; right: 0; top: 34%; text-align: center; display: none; }
+      #hud .card.on { display: block; }
+      #hud .card h1 { margin: 0; font-size: 34px; letter-spacing: .3em; font-weight: 500; color: #ffd9a8; }
+      #hud .card h1.lost { color: #ff6a4a; }
+      #hud .card p { margin: 14px 0 0; font-size: 15px; letter-spacing: .06em; opacity: .9; white-space: pre-line; }
+      #hud .card .again { margin-top: 26px; font-size: 13px; letter-spacing: .2em; opacity: .7; animation: blink 1.2s steps(2) infinite; }
       .lil-gui { --width: 300px; }
     </style>
   </head>
@@ -31,6 +52,13 @@
       <div class="warn hidden">LEAVING THE FIELD &middot; TURN BACK</div>
       <div class="hint"></div>
       <div class="scheme"></div>
+      <div class="reticle"></div>
+      <div class="tgt"><small></small></div>
+      <div class="lead"></div>
+      <div class="arrow"></div>
+      <div class="mission"><span class="title"></span><span class="obj"></span></div>
+      <div class="hp"><i></i></div>
+      <div class="card"><h1></h1><p></p><div class="again">R · FLY AGAIN</div></div>
       <div class="boost"><i></i></div>
       <div class="throttle"><i></i></div>
       <div class="speed"><span class="v">0</span><small>m/s</small></div>

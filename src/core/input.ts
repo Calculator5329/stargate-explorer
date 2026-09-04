@@ -23,7 +23,7 @@ export class Input {
   barrel = 0;
   space = false;
   boost = false;
-  /** Tracked for M2; nothing consumes it yet. */
+  /** LMB held (only while pointer-locked) */
   fire = false;
   locked = false;
 
@@ -33,13 +33,19 @@ export class Input {
   private lastTap = { code: "", t: -1 };
   private pendingBarrel = 0;
 
-  constructor(el: HTMLElement, scheme: SchemeName, enabled = true) {
+  /**
+   * `freeLock` (`?lock=free`) treats the pointer as locked from the first frame, so headless
+   * captures and automated tests can fly and fire without a real pointer lock.
+   */
+  constructor(el: HTMLElement, scheme: SchemeName, enabled = true, freeLock = false) {
     this.scheme = new Scheme(scheme);
     if (!enabled) return;
+    this.locked = freeLock;
     el.addEventListener("click", () => {
       if (!this.locked) el.requestPointerLock();
     });
     document.addEventListener("pointerlockchange", () => {
+      if (freeLock) return;
       this.locked = document.pointerLockElement === el;
       if (!this.locked) this.mdx = this.mdy = 0;
     });

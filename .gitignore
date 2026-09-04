@@ -9,3 +9,6 @@ docs/shots/*.mp4
 
 # agent-orchestrator local state
 .orc/
+
+# scratch captures from test scripts
+docs/shots/_*.png

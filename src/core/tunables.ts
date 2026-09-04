@@ -78,6 +78,29 @@ export const T = {
     enemyDamage: 7,
     enemySpread: 0.02,
   },
+  enemy: {
+    hp: 40,
+    cruise: 130,
+    dash: 190,
+    accel: 70,
+    /** rad/s */
+    turnRate: 1.3,
+    /** roll gain into a turn (rad/s per unit of sideways want) */
+    bank: 2.5,
+    /** half-angle of the cone inside which it shoots (rad) */
+    fireCone: 0.09,
+    /** closer than this it peels off */
+    breakDist: 110,
+    /** clearance kept from rock surfaces */
+    avoidDist: 90,
+    radius: 5.5,
+  },
+  player: {
+    hp: 100,
+    /** hp regained per second after `regenDelay` seconds without a hit */
+    regen: 4,
+    regenDelay: 6,
+  },
   arena: {
     /** play-field radius; beyond it a soft current turns you back */
     radius: 1500,

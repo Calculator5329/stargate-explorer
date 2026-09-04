@@ -35,11 +35,15 @@ src/
   render/  renderer + post stack, chase camera, inspect views, perf overlay
   world/   procedural skybox, planet, sun, asteroids, World composition
   ships/   parametric builder, ship defs, palettes, rig (ship + plumes), GLTF loader
-  fx/      engine plumes, speed dust (particles, flashes later)
-  ui/      DOM HUD, debug panel
+  fx/      engine plumes, speed dust, explosions
+  combat/  projectiles (pooled tracers), enemies (glider AI), combat (weapons + hit resolution), glider-def (enemy hull)
+  mission/ mission state machine + level data (CLEAR_THE_FIELD)
+  audio/   WebAudio synth (no assets)
+  ui/      DOM HUD (flight + combat layers), debug panel
+  game.ts  the layer above flight: owns combat, mission, audio; main.ts only wires it
 docs/      roadmap, STATUS, DECISIONS, GRAPHICS, changelog, refs/, shots/
 ```
-New systems get their own folder under `src/` (e.g. `src/combat/`, `src/ai/`, `src/fx/`). Keep `main.ts` as wiring only (61 lines today; the M0 exit said under 60, treat it as a ceiling to trend back to).
+New systems get their own folder under `src/` and are wired through `game.ts`, not `main.ts`. Keep `main.ts` as wiring only (66 lines today; the M0 exit said under 60, treat it as a ceiling to trend back to). Headless checks: `?lock=free` skips pointer lock and `window.__game` / `window.__flight` are exposed, so a playwright script can spawn enemies, hold fire and read kills (`scripts/fight-test.mjs` does exactly that; `capture-shots.mjs` `fight` view for the picture).
 
 ## Working style
 - Small, verifiable steps. After any visual change, capture `?view=side&spin=0`, `?view=rear&spin=0` and the chase view into `docs/shots/YYYY-MM-DD-view.png` and compare against the previous one. Captures come from `node scripts/capture-shots.mjs` (headless Chromium via `playwright-core`, see `docs/shots/README.md`); the in-app preview pane cannot zoom or measure fps.

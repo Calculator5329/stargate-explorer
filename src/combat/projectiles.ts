@@ -1,0 +1,100 @@
+import * as THREE from "three";
+import { T } from "@/core/tunables";
+import { noEdge } from "@/render/layers";
+
+/** Who fired: player shots hit enemies, enemy shots hit the player. */
+export type Side = "player" | "enemy";
+
+export interface Shot {
+  alive: boolean;
+  side: Side;
+  pos: THREE.Vector3;
+  vel: THREE.Vector3;
+  ttl: number;
+}
+
+const _dir = new THREE.Vector3();
+const _obj = new THREE.Object3D();
+const _up = new THREE.Vector3(0, 1, 0);
+const HIDDEN = new THREE.Matrix4().makeScale(0, 0, 0);
+
+/**
+ * Pooled tracer rounds. One InstancedMesh per side (player: warm, enemy: hot
+ * orange); each tracer is a thin box stretched along its velocity. Motion is
+ * simulated in `tick`; hits are resolved by whoever owns the targets
+ * (`combat/combat.ts`), which calls `kill()`.
+ */
+export class Projectiles {
+  readonly group = new THREE.Group();
+  readonly shots: Shot[] = [];
+  private readonly meshes: Record<Side, THREE.InstancedMesh>;
+
+  constructor(capacity = 256) {
+    const geo = new THREE.BoxGeometry(0.4, 0.4, 1);
+    const mat = (c: number, k: number) => {
+      const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(k) });
+      m.toneMapped = false;
+      return m;
+    };
+    this.meshes = {
+      player: noEdge(new THREE.InstancedMesh(geo, mat(0xbfe6ff, 2.6), capacity)),
+      enemy: noEdge(new THREE.InstancedMesh(geo, mat(0xffa040, 2.6), capacity)),
+    };
+    for (const side of ["player", "enemy"] as const) {
+      const m = this.meshes[side];
+      m.frustumCulled = false;
+      for (let i = 0; i < capacity; i++) m.setMatrixAt(i, HIDDEN);
+      this.group.add(m);
+    }
+    for (let i = 0; i < capacity * 2; i++) {
+      this.shots.push({ alive: false, side: i < capacity ? "player" : "enemy", pos: new THREE.Vector3(), vel: new THREE.Vector3(), ttl: 0 });
+    }
+  }
+
+  /** Spawn a round at `pos` travelling along `dir` at the side's muzzle speed plus the shooter's velocity. */
+  fire(side: Side, pos: THREE.Vector3, dir: THREE.Vector3, shooterVel: THREE.Vector3): boolean {
+    const s = this.shots.find((x) => !x.alive && x.side === side);
+    if (!s) return false;
+    const w = T.weapons;
+    s.alive = true;
+    s.pos.copy(pos);
+    s.vel.copy(dir).multiplyScalar(side === "player" ? w.muzzleSpeed : w.enemyMuzzleSpeed).add(shooterVel);
+    s.ttl = w.range / (side === "player" ? w.muzzleSpeed : w.enemyMuzzleSpeed);
+    return true;
+  }
+
+  kill(s: Shot): void {
+    s.alive = false;
+  }
+
+  tick(dt: number): void {
+    for (const s of this.shots) {
+      if (!s.alive) continue;
+      s.ttl -= dt;
+      if (s.ttl <= 0) s.alive = false;
+      else s.pos.addScaledVector(s.vel, dt);
+    }
+  }
+
+  /** Rebuild instance matrices: length follows speed so a tracer is a streak, not a dot. */
+  update(): void {
+    let pi = 0, ei = 0;
+    const cap = this.meshes.player.count;
+    for (const s of this.shots) {
+      if (!s.alive) continue;
+      const m = this.meshes[s.side];
+      const i = s.side === "player" ? pi++ : ei++;
+      if (i >= cap) continue;
+      const len = Math.max(6, s.vel.length() * T.weapons.tracerSec);
+      _obj.position.copy(s.pos).addScaledVector(_dir.copy(s.vel).normalize(), -len / 2);
+      _obj.quaternion.setFromUnitVectors(_up.set(0, 0, 1), _dir);
+      _obj.scale.set(1, 1, len);
+      _obj.updateMatrix();
+      m.setMatrixAt(i, _obj.matrix);
+    }
+    for (let i = pi; i < cap; i++) this.meshes.player.setMatrixAt(i, HIDDEN);
+    for (let i = ei; i < cap; i++) this.meshes.enemy.setMatrixAt(i, HIDDEN);
+    this.meshes.player.instanceMatrix.needsUpdate = true;
+    this.meshes.enemy.instanceMatrix.needsUpdate = true;
+  }
+}

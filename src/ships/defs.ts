@@ -59,6 +59,12 @@ export interface EngineDef {
   length: number;
   /** open dark intake at the front instead of a pointed cap */
   intake?: boolean;
+  /** cross-section width/height multipliers on `radius`; default [1, 1] (square) */
+  aspect?: [number, number];
+  /** superellipse exponent of the body sections: 2 = round, 5+ = a rounded-corner box */
+  boxiness?: number;
+  /** ring vertex count; 12 by default, raise it so a boxy section keeps crisp corners */
+  segments?: number;
 }
 
 /**
@@ -124,64 +130,86 @@ export interface ShipDef {
 }
 
 /**
- * Player fighter, ~17 m long, ~14 m span, modelled on the show's twin-engine
- * space-superiority fighter: long flat wedge nose, tandem canopy far forward,
- * wide flat body, anhedral swept wings, two intake-fed engines on top of the
- * aft fuselage with outward-canted fins on them, booster pods under the wings.
+ * Player fighter, ~15.7 m long, ~13.7 m span, modelled on the show's twin-engine
+ * space-superiority fighter. The body is a broad flat wedge: a deep flat-decked
+ * fuselage that reads as an arrow from above and a shallow slab from the side,
+ * with a short slender nose that droops at the tip and a tandem two-seat canopy
+ * sitting far forward on the deck, its two frame bands splitting the seats.
+ * The defining feature is the pair of rectangular intake boxes on the sides at
+ * the wing roots, mouths open at z = +2.1, running aft to feed the round jet
+ * exhausts behind them. Cropped-delta wings (45 deg leading edge, dead straight
+ * trailing edge, slight anhedral) carry wingtip missile rails. The tail is
+ * deliberately chunky: two large round rocket bells low and central, the two jet
+ * nozzles outboard of them, and two vertical tails canted 24 deg outward off the
+ * aft deck. Markings are minimal, as the show's are: recessed panel breaks, a
+ * small nose number and one dark stripe per wing.
  */
 export const F11_HALBERD: ShipDef = {
   name: "F-11 Halberd",
   ringVerts: 16,
   hull: [
-    { z: 9.2, w: 0.14, h: 0.06, n: 2.2 },
-    { z: 7.6, w: 0.55, h: 0.22, n: 2.6 },
-    { z: 5.8, w: 1.0, h: 0.42, n: 3.0 },
-    { z: 3.8, w: 1.5, h: 0.6, n: 3.4, yOff: 0.02 },
-    { z: 1.5, w: 2.1, h: 0.72, n: 3.8 },
-    { z: -1.0, w: 2.5, h: 0.78, n: 4.0 },
-    { z: -3.5, w: 2.5, h: 0.75, n: 4.0 },
-    { z: -6.0, w: 2.0, h: 0.62, n: 3.4 },
-    { z: -7.6, w: 1.4, h: 0.45, n: 3.0 },
+    { z: 7.0, w: 0.34, h: 0.2, n: 2.4, yOff: -0.44 },
+    { z: 6.1, w: 0.82, h: 0.42, n: 3.2, yOff: -0.34 },
+    { z: 5.1, w: 1.28, h: 0.6, n: 3.8, yOff: -0.2 },
+    { z: 3.9, w: 1.68, h: 0.72, n: 4.2, yOff: -0.16 },
+    { z: 2.2, w: 1.98, h: 0.78, n: 4.4, yOff: -0.18 },
+    { z: 0.4, w: 2.2, h: 0.82, n: 4.6, yOff: -0.2 },
+    { z: -1.8, w: 2.25, h: 0.84, n: 4.6, yOff: -0.22 },
+    { z: -4.2, w: 2.1, h: 0.8, n: 4.2, yOff: -0.22 },
+    { z: -6.4, w: 1.72, h: 0.68, n: 3.8, yOff: -0.2 },
+    { z: -8.0, w: 1.32, h: 0.54, n: 3.4, yOff: -0.16 },
   ],
+  // panel breaks only: the show's airframe is one flat grey with recessed plates
   panels: [
     { ring: 5, seg: 3, mirror: true },
     { ring: 4, seg: 3, mirror: true },
-    { ring: 6, seg: 3, mirror: true },
-    { ring: 2, seg: 1, mirror: true },
-    { ring: 3, seg: 14, mirror: true },
-    { ring: 5, seg: 13, mirror: true },
+    { ring: 3, seg: 2, mirror: true },
+    { ring: 6, seg: 1, mirror: true },
+    { ring: 2, seg: 11, mirror: true },
+    { ring: 3, seg: 12, mirror: true },
   ],
-  stripes: [{ seg: 0, ringFrom: 1, ringTo: 6, mirror: true }],
+  stripes: [],
   canopy: {
     sections: [
-      { z: 6.7, w: 0.26, h: 0.1, n: 2.4, yOff: 0.34 },
-      { z: 5.7, w: 0.5, h: 0.42, n: 2.4, yOff: 0.4 },
-      { z: 4.5, w: 0.6, h: 0.5, n: 2.6, yOff: 0.48 },
-      { z: 3.5, w: 0.56, h: 0.34, n: 2.6, yOff: 0.62 },
+      { z: 5.9, w: 0.38, h: 0.18, n: 2.4, yOff: 0.14 },
+      { z: 5.0, w: 0.7, h: 0.44, n: 2.6, yOff: 0.3 },
+      { z: 3.9, w: 0.84, h: 0.56, n: 2.8, yOff: 0.4 },
+      { z: 2.7, w: 0.78, h: 0.48, n: 2.8, yOff: 0.44 },
+      { z: 1.7, w: 0.56, h: 0.28, n: 2.8, yOff: 0.48 },
     ],
-    frameBands: [1, 2],
+    frameBands: [1, 3],
   },
   wings: [
-    { root: [2.3, -0.1, -0.8], span: 4.6, rootChord: 5.6, tipChord: 1.5, sweep: 3.4, dihedral: -0.06, thickness: 0.2 },
-    // nose chines: thin strakes blending the wedge nose into the wing roots
-    { root: [0.5, 0.0, 4.6], span: 1.1, rootChord: 6.4, tipChord: 2.2, sweep: 4.0, dihedral: 0, thickness: 0.08 },
+    // cropped delta: 45 deg leading edge, trailing edge dead straight across the span
+    { root: [1.9, -0.35, -0.8], span: 4.8, rootChord: 7.2, tipChord: 2.2, sweep: 5.0, dihedral: -0.09, thickness: 0.2 },
+    // nose chines: thin strakes carrying the wedge nose back into the intake mouths
+    { root: [0.5, -0.04, 3.9], span: 1.8, rootChord: 4.6, tipChord: 2.2, sweep: 2.4, dihedral: -0.05, thickness: 0.1 },
   ],
   fins: [
-    { root: [1.45, 1.3, -5.2], height: 1.7, rootChord: 2.0, tipChord: 0.7, sweep: 1.1, angle: Math.PI / 2 - 0.35, thickness: 0.1 },
-    { root: [-1.45, 1.3, -5.2], height: 1.7, rootChord: 2.0, tipChord: 0.7, sweep: 1.1, angle: Math.PI / 2 + 0.35, thickness: 0.1 },
+    { root: [1.55, 0.42, -4.3], height: 2.4, rootChord: 3.2, tipChord: 1.1, sweep: 2.2, angle: Math.PI / 2 - 0.42, thickness: 0.12 },
+    { root: [-1.55, 0.42, -4.3], height: 2.4, rootChord: 3.2, tipChord: 1.1, sweep: 2.2, angle: Math.PI / 2 + 0.42, thickness: 0.12 },
   ],
   engines: [
-    { pos: [0.95, 0.85, -4.4], radius: 0.62, length: 4.6, intake: true },
-    { pos: [-0.95, 0.85, -4.4], radius: 0.62, length: 4.6, intake: true },
+    // jet exhausts, emerging from behind the intake boxes
+    { pos: [2.15, -0.1, -5.6], radius: 0.5, length: 2.4 },
+    { pos: [-2.15, -0.1, -5.6], radius: 0.5, length: 2.4 },
+    // rocket bells, big and round, low and central between them
+    { pos: [0.85, -0.18, -6.5], radius: 0.72, length: 2.2 },
+    { pos: [-0.85, -0.18, -6.5], radius: 0.72, length: 2.2 },
   ],
   pods: [
-    { pos: [3.1, -0.5, -1.4], radius: 0.38, length: 3.8 },
-    { pos: [-3.1, -0.5, -1.4], radius: 0.38, length: 3.8 },
+    // the defining feature: boxy intake ducts on the sides at the wing roots,
+    // mouths open at z = +2.1, running aft to feed the jet exhausts
+    { pos: [2.35, -0.05, -1.2], radius: 0.75, length: 6.6, intake: true, aspect: [0.95, 1.0], boxiness: 5.5, segments: 16 },
+    { pos: [-2.35, -0.05, -1.2], radius: 0.75, length: 6.6, intake: true, aspect: [0.95, 1.0], boxiness: 5.5, segments: 16 },
+    // wingtip missile rails
+    { pos: [6.7, -0.78, -2.7], radius: 0.16, length: 3.4 },
+    { pos: [-6.7, -0.78, -2.7], radius: 0.16, length: 3.4 },
   ],
-  hatches: [{ pos: [0, 0.78, -1.6], size: [1.0, 1.6], face: "top" }],
+  hatches: [{ pos: [0, 0.6, -1.4], size: [0.9, 1.4], face: "top" }],
   decals: [
-    { kind: "number", text: "11", pos: [0.86, 0.1, 6.5], rot: [0, Math.PI / 2, 0], size: [0.8, 0.4], mirror: true },
-    { kind: "stripe", pos: [4.4, 0.06, -2.6], rot: [-Math.PI / 2, 0, 0], size: [1.6, 0.5], mirror: true, slot: "dark" },
+    { kind: "number", text: "11", pos: [0.8, -0.26, 5.4], rot: [0, Math.PI / 2, 0], size: [0.55, 0.28], mirror: true },
+    { kind: "stripe", pos: [4.0, -0.44, -2.4], rot: [-Math.PI / 2, 0, 0], size: [1.2, 0.35], mirror: true, slot: "dark" },
   ],
   palette: PALETTES.tauri,
 };
