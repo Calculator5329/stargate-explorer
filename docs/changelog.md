@@ -2,6 +2,16 @@
 
 Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
+## 2026-09-04 (overnight) — Missions, hub, menu, Prometheus, Ha'tak, new FX
+
+- **Mission framework** (`mission/levels.ts` data, `mission/mission.ts` base + `Waves`, runners `clear.ts` / `run.ts` / `protect.ts` / `strike.ts`, `mission/index.ts` factory): four levels. *Clear the Field* (as before). *The Gauntlet*: 12 glowing gates laid on an S-curve through the belt, 90 s, gliders join at gate 5; the next gate is amber and boxed on the HUD. *Cover the Prometheus*: the Prometheus (600 hull, 26 m/s) crawls toward the gate while two thirds of each wave go for her; her hull is in the mission line; lose her, lose the mission. *Bring Down the Ha'tak*: a capital ship 1.7 km ahead; six ring turrets shoot back (1 km range), shield nodes are hardened until the turrets fall, the hull takes damage once the nodes are gone, staged death, first clear unlocks the Prometheus. Missions register their shootable parts with `Combat.extras` and their protectees with `Combat.friendlies`; lock, missiles, cannon hits and the HUD box all work on the shared `Tracked`/`Lockable` shape. Each glider picks its target from `Enemies.targets` round-robin.
+- **Mission select** (`ui/hub.ts`, MISSIONS button): cards with lock chain, best time and completions; ship row with stats; LAUNCH reloads with `?mission=&ship=`. Progress in `core/save.ts` (`Game.record` is the only writer).
+- **Start / pause menu** (`ui/menu.ts`): Esc (pointer unlock) pauses the sim and opens it; scheme, flight assist, mouse sensitivity (× `stickGain`), difficulty (`core/difficulty.ts`: easy/normal/hard multipliers on enemy speed, hp, fire rate, damage, spread), mute, restart. Settings persist.
+- **Ship stats applied**: `ShipStats` scale speed/agility (Flight), hull/guns/rack (Combat), and a `size` that scales the chase camera and collision radius. Prometheus (`ships/prometheus-def.ts`, BC-303-style slab hull, tower, two stern engine blocks, 6.7k tris): 70 % speed, 45 % agility, 600 hull, 2.2× guns, 16 missiles.
+- **Ha'tak** (`combat/capital.ts` + `capital-geo.ts`): pyramid in a ring with lobes, 6 dome turrets, 3 shield nodes, glow window strips, hangar gate; `aimAt`, `damagePart`, staged `die`; 5.9k tris.
+- **FX rewrite** (`fx/explosion.ts`, `fx-util.ts`): eight shared instanced meshes for every burst; white pop → shockwave ring → lumpy two-tone fireball → tumbling chunks with ember streaks → toon smoke puffs. `crash(pos, normal, speed)` dust cone + chips, wired to player rock hits (`Combat`) and glider scrapes (`Enemies.onCrash`).
+- Captures: `docs/shots/hub-pass1.png`, `menu-pass1-menu.png`, `menu-pass2-prometheus.png`, `mission-pass2-gauntlet.png`, `mission-pass1-hatak-dying.png`, `capital-pass3-*`, `prom-pass4-*`, `fx-pass5-*`.
+
 ## 2026-09-04 (overnight) — Lock-on missiles
 
 - `combat/missiles.ts`: RMB launches a homing missile once a glider has sat inside the lock cone (`T.missile.lockCone`, `lockTime` 0.9 s); six per sortie, restocked each wave; proximity fuse; 60 damage (a glider dies to one). HUD box shrinks onto the target as the lock builds, dashed while locking, red + "LOCK" when ready; missile rack shown above the HP bar. Lock tone and launch whoosh.

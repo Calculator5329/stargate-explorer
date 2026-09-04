@@ -39,8 +39,9 @@ export class Flight {
   readonly velDir = new Vector3(0, 0, 1);
   readonly vel = new Vector3(0, 0, T.flight.minSpeed);
   speed = T.flight.minSpeed;
-  /** normal impact speed of the last rock hit (m/s); consumers read and clear it */
+  /** normal impact speed of the last rock hit (m/s) and its surface normal; consumers read and clear the speed */
   lastImpact = 0;
+  readonly lastImpactNormal = new Vector3(0, 1, 0);
   throttle = 0.5;
   boosting = false;
   /** 0..1, drains while boosting; boost cannot re-engage below `boostMinEngage` (Ethan: "not overpowered") */
@@ -142,6 +143,7 @@ export class Flight {
   bounce(n: Vector3): void {
     _n.copy(n);
     const into = -this.vel.dot(_n); // normal impact speed, positive when moving into the face
+    if (into >= this.lastImpact) this.lastImpactNormal.copy(_n);
     this.lastImpact = Math.max(this.lastImpact, into);
     if (into > 0) this.vel.addScaledVector(_n, 2 * into);
     const speed = this.vel.length();

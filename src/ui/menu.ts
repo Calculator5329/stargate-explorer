@@ -25,7 +25,7 @@ export class Menu {
   private readonly title: HTMLElement;
   private readonly sub: HTMLElement;
 
-  constructor(root: HTMLElement, canvas: HTMLElement, save: Save, hooks: MenuHooks, enabled = true) {
+  constructor(root: HTMLElement, canvas: HTMLElement, save: Save, hooks: MenuHooks, enabled = true, private readonly missionTitle = "") {
     this.el = root;
     this.title = q(root, ".title");
     this.sub = q(root, ".sub");
@@ -77,7 +77,7 @@ export class Menu {
     this.el.classList.toggle("on", open);
     if (!open) return;
     this.title.textContent = first ? "STARGATE EXPLORER" : "PAUSED";
-    this.sub.textContent = first ? "F-302 · the belt · gliders inbound" : "Esc released the pointer. FLY to resume.";
+    this.sub.textContent = first ? `${this.missionTitle}  ·  MISSIONS to pick another sortie` : "Paused. FLY to resume.";
   }
 }
 

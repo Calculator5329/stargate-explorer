@@ -5,6 +5,7 @@ import type { Camera, Vector3 } from "three";
 import { Vector3 as V3 } from "three";
 import type { Combat } from "@/combat/combat";
 import type { Mission } from "@/mission/mission";
+import type { Tracked } from "@/combat/targets";
 
 const HINTS = {
   arcade: "click to fly · mouse steers · W pull up / S dive · A/D roll (double-tap: barrel roll) · Shift boost · Space brake · LMB fire · C classic · X flight assist · ` tuning",
@@ -107,17 +108,17 @@ export class Hud {
       this.titleEl.textContent = mission.def.title;
       this.objEl.textContent = obj;
     }
-    this.target(combat, cam, playerVel);
-    this.cards(combat, mission);
+    this.target(combat, mission, cam, playerVel);
+    this.cards(mission);
     if (combat.ammo !== this.lastAmmo) {
       this.lastAmmo = combat.ammo;
       this.ammoEl.textContent = "▲".repeat(combat.ammo) + "△".repeat(Math.max(0, combat.maxAmmo - combat.ammo));
     }
   }
 
-  private target(combat: Combat, cam: Camera, playerVel: Vector3): void {
-    // the lock candidate if there is one, else the nearest live enemy
-    let best: (typeof combat.enemies.list)[number] | null = combat.target, bd = Infinity;
+  private target(combat: Combat, mission: Mission, cam: Camera, playerVel: Vector3): void {
+    // the lock candidate if there is one, else the nearest live enemy, else the mission's marker
+    let best: Tracked | null = combat.target, bd = Infinity;
     if (best) bd = best.pos.distanceToSquared(combat.player.pos);
     else
       for (const e of combat.enemies.list) {
@@ -125,6 +126,9 @@ export class Hud {
         const d = e.pos.distanceToSquared(combat.player.pos);
         if (d < bd) (bd = d), (best = e);
       }
+    const isMarker = !best && mission.marker !== null;
+    if (!best && mission.marker) (best = mission.marker), (bd = best.pos.distanceToSquared(combat.player.pos));
+    this.tgtEl.classList.toggle("marker", isMarker);
     if (!best) {
       this.tgtEl.classList.remove("on");
       this.leadEl.classList.remove("on");
@@ -140,7 +144,7 @@ export class Hud {
       const dist = Math.sqrt(bd);
       this.tgtEl.style.left = `${((_s.x + 1) * 0.5 * w).toFixed(0)}px`;
       this.tgtEl.style.top = `${((1 - _s.y) * 0.5 * h).toFixed(0)}px`;
-      const locking = combat.target === best;
+      const locking = combat.target === best && !isMarker;
       this.tgtEl.classList.toggle("locked", locking && combat.lock >= 1);
       this.tgtEl.classList.toggle("locking", locking && combat.lock < 1);
       // the box shrinks onto the target as the lock builds
@@ -152,7 +156,7 @@ export class Hud {
       const closing = Math.max(120, T.weapons.muzzleSpeed);
       const t = dist / closing;
       _l.copy(best.pos).addScaledVector(best.vel, t).addScaledVector(playerVel, -t).project(cam);
-      const leadOn = _l.z < 1 && Math.abs(_l.x) < 1 && Math.abs(_l.y) < 1;
+      const leadOn = !isMarker && _l.z < 1 && Math.abs(_l.x) < 1 && Math.abs(_l.y) < 1;
       this.leadEl.classList.toggle("on", leadOn);
       if (leadOn) {
         this.leadEl.style.left = `${((_l.x + 1) * 0.5 * w).toFixed(0)}px`;
@@ -169,22 +173,19 @@ export class Hud {
     }
   }
 
-  private cards(combat: Combat, mission: Mission): void {
-    const P = combat.player;
-    const key = mission.phase === "complete" || mission.phase === "lost" ? mission.phase : "";
+  private cards(mission: Mission): void {
+    const key = mission.done ? mission.phase : "";
     if (key === this.cardShown) return;
     this.cardShown = key;
     this.cardEl.classList.toggle("on", key !== "");
     if (key === "") return;
     this.cardH.classList.toggle("lost", key === "lost");
     if (key === "lost") {
-      this.cardH.textContent = "SHIP LOST";
-      this.cardP.textContent = `${P.kills} gliders down before the belt took you.`;
+      this.cardH.textContent = mission.loseTitle;
+      this.cardP.textContent = mission.loseLine;
     } else {
-      const acc = P.fired ? Math.round((100 * P.hits) / P.fired) : 0;
-      const m = Math.floor(mission.clock / 60), s = Math.floor(mission.clock % 60);
-      this.cardH.textContent = "FIELD CLEAR";
-      this.cardP.textContent = `time ${m}:${String(s).padStart(2, "0")}\nkills ${P.kills}\naccuracy ${acc}%\nhull ${Math.round((100 * P.hp) / combat.maxHp)}%`;
+      this.cardH.textContent = mission.winTitle;
+      this.cardP.textContent = mission.summary();
     }
   }
 }

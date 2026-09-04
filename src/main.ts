@@ -5,6 +5,7 @@ import { Scheme, parseScheme } from "@/core/scheme";
 import { loadSave } from "@/core/save";
 import { setDifficulty } from "@/core/difficulty";
 import { Menu } from "@/ui/menu";
+import { Hub } from "@/ui/hub";
 import { Flight } from "@/sim/flight";
 import { Hazards } from "@/sim/hazards";
 import { QUALITY, Renderer, parseQuality } from "@/render/renderer";
@@ -18,6 +19,7 @@ import { parseShip } from "@/ships/registry";
 import { Hud } from "@/ui/hud";
 import { createDebugPanel } from "@/ui/debug";
 import { Game } from "@/game";
+import { parseLevel } from "@/mission/levels";
 const params = new URLSearchParams(location.search), quality = parseQuality(params.get("quality"));
 const save = loadSave(), S = save.settings;
 setDifficulty(S.difficulty);
@@ -39,15 +41,16 @@ if (inspect) world.asteroids.group.visible = world.dust.lines.visible = false; /
 const hud = new Hud(document.getElementById("hud")!);
 const perf = new PerfOverlay(document.querySelector<HTMLElement>("#hud .perf")!);
 if (inspect) hud.hideAll();
-const game = inspect ? null : new Game(r.scene, world, rig.root, canvas, flight);
+const level = parseLevel(params.get("mission"));
+const game = inspect ? null : new Game(r.scene, world, rig.root, canvas, flight, save, level);
+const hub = new Hub(document.getElementById("hub")!, save, level, () => undefined);
 const menu = new Menu(document.getElementById("menu")!, canvas, save, {
   apply: (s) => ((scheme.arcade = s.scheme === "arcade"), (scheme.assist = s.assist), (input.sens = s.sens), setDifficulty(s.difficulty), game?.audio.setMute(s.mute)),
   restart: () => location.reload(),
-}, game !== null && !input.freeLock);
+  hub: () => hub.show(),
+}, game !== null && !input.freeLock, level.title);
 Object.assign(window, { __game: game, __flight: flight, __rocks: world.asteroids });
-// dev hook for the capital-ship authoring pass: `?capital=1` drops one 400 m ahead (module loaded lazily so a missing file only fails when asked for)
-const capitalModule = "/src/combat/capital.ts"; // string kept out of the literal so tsc does not resolve it
-if (params.get("capital")) void import(/* @vite-ignore */ capitalModule).then((m) => { const c = new m.Capital(); c.setPose(new Vector3(0, 0, 400), new Quaternion()); r.scene.add(c.group); Object.assign(window, { __capital: c }); }); // headless tests (scripts/_*.mjs) drive the game through these
+// headless tests (scripts/_*.mjs) drive the game through these
 createDebugPanel();
 
 const _p = new Vector3(), _v = new Vector3(), _q = new Quaternion();

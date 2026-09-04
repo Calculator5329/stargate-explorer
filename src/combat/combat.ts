@@ -8,6 +8,7 @@ import { Enemies, type Enemy, type RockSpheres } from "@/combat/enemies";
 import { Explosions } from "@/fx/explosion";
 import { Missiles } from "@/combat/missiles";
 import type { Audio } from "@/audio/audio";
+import type { Lockable, Tracked } from "@/combat/targets";
 import { noEdge } from "@/render/layers";
 import { glowMaterial } from "@/render/toon";
 
@@ -56,8 +57,12 @@ export class Combat {
   readonly fx = new Explosions();
   readonly missiles = new Missiles();
   /** nearest glider inside the lock cone, and how far along the lock is (0..1) */
-  target: Enemy | null = null;
+  target: Tracked | null = null;
   lock = 0;
+  /** mission-owned things the player can shoot and lock (turrets, shield nodes, a hull) */
+  readonly extras: Lockable[] = [];
+  /** mission-owned things enemy rounds can hurt (an escort) */
+  readonly friendlies: Lockable[] = [];
   ammo = T.missile.count;
   /** rack size and hull points for the current ship (stats × T) */
   maxAmmo = T.missile.count;
@@ -72,6 +77,8 @@ export class Combat {
 
   constructor(readonly enemies: Enemies, private readonly rocks: RockSpheres, private readonly ship: THREE.Object3D, private readonly audio: Audio) {
     this.group.add(this.shots.group, this.fx.group, enemies.group, this.missiles.group);
+    enemies.targets.push(this.player);
+    enemies.onCrash = (pos, n, speed) => this.fx.crash(pos, n, speed);
     const geo = new THREE.CircleGeometry(0.55, 10);
     for (const g of GUNS) {
       const m = noEdge(new THREE.Mesh(geo, glowMaterial(0xdff2ff, 3)));
@@ -101,6 +108,8 @@ export class Combat {
     if (flight.lastImpact > 0) {
       // a crash hurts the same fraction of hull whatever the ship: a big hull is not a crash licence
       const dmg = Flight.impactDamage(flight.lastImpact) * this.maxHp;
+      _p.copy(flight.pos).addScaledVector(flight.lastImpactNormal, -T.arena.shipRadius * flight.stats.size * 0.8);
+      this.fx.crash(_p, flight.lastImpactNormal, flight.lastImpact);
       flight.lastImpact = 0;
       if (dmg > 0 && P.alive) {
         P.hp -= dmg;
@@ -153,15 +162,17 @@ export class Combat {
     const M = T.missile;
     this.missileCd -= dt;
     _fwdv.set(0, 0, 1).applyQuaternion(flight.quat);
-    let best: Enemy | null = null, bd = Infinity;
+    let best: Tracked | null = null, bd = Infinity;
     const cosCone = Math.cos(M.lockCone);
-    for (const e of this.enemies.list) {
-      if (!e.alive) continue;
+    const consider = (e: Tracked) => {
+      if (!e.alive) return;
       _d.subVectors(e.pos, flight.pos);
       const d = _d.length();
-      if (d > M.lockRange || d < 1e-3 || _d.dot(_fwdv) / d < cosCone) continue;
+      if (d > M.lockRange || d < 1e-3 || _d.dot(_fwdv) / d < cosCone) return;
       if (d < bd) (bd = d), (best = e);
-    }
+    };
+    for (const e of this.enemies.list) consider(e);
+    for (const x of this.extras) consider(x);
     if (best !== this.target) this.lock = 0;
     this.target = best;
     if (best) {
@@ -190,6 +201,17 @@ export class Combat {
         if (this.enemies.damage(e, M.damage)) this.destroy(e);
         break;
       }
+      if (m.alive)
+        for (const x of this.extras) {
+          if (!x.alive) continue;
+          const r = x.radius + M.fuse;
+          if (m.pos.distanceToSquared(x.pos) > r * r) continue;
+          m.alive = false;
+          this.fx.spawn(m.pos, ZEROV, 3);
+          this.audio.explosion(0.6);
+          x.damage(M.damage);
+          break;
+        }
       if (m.alive) {
         for (let i = 0; i < this.rocks.count; i++) {
           const dx = m.pos.x - this.rocks.centers[i * 3]!, dy = m.pos.y - this.rocks.centers[i * 3 + 1]!, dz = m.pos.z - this.rocks.centers[i * 3 + 2]!;
@@ -220,9 +242,25 @@ export class Combat {
       if (this.enemies.damage(e, this.gunDamage)) this.destroy(e);
       return;
     }
+    for (const x of this.extras) {
+      if (!x.alive || segDist2(_prev, s.pos, x.pos) > x.radius * x.radius) continue;
+      this.shots.kill(s);
+      this.player.hits++;
+      this.fx.spark(s.pos);
+      this.audio.hit();
+      x.damage(this.gunDamage);
+      return;
+    }
   }
 
   private hitPlayer(s: Shot, flight: Flight): void {
+    for (const x of this.friendlies) {
+      if (!x.alive || segDist2(_prev, s.pos, x.pos) > x.radius * x.radius) continue;
+      this.shots.kill(s);
+      this.fx.spark(s.pos);
+      x.damage(T.weapons.enemyDamage * D.enemyDamage);
+      return;
+    }
     const r = T.arena.shipRadius * 0.8 * flight.stats.size;
     if (!this.player.alive || segDist2(_prev, s.pos, flight.pos) > r * r) return;
     this.shots.kill(s);
@@ -252,6 +290,12 @@ export class Combat {
       this.fx.spark(s.pos);
       return;
     }
+  }
+
+  /** Public so missions can blow up their own things with the same look and sound. */
+  burst(pos: THREE.Vector3, vel: THREE.Vector3, scale: number, loud = 0.8): void {
+    this.fx.spawn(pos, vel, scale);
+    this.audio.explosion(loud);
   }
 
   private destroy(e: Enemy, byPlayer = true): void {

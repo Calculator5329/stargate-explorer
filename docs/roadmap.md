@@ -117,21 +117,35 @@ Rewritten 2026-09-04 from the pre-M1 sketch. One mission you can play start to f
 - [x] (2026-09-04, `docs/shots/2026-09-04d-fight.png`) Captures of a fight (`scripts/capture-shots.mjs` gains a `fight` view that lets a wave spawn), STATUS/changelog/DECISIONS updated, chat rundown.
 - **Exit:** Ethan plays "Clear the field" through once and has feedback that is about the game, not the tooling.
 
+### M2.5 — Overnight build (2026-09-04, from Ethan's "GOT EM" feedback and the milestone list he sent)
+Ethan asked for momentum, lethal rock hits, a canon secondary weapon, then "all that + the other milestones": more level types (race, asteroid run, protect, cruiser strike), obstacles, a deeper map, the Prometheus as an unlockable with its own stats, SG-1-flavoured stories, better crash/explosion animation. Everything below landed in one night and is verified headless only.
+- [x] (2026-09-04, `sim/flight.ts` velocity vector, X toggles assist) Momentum: lateral slide through turns, coast-down after boost, flight-assist-off drift mode.
+- [x] (2026-09-04, `Flight.impactDamage`, gliders too via `Enemies.rockHit`) Rock hits hurt by normal speed; head-on at cruise is fatal.
+- [x] (2026-09-04, `combat/missiles.ts`, RMB) Lock-on missiles, in-canon for the F-302.
+- [x] (2026-09-04, `ui/menu.ts`, `core/save.ts`, `core/difficulty.ts`) Esc pause/start menu: scheme, flight assist, mouse sensitivity, difficulty preset, mute, restart, missions. Persisted.
+- [x] (2026-09-04, `ships/registry.ts` stats applied in Flight/Combat/camera/hazards) Per-ship stats; Prometheus flyable (`ships/prometheus-def.ts`, subagent hull).
+- [x] (2026-09-04, `mission/levels.ts` + runners `clear/run/protect/strike.ts`, `ui/hub.ts`) Mission framework with four types and a mission-select hub with saved progress: Clear the Field, The Gauntlet (12 gates vs the clock), Cover the Prometheus (escort), Bring Down the Ha'tak (turrets → shield nodes → hull; unlocks the Prometheus).
+- [x] (2026-09-04, `combat/capital.ts`, subagent) Ha'tak-style capital ship with turrets that shoot, weak points, staged death.
+- [x] (2026-09-04, `fx/explosion.ts` rewrite, subagent; `crash()` wired to player and glider rock hits) Two-tone fireball + shockwave ring + debris + smoke explosions; crash dust cones.
+- [ ] Ethan plays the four missions and the Prometheus and reports: difficulty preset that fits, gate count/time for the Gauntlet, whether the Ha'tak fight is legible (which part to shoot next).
+- [ ] Not done tonight: a "race" mission distinct from the gauntlet (needs AI racers), a deeper map (multiple systems, gate travel), new obstacle types beyond rocks and the hull, a heavier enemy hull (bomber), gamepad.
+- **Exit:** Ethan's feedback on the four missions is about the game, not the tooling.
+
 ### M3 — Fleet & factions
 - [ ] <!-- workspace:id=work:fbd1c463-3000-5d78-830c-2a559fa5d2a3 --> 3 player hulls, 3 enemy hulls, distinct silhouettes (see GRAPHICS.md silhouette test).
 - [ ] <!-- workspace:id=work:4f39c478-be65-577d-b085-12e3d36e930e --> Faction materials/palettes.
 - [ ] <!-- workspace:id=work:b24057c9-9ff2-5002-a606-e79c2d569ced --> 3+ sky presets, 3+ planet presets.
-- [ ] <!-- workspace:id=work:b0ce8258-8118-50ac-b155-ac1f6e3adaa2 --> Enemy variety: interceptor, gunboat, one capital-scale target.
+- [ ] <!-- workspace:id=work:b0ce8258-8118-50ac-b155-ac1f6e3adaa2 --> Enemy variety: interceptor, gunboat, one capital-scale target. *(capital-scale target landed 2026-09-04: `combat/capital.ts`; interceptor/gunboat still open)*
 
 ### M4 — Structure
 - [ ] <!-- workspace:id=work:ccb23c6e-65b9-507b-a9a3-fe96f5e509a5 --> Hub scene → gate dial UI → transit FX → system → objective → return.
-- [ ] <!-- workspace:id=work:b43496f3-906d-5db6-9ea7-ceced0195364 --> Mission templates: dogfight, escort, capital strike.
-- [ ] <!-- workspace:id=work:e90114d4-73ac-502d-bfab-5043ad89afcc --> Progression: at least ship unlock.
+- [x] <!-- workspace:id=work:b43496f3-906d-5db6-9ea7-ceced0195364 --> (2026-09-04, `mission/levels.ts`; clear, run, protect, strike) Mission templates: dogfight, escort, capital strike.
+- [x] <!-- workspace:id=work:e90114d4-73ac-502d-bfab-5043ad89afcc --> (2026-09-04, Prometheus unlocks after the Ha'tak strike; `Game.record`) Progression: at least ship unlock.
 
 ### M5 — Polish
 - [ ] <!-- workspace:id=work:4a4b65a8-1b9b-5003-aed0-604b95e6f42d --> Audio (engine loop, weapons, UI, music stubs).
-- [ ] <!-- workspace:id=work:1d92fc39-1255-51d0-936b-36bb8c72dc2b --> Menus, settings (sensitivity, invert, quality), keybinds.
-- [ ] <!-- workspace:id=work:209c7577-9da9-598d-b34e-2a868f079b94 --> Save/load (localStorage).
+- [ ] <!-- workspace:id=work:1d92fc39-1255-51d0-936b-36bb8c72dc2b --> Menus, settings (sensitivity, invert, quality), keybinds. *(menu + sensitivity + difficulty landed 2026-09-04; invert, quality, keybinds open)*
+- [x] <!-- workspace:id=work:209c7577-9da9-598d-b34e-2a868f079b94 --> (2026-09-04, `core/save.ts`: settings + progress in one blob) Save/load (localStorage).
 - [ ] <!-- workspace:id=work:239b2be7-4508-5066-a3f7-4910c341b86e --> Gamepad support.
 
 ## Non-goals (for now)

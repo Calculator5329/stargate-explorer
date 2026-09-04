@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { T } from "@/core/tunables";
-import type { Enemy } from "@/combat/enemies";
+import type { Tracked } from "@/combat/targets";
 import { noEdge } from "@/render/layers";
 import { glowMaterial, toonMaterial } from "@/render/toon";
 
@@ -8,7 +8,7 @@ export interface Missile {
   alive: boolean;
   pos: THREE.Vector3;
   vel: THREE.Vector3;
-  target: Enemy | null;
+  target: Tracked | null;
   ttl: number;
 }
 
@@ -50,7 +50,7 @@ export class Missiles {
     }
   }
 
-  fire(pos: THREE.Vector3, dir: THREE.Vector3, shooterVel: THREE.Vector3, target: Enemy): boolean {
+  fire(pos: THREE.Vector3, dir: THREE.Vector3, shooterVel: THREE.Vector3, target: Tracked): boolean {
     const m = this.list.find((x) => !x.alive);
     if (!m) return false;
     m.alive = true;

@@ -28,6 +28,10 @@ export interface Enemy {
   sinceHit: number;
   /** body materials, for the hit flash */
   mats: THREE.MeshToonMaterial[];
+  /** hit radius (Tracked) */
+  radius: number;
+  /** index into `Enemies.targets`, assigned round-robin at spawn */
+  tgt: number;
 }
 
 export interface Target {
@@ -70,6 +74,11 @@ function facing(dir: THREE.Vector3, out: THREE.Quaternion): THREE.Quaternion {
 export class Enemies {
   readonly group = new THREE.Group();
   readonly list: Enemy[] = [];
+  /** what gliders go after; [0] is always the player, missions may append an escort (listed twice = two thirds of spawns) */
+  readonly targets: Target[] = [];
+  private spawned = 0;
+  /** set by combat: crash dust at a rock scrape */
+  onCrash: ((pos: THREE.Vector3, normal: THREE.Vector3, speed: number) => void) | null = null;
 
   constructor(private readonly def: ShipDef, private readonly rocks: RockSpheres) {}
 
@@ -89,7 +98,7 @@ export class Enemies {
       });
       e = {
         rig, alive: false, pos: new THREE.Vector3(), quat: new THREE.Quaternion(), prevPos: new THREE.Vector3(), prevQuat: new THREE.Quaternion(),
-        vel: new THREE.Vector3(), speed: 0, hp: 0, state: "pursue", stateT: 0, hold: new THREE.Vector3(0, 0, 1), fireCd: 0, sinceHit: 99, mats,
+        vel: new THREE.Vector3(), speed: 0, hp: 0, state: "pursue", stateT: 0, hold: new THREE.Vector3(0, 0, 1), fireCd: 0, sinceHit: 99, mats, radius: T.enemy.radius, tgt: 0,
       };
       this.list.push(e);
       this.group.add(rig.root);
@@ -109,6 +118,8 @@ export class Enemies {
     e.stateT = 0;
     e.fireCd = 1 + Math.random();
     e.sinceHit = 99;
+    e.radius = a.radius;
+    e.tgt = this.spawned++;
     return e;
   }
 
@@ -132,31 +143,34 @@ export class Enemies {
   tick(dt: number, player: Target, shots: Projectiles): void {
     const a = T.enemy;
     const w = T.weapons;
+    const n = this.targets.length;
     for (const e of this.list) {
       if (!e.alive) continue;
+      let tgt = n ? this.targets[e.tgt % n]! : player;
+      if (!tgt.alive) tgt = player;
       e.prevPos.copy(e.pos);
       e.prevQuat.copy(e.quat);
       e.sinceHit += dt;
       e.fireCd -= dt;
       e.stateT -= dt;
       _fwd.set(0, 0, 1).applyQuaternion(e.quat);
-      _to.subVectors(player.pos, e.pos);
+      _to.subVectors(tgt.pos, e.pos);
       const dist = _to.length();
       _to.multiplyScalar(1 / Math.max(1e-3, dist));
 
       // brain
       if (e.state !== "pursue" && e.stateT <= 0) e.state = "pursue";
-      if (e.state === "pursue" && dist < a.breakDist && player.alive) {
+      if (e.state === "pursue" && dist < a.breakDist && tgt.alive) {
         e.state = "break";
         e.stateT = 1.6 + Math.random() * 1.2;
         _right.set(-1, 0, 0).applyQuaternion(e.quat);
         e.hold.copy(_fwd).addScaledVector(_right, Math.random() < 0.5 ? 1.0 : -1.0).addScaledVector(UP, (Math.random() - 0.5) * 0.8).normalize();
       }
       let targetSpeed = a.cruise;
-      if (e.state === "pursue" && player.alive) {
-        // lead the player by the round's flight time
+      if (e.state === "pursue" && tgt.alive) {
+        // lead the target by the round's flight time
         const tof = dist / w.enemyMuzzleSpeed;
-        _lead.copy(player.pos).addScaledVector(player.vel, tof).sub(e.pos).normalize();
+        _lead.copy(tgt.pos).addScaledVector(tgt.vel, tof).sub(e.pos).normalize();
         _want.copy(_lead);
         targetSpeed = dist > 400 ? a.dash : a.cruise;
         if (dist < w.range * 0.6 && _fwd.dot(_lead) > Math.cos(a.fireCone) && e.fireCd <= 0) {
@@ -168,7 +182,7 @@ export class Enemies {
         _want.copy(e.hold);
         targetSpeed = a.dash;
       }
-      if (!player.alive) _want.copy(_fwd);
+      if (!tgt.alive) _want.copy(_fwd);
 
       // rocks ahead push the wanted direction away; the arena edge pulls it home
       const R = this.rocks;
@@ -217,6 +231,7 @@ export class Enemies {
       _tmp.set(dx / d, dy / d, dz / d);
       const into = -e.vel.dot(_tmp);
       e.pos.addScaledVector(_tmp, r - d + 0.1);
+      if (into > 5 && this.onCrash) this.onCrash(_lead.copy(e.pos).addScaledVector(_tmp, -T.enemy.radius), _tmp, into);
       if (into > 0) e.vel.addScaledVector(_tmp, 2 * into).multiplyScalar(0.5);
       e.speed *= 0.5;
       const dmg = Flight.impactDamage(into) * T.enemy.hp * D.enemyHp;

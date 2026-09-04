@@ -1,4 +1,4 @@
-# STATUS.md — as of 2026-09-04 (M2 "Clear the field" first pass, unplayed by a human)
+# STATUS.md — as of 2026-09-04 overnight (four missions, hub, menu, Prometheus; Ethan has played only "Clear the field")
 
 Snapshot of what actually works. This is the project state snapshot, not the workspace root `STATUS.md` handoff file (see CLAUDE.md). Update when things change; keep the "Known issues" list honest.
 
@@ -18,7 +18,13 @@ Snapshot of what actually works. This is the project state snapshot, not the wor
 - **Rock collision** is sphere broad phase + face-plane narrow phase (`Hazards.narrow`), so close fly-bys no longer bounce.
 - **Combat (M2 first pass, verified headless only):** LMB fires twin cannons (`T.weapons`); pooled instanced tracers; swept hits against gliders, the player and rocks; impact sparks; destruction bursts with debris. Gliders (`combat/glider-def.ts`, `combat/enemies.ts`) pursue with lead, fire inside a cone, break off close, evade when hit, avoid rocks. Player HP with delayed regen; enemy rounds flash + shake.
 - **Mission "Clear the field"** (`mission/mission.ts`): intro → 3 waves (2/3/5 gliders spawned 700–1100 m out, ahead) → FIELD CLEAR card (time, kills, accuracy, hull) or SHIP LOST card; R restarts. Objective line + kills top-left; target box with range and lead ring; off-screen arrow to the nearest glider.
-- **Sound:** synthesised engine drone, cannon, hit, damage, explosion, boost whoosh; created on the first click; M mutes.
+- **Sound:** synthesised engine drone, cannon, hit, damage, explosion, boost whoosh, lock tone, launch; created on the first click; M mutes.
+- **Momentum:** velocity is a real vector (lateral slide through turns, coast-down after boost); X turns flight assist off for near-Newtonian drift. Rock hits do damage by normal speed (fatal head-on at cruise), for gliders too.
+- **Missiles:** RMB, cone lock over 0.9 s, homing, proximity fuse, 6 per sortie (16 on the Prometheus), restocked each wave.
+- **Menu / settings:** Esc pauses and opens the menu (scheme, assist, sensitivity, difficulty, mute, restart, missions); all persisted in localStorage.
+- **Missions:** Clear the Field, The Gauntlet (12 gates, 90 s), Cover the Prometheus (escort), Bring Down the Ha'tak (turrets → nodes → hull). Hub with lock chain, best times, ship choice. Ha'tak clear unlocks the Prometheus. All four verified headless end to end (playwright: teleport through gates, `extras[i].damage()` on the Ha'tak parts, read `mission.phase`).
+- **Prometheus** flyable: slower, heavier, bigger camera pull-back and collision radius.
+- **FX:** two-tone fireball + shockwave + chunks + smoke on every kill; crash dust on rock hits.
 
 ## Partial
 - Combat balance is a first guess: no human has flown a wave. Enemy hp 40 / player round 12 (4 hits), enemy rounds 7 hp against 100. Glider AI has no formation, no wingman logic, no retreat.
@@ -27,9 +33,12 @@ Snapshot of what actually works. This is the project state snapshot, not the wor
 - `ships/loader.ts` exists but is unused and untested against a real GLTF (B migration hook; a glTF hull would need `outlineShell()` and toon materials applied per mesh).
 
 ## Not started
-Heavier enemy hulls (bomber, mothership), menus, mission select, gate/hub, saves, gamepad, settings/keybinds.
+Bomber-scale enemy hull, gate transit / multiple systems (a deeper map), a race mission with AI racers, new obstacle types, gamepad, keybinds, invert, quality setting in the menu.
 
 ## Known issues
+- **Nothing beyond "Clear the field" has been flown by a human** (2026-09-04 overnight). Gauntlet timing (90 s, 360 m spacing), escort hull (600), turret range/cadence (1 km, 1.6 s) and the difficulty multipliers are guesses. The Ha'tak fight's "shoot this next" legibility is untested.
+- Prometheus: no plumes light up at cruise in the capture (rig throttle path), guns fire from the fighter's muzzle offsets (under the bow), and the escort version in *Cover the Prometheus* has no rock avoidance beyond a slide.
+- Ha'tak: a single bounding sphere for player collision (0.72 × radius), no collision for gliders or rounds against the hull itself; missiles only hurt the hull once the nodes are down (by design, but not signposted beyond the mission line).
 - **Awaiting Ethan's verdict on M2** (2026-09-04): play "Clear the field" once; the fight capture is `docs/shots/2026-09-04d-fight.png`. Ethan's two reference frames are still not in `docs/refs/`.
 - Headless SwiftShader runs the sim at ~0.5× real time, so a headless fight is slow motion; timing judgments need a real GPU.
 - Rocks: the violet shadow side comes from a flat emissive, so it also tints lit facets slightly; the reference's plum-in-shadow / rust-in-light split would need a per-band hue ramp (custom toon shader).
