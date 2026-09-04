@@ -33,7 +33,7 @@ export interface ClearLevel extends BaseLevel {
 export interface RunLevel extends BaseLevel {
   type: "run";
   rings: number;
-  /** distance between rings (m) and how far the path wanders sideways per ring */
+  /** distance between gates (m) and how far sideways the chain may turn per gate (m) */
   spacing: number;
   wander: number;
   ringRadius: number;
@@ -84,15 +84,15 @@ export const LEVELS: LevelDef[] = [
     id: "gauntlet",
     type: "run",
     title: "THE GAUNTLET",
-    blurb: "Thread twelve gates through the belt before the hyperspace window closes. Mines sit on the rims; gliders join the chase halfway.",
-    intro: ["The window closes in ninety seconds.", "Fly the gates. Do not slow down."],
+    blurb: "Ten gates threaded through the thickest rock in the belt, either way through. Mines on the rims; gliders join the chase halfway.",
+    intro: ["The window closes in two minutes.", "The gates sit in the rock. Fly them, either way through."],
     requires: "belt-clear",
-    rings: 12,
-    spacing: 360,
-    wander: 140,
+    rings: 10,
+    spacing: 620,
+    wander: 380,
     ringRadius: 34,
-    timeLimit: 90,
-    harassAt: 5,
+    timeLimit: 120,
+    harassAt: 4,
     harass: 2,
     minesPerGate: 2,
   },

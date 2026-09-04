@@ -71,10 +71,17 @@ export const T = {
     /** shake amplitude (m) right after a collision, and the constant boost rumble */
     hitShake: 0.7,
     boostShake: 0.05,
+    /** how fast the camera frame catches the ship's attitude (1/s): lower = the ship visibly rotates against the view in a pull-up or roll */
+    followRate: 7,
+    /** same, while a barrel roll is running: the ship spins most of the way round on screen */
+    barrelFollow: 4.5,
+    /** extra FOV (deg) and pull-back (m) during a barrel roll */
+    barrelFov: 8,
+    barrelDistance: 2.5,
   },
   weapons: {
     /** player cannon: rounds per second (both guns together), muzzle speed and reach (m) */
-    fireRate: 9,
+    fireRate: 13,
     muzzleSpeed: 900,
     range: 1400,
     /** spread in radians per shot */

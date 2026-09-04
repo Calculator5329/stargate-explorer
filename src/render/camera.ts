@@ -22,16 +22,23 @@ export class ChaseCamera {
   private boostFrac = 0;
   private fov = T.camera.fovBase;
   private initialised = false;
+  /** the camera's own attitude, chasing the ship's with a lag so manoeuvres read on screen */
+  private readonly frame = new Quaternion();
+  private rollFrac = 0;
 
   constructor(readonly cam: PerspectiveCamera) {}
 
-  update(frameDt: number, shipPos: Vector3, shipQuat: Quaternion, speed: number, stick: { x: number; y: number }, boost: boolean, sinceHit: number, size = 1): void {
+  update(frameDt: number, shipPos: Vector3, shipQuat: Quaternion, speed: number, stick: { x: number; y: number }, boost: boolean, sinceHit: number, size = 1, rolling = false): void {
     const c = T.camera;
     const dt = Math.min(frameDt, 1 / 30); // keep the spring stable on hitches
     this.boostFrac += ((boost ? 1 : 0) - this.boostFrac) * (1 - Math.exp(-3 * dt));
+    this.rollFrac += ((rolling ? 1 : 0) - this.rollFrac) * (1 - Math.exp(-(rolling ? 10 : 3) * dt));
+    if (!this.initialised) this.frame.copy(shipQuat);
+    // the frame chases the ship's attitude; during a barrel roll it chases slower, so the hull spins on screen
+    this.frame.slerp(shipQuat, 1 - Math.exp(-(rolling ? c.barrelFollow : c.followRate) * dt));
 
-    _off.set(stick.x * c.swayYaw, (c.height - stick.y * c.swayPitch) * size, (-c.distance - c.distanceBoost * this.boostFrac) * size); // +X is port
-    _desired.copy(_off).applyQuaternion(shipQuat);
+    _off.set(stick.x * c.swayYaw, (c.height - stick.y * c.swayPitch) * size, (-c.distance - c.distanceBoost * this.boostFrac - c.barrelDistance * this.rollFrac) * size); // +X is port
+    _desired.copy(_off).applyQuaternion(this.frame);
     if (!this.initialised) {
       this.off.copy(_desired);
       this.initialised = true;
@@ -44,13 +51,13 @@ export class ChaseCamera {
     const shake = c.hitShake * Math.exp(-sinceHit * 5) + c.boostShake * this.boostFrac;
     if (shake > 1e-3) this.cam.position.addScaledVector(_up.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5), shake * 2);
 
-    _fwd.set(0, 0, 1).applyQuaternion(shipQuat);
+    _fwd.set(0, 0, 1).applyQuaternion(this.frame);
     _target.copy(shipPos).addScaledVector(_fwd, c.lookAhead);
-    _up.set(0, 1, 0).applyQuaternion(shipQuat);
+    _up.set(0, 1, 0).applyQuaternion(this.frame);
     this.cam.up.lerp(_up, 1 - Math.exp(-c.upFollow * dt)).normalize();
     this.cam.lookAt(_target);
 
-    const targetFov = c.fovBase + c.fovSpeed * Math.min(1, speed / T.flight.boostSpeed); // boost = full swing, never past it
+    const targetFov = c.fovBase + c.fovSpeed * Math.min(1, speed / T.flight.boostSpeed) + c.barrelFov * this.rollFrac; // boost = full swing, never past it
     this.fov += (targetFov - this.fov) * (1 - Math.exp(-4 * dt));
     if (Math.abs(this.cam.fov - this.fov) > 0.01) {
       this.cam.fov = this.fov;
