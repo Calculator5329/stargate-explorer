@@ -198,7 +198,7 @@ export class Combat {
       if (!m.alive) continue;
       for (const e of this.enemies.list) {
         if (!e.alive) continue;
-        const r = T.enemy.radius + M.fuse;
+        const r = e.radius + M.fuse;
         if (m.pos.distanceToSquared(e.pos) > r * r) continue;
         m.alive = false;
         this.fx.spawn(m.pos, e.vel, 3);
@@ -237,9 +237,8 @@ export class Combat {
   }
 
   private hitEnemies(s: Shot): void {
-    const r2 = T.enemy.radius * T.enemy.radius;
     for (const e of this.enemies.list) {
-      if (!e.alive || segDist2(_prev, s.pos, e.pos) > r2) continue;
+      if (!e.alive || segDist2(_prev, s.pos, e.pos) > e.radius * e.radius) continue;
       this.shots.kill(s);
       this.player.hits++;
       this.fx.spark(s.pos);
@@ -263,7 +262,7 @@ export class Combat {
       if (!x.alive || segDist2(_prev, s.pos, x.pos) > x.radius * x.radius) continue;
       this.shots.kill(s);
       this.fx.spark(s.pos);
-      x.damage(T.weapons.enemyDamage * D.enemyDamage);
+      x.damage(T.weapons.enemyDamage * s.dmg * D.enemyDamage);
       return;
     }
     const r = T.arena.shipRadius * 0.8 * flight.stats.size;
@@ -271,7 +270,7 @@ export class Combat {
     this.shots.kill(s);
     this.fx.spark(s.pos);
     flight.sinceHit = Math.max(flight.sinceHit, 0.25); // a light shake and flash, not the rock-hit slam
-    this.hurt(T.weapons.enemyDamage * D.enemyDamage, flight);
+    this.hurt(T.weapons.enemyDamage * s.dmg * D.enemyDamage, flight);
   }
 
   /** Every source of player damage comes through here; a dying ship takes no more. */
@@ -336,8 +335,10 @@ export class Combat {
       this.player.kills++;
       this.onKill?.(e.pos, e.vel);
     }
-    this.fx.spawn(e.pos, e.vel, 5);
-    this.audio.explosion(0.8);
+    // burst scales with the hull: a gunboat goes up big
+    const big = e.radius / T.enemy.radius;
+    this.fx.spawn(e.pos, e.vel, 5 * Math.sqrt(big));
+    this.audio.explosion(Math.min(1, 0.8 * Math.sqrt(big)));
   }
 
   render(alpha: number, dt: number, camPos: THREE.Vector3): void {

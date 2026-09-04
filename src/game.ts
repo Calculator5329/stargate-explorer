@@ -5,7 +5,6 @@ import type { World } from "@/world/world";
 import type { Hud } from "@/ui/hud";
 import { Enemies } from "@/combat/enemies";
 import { Combat } from "@/combat/combat";
-import { GLIDER } from "@/combat/glider-def";
 import type { Mission } from "@/mission/mission";
 import { createMission } from "@/mission/index";
 import type { LevelDef } from "@/mission/levels";
@@ -35,7 +34,7 @@ export class Game {
   private cam: THREE.PerspectiveCamera | null = null;
 
   constructor(scene: THREE.Scene, world: World, ship: THREE.Object3D, canvas: HTMLCanvasElement, flight: Flight, private readonly save: Save, level: LevelDef) {
-    this.enemies = new Enemies(GLIDER, world.asteroids);
+    this.enemies = new Enemies(world.asteroids);
     this.combat = new Combat(this.enemies, world.asteroids, ship, this.audio);
     this.combat.setShip(flight);
     this.flight = flight;

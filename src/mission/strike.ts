@@ -83,7 +83,7 @@ export class StrikeMission extends Mission {
 
   protected begin(): void {
     this.phase = "run";
-    this.spawnCone(this.def.escorts, 600, 800, 0.8);
+    this.spawnCone(this.def.escorts, 600, 800, 0.8, this.def.escortKinds);
     this.line = `Ring guns: ${this.aliveGuns()} of ${this.turrets.length}.`;
     this.marker = this.nearest(this.turrets);
     this.ctx.audio.ui();
@@ -115,7 +115,7 @@ export class StrikeMission extends Mission {
       }
     } else if (this.stage === "nodes") {
       const n = this.nodes.filter((x) => x.alive).length;
-      this.spawnCone(this.def.reinforce, 700, 900, 1.0);
+      this.spawnCone(this.def.reinforce, 700, 900, 1.0, this.def.reinforceKinds);
       if (n > 0) this.line = `Shield nodes: ${n}. Gliders launching.`;
       else {
         this.stage = "hull";

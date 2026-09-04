@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { Combat } from "@/combat/combat";
 import type { Audio } from "@/audio/audio";
 import type { RockSpheres } from "@/combat/enemies";
+import type { EnemyKind } from "@/combat/enemy-kinds";
 import type { Flight } from "@/sim/flight";
 import type { Tracked } from "@/combat/targets";
 import type { LevelDef, Wave } from "@/mission/levels";
@@ -114,8 +115,8 @@ export abstract class Mission {
     return true;
   }
 
-  /** Spawn `count` gliders in a ~50° cone ahead of the player, `near..far` out, off the rocks. */
-  protected spawnCone(count: number, near: number, far: number, halfAngle = 0.45): void {
+  /** Spawn `count` enemies in a ~50° cone ahead of the player, `near..far` out, off the rocks; `kinds` cycles per spawn, default gliders. */
+  protected spawnCone(count: number, near: number, far: number, halfAngle = 0.45, kinds?: EnemyKind[]): void {
     const f = this.ctx.flight;
     _fwd.set(0, 0, 1).applyQuaternion(f.quat);
     for (let i = 0; i < count; i++) {
@@ -125,7 +126,7 @@ export abstract class Mission {
         _pos.copy(f.pos).addScaledVector(_dir, near + Math.random() * (far - near));
         if (this.clear(_pos)) break;
       }
-      this.ctx.combat.enemies.spawn(_pos, f.pos);
+      this.ctx.combat.enemies.spawn(_pos, f.pos, kinds?.[i % kinds.length] ?? "glider");
     }
   }
 }

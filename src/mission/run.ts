@@ -159,7 +159,7 @@ export class RunMission extends Mission {
     if (this.next < this.rings.length) this.line = `Gate ${this.next + 1} of ${d.rings}  ·  ${fmt(this.left)} left`;
     if (!this.harassed && d.harassAt > 0 && this.next >= d.harassAt) {
       this.harassed = true;
-      this.spawnCone(d.harass, 500, 700, 1.2);
+      this.spawnCone(d.harass, 500, 700, 1.2, d.harassKinds);
       this.ctx.audio.ui();
     }
   }

@@ -55,7 +55,7 @@ export const GUNBOAT: ShipDef = {
     { pos: [0, -0.05, -8.0], radius: 1.1, length: 5.6, boxiness: 4, segments: 8 },
     { pos: [-5.6, -0.05, -8.0], radius: 1.1, length: 5.6, boxiness: 4, segments: 8 },
   ],
-  plumeScale: 1.3,
+  plumeScale: 1.0,
   // Open +Z mouths read as gun barrels; pods produce no exhaust or glow discs.
   pods: [
     { pos: [3.0, 0.55, 9.0], radius: 0.5, length: 4.2, intake: true, boxiness: 4, segments: 8 },

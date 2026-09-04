@@ -3,8 +3,12 @@
  * Story beats lean on the show (a Ha'tak over the belt, the Prometheus limping
  * home) but franchise names stay in strings, never in identifiers.
  */
+import type { EnemyKind } from "@/combat/enemy-kinds";
+
 export interface Wave {
   count: number;
+  /** enemy kinds, cycled per spawn; omitted = all gliders */
+  kinds?: EnemyKind[];
   /** seconds after the previous wave clears (or after the intro) */
   delay: number;
   /** spawn distance band from the player (m) */
@@ -43,6 +47,7 @@ export interface RunLevel extends BaseLevel {
   /** gliders that join the chase at this ring index (0 = none) */
   harassAt: number;
   harass: number;
+  harassKinds?: EnemyKind[];
   /** proximity mines laid just outside each gate's rim */
   minesPerGate: number;
 }
@@ -62,6 +67,8 @@ export interface StrikeLevel extends BaseLevel {
   /** escort gliders at the start, and per shield node lost */
   escorts: number;
   reinforce: number;
+  escortKinds?: EnemyKind[];
+  reinforceKinds?: EnemyKind[];
   /** proximity mines in a ring around the hull */
   mines: number;
 }
@@ -79,16 +86,16 @@ export const LEVELS: LevelDef[] = [
     waves: [
       { count: 2, delay: 4, near: 700, far: 900 },
       { count: 3, delay: 5, near: 800, far: 1000 },
-      { count: 5, delay: 5, near: 800, far: 1100 },
+      { count: 5, delay: 5, near: 800, far: 1100, kinds: ["glider", "interceptor", "glider", "interceptor", "glider"] },
     ],
-    finaleLine: "Last wave. All of them.",
+    finaleLine: "Last wave. Interceptors with them, the quick ones.",
   },
   {
     id: "gauntlet",
     type: "run",
     system: "abydos",
     title: "THE GAUNTLET",
-    blurb: "Ten gates threaded through the thickest rock in the belt, either way through. Mines on the rims; gliders join the chase halfway.",
+    blurb: "Ten gates threaded through the thickest rock in the belt, either way through. Mines on the rims; interceptors join the chase halfway.",
     intro: ["The window closes in two minutes.", "The gates sit in the rock. Fly them, either way through."],
     requires: "belt-clear",
     rings: 10,
@@ -98,6 +105,7 @@ export const LEVELS: LevelDef[] = [
     timeLimit: 120,
     harassAt: 4,
     harass: 2,
+    harassKinds: ["interceptor"],
     minesPerGate: 2,
   },
   {
@@ -105,15 +113,15 @@ export const LEVELS: LevelDef[] = [
     type: "protect",
     system: "chulak",
     title: "COVER THE PROMETHEUS",
-    blurb: "The Prometheus is limping to the gate with her shields down. Keep the gliders off her hull.",
+    blurb: "The Prometheus is limping to the gate with her shields down. Keep the gliders off her hull; gunboats come for the engines.",
     intro: ["Prometheus reports shields down, sublight only.", "Nothing reaches her. Nothing."],
     requires: "gauntlet",
     waves: [
       { count: 3, delay: 5, near: 900, far: 1100 },
-      { count: 4, delay: 6, near: 900, far: 1200 },
-      { count: 6, delay: 6, near: 1000, far: 1300 },
+      { count: 4, delay: 6, near: 900, far: 1200, kinds: ["gunboat", "glider", "glider", "glider"] },
+      { count: 6, delay: 6, near: 1000, far: 1300, kinds: ["gunboat", "glider", "interceptor", "gunboat", "glider", "interceptor"] },
     ],
-    finaleLine: "Last wave. They are going for the engines.",
+    finaleLine: "Last wave. Two gunboats, and they are going for the engines.",
     escortHp: 600,
     escortSpeed: 26,
   },
@@ -129,6 +137,8 @@ export const LEVELS: LevelDef[] = [
     distance: 1700,
     escorts: 2,
     reinforce: 2,
+    escortKinds: ["interceptor"],
+    reinforceKinds: ["glider", "gunboat"],
     mines: 14,
   },
 ];

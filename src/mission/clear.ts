@@ -18,8 +18,8 @@ export class ClearMission<L extends ClearLevel | ProtectLevel = ClearLevel> exte
   }
 
   protected onWave(w: Wave): void {
-    this.spawnCone(w.count, w.near, w.far);
-    this.line = this.waves.isLast ? this.def.finaleLine : `Wave ${this.waves.index} of ${this.waves.total}: ${w.count} gliders.`;
+    this.spawnCone(w.count, w.near, w.far, 0.45, w.kinds);
+    this.line = this.waves.isLast ? this.def.finaleLine : `Wave ${this.waves.index} of ${this.waves.total}: ${w.count} ${w.kinds && w.kinds.some((k) => k !== "glider") ? "hostiles" : "gliders"}.`;
     this.ctx.audio.ui();
   }
 

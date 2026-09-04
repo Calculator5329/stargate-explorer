@@ -11,6 +11,8 @@ export interface Shot {
   pos: THREE.Vector3;
   vel: THREE.Vector3;
   ttl: number;
+  /** damage multiplier on the side's base round (enemy kinds differ) */
+  dmg: number;
 }
 
 const _dir = new THREE.Vector3();
@@ -47,16 +49,17 @@ export class Projectiles {
       this.group.add(m);
     }
     for (let i = 0; i < capacity * 2; i++) {
-      this.shots.push({ alive: false, side: i < capacity ? "player" : "enemy", pos: new THREE.Vector3(), vel: new THREE.Vector3(), ttl: 0 });
+      this.shots.push({ alive: false, side: i < capacity ? "player" : "enemy", pos: new THREE.Vector3(), vel: new THREE.Vector3(), ttl: 0, dmg: 1 });
     }
   }
 
   /** Spawn a round at `pos` travelling along `dir` at the side's muzzle speed plus the shooter's velocity. */
-  fire(side: Side, pos: THREE.Vector3, dir: THREE.Vector3, shooterVel: THREE.Vector3): boolean {
+  fire(side: Side, pos: THREE.Vector3, dir: THREE.Vector3, shooterVel: THREE.Vector3, dmg = 1): boolean {
     const s = this.shots.find((x) => !x.alive && x.side === side);
     if (!s) return false;
     const w = T.weapons;
     s.alive = true;
+    s.dmg = dmg;
     s.pos.copy(pos);
     s.vel.copy(dir).multiplyScalar(side === "player" ? w.muzzleSpeed : w.enemyMuzzleSpeed).add(shooterVel);
     s.ttl = w.range / (side === "player" ? w.muzzleSpeed : w.enemyMuzzleSpeed);

@@ -2,13 +2,16 @@ import * as THREE from "three";
 import { T, clamp } from "@/core/tunables";
 import { Flight } from "@/sim/flight";
 import { D } from "@/core/difficulty";
-import type { ShipDef } from "@/ships/defs";
+import { ENEMY_KINDS, type EnemyKind, type EnemyStats } from "@/combat/enemy-kinds";
 import { ShipRig } from "@/ships/rig";
 import type { Projectiles } from "@/combat/projectiles";
 
 export type EnemyState = "pursue" | "break" | "evade" | "saddle" | "flinch";
 
 export interface Enemy {
+  kind: EnemyKind;
+  /** the kind's table in `T` */
+  stats: EnemyStats;
   rig: ShipRig;
   alive: boolean;
   pos: THREE.Vector3;
@@ -95,7 +98,7 @@ export class Enemies {
   /** set by combat: crash dust at a rock scrape */
   onCrash: ((pos: THREE.Vector3, normal: THREE.Vector3, speed: number) => void) | null = null;
 
-  constructor(private readonly def: ShipDef, readonly rocks: RockSpheres) {}
+  constructor(readonly rocks: RockSpheres) {}
 
   get aliveCount(): number {
     let n = 0;
@@ -103,22 +106,23 @@ export class Enemies {
     return n;
   }
 
-  spawn(pos: THREE.Vector3, toward: THREE.Vector3): Enemy {
-    let e = this.list.find((x) => !x.alive);
+  spawn(pos: THREE.Vector3, toward: THREE.Vector3, kind: EnemyKind = "glider"): Enemy {
+    const K = ENEMY_KINDS[kind];
+    let e = this.list.find((x) => !x.alive && x.kind === kind);
     if (!e) {
-      const rig = new ShipRig(this.def);
+      const rig = new ShipRig(K.def);
       const mats: THREE.MeshToonMaterial[] = [];
       rig.root.traverse((o) => {
         if (o instanceof THREE.Mesh && o.material instanceof THREE.MeshToonMaterial && o.name !== "canopy") mats.push(o.material);
       });
       e = {
-        rig, alive: false, pos: new THREE.Vector3(), quat: new THREE.Quaternion(), prevPos: new THREE.Vector3(), prevQuat: new THREE.Quaternion(),
+        kind, stats: K.stats, rig, alive: false, pos: new THREE.Vector3(), quat: new THREE.Quaternion(), prevPos: new THREE.Vector3(), prevQuat: new THREE.Quaternion(),
         vel: new THREE.Vector3(), speed: 0, hp: 0, state: "pursue", stateT: 0, hold: new THREE.Vector3(0, 0, 1), fireCd: 0, flinchCd: 0, side: 1, sinceHit: 99, mats, radius: T.enemy.radius, tgt: 0,
       };
       this.list.push(e);
       this.group.add(rig.root);
     }
-    const a = T.enemy;
+    const a = K.stats;
     e.alive = true;
     e.rig.root.visible = true;
     e.pos.copy(pos);
@@ -158,11 +162,11 @@ export class Enemies {
   }
 
   tick(dt: number, player: Target, shots: Projectiles): void {
-    const a = T.enemy;
     const w = T.weapons;
     const n = this.targets.length;
     for (const e of this.list) {
       if (!e.alive) continue;
+      const a = e.stats;
       let tgt = n ? this.targets[e.tgt % n]! : player;
       if (!tgt.alive) tgt = player;
       e.prevPos.copy(e.pos);
@@ -184,7 +188,7 @@ export class Enemies {
       const noseOn = -_tf.dot(_to);
       // brain
       if (e.state !== "pursue" && e.stateT <= 0) e.state = "pursue";
-      if ((e.state === "pursue" || e.state === "saddle") && tgt.alive && tgt.fwd && dist < a.flinchDist && noseOn > Math.cos(a.flinchCone) && e.flinchCd <= 0 && Math.random() < a.flinchChance) {
+      if (a.dogfight > 0 && (e.state === "pursue" || e.state === "saddle") && tgt.alive && tgt.fwd && dist < a.flinchDist && noseOn > Math.cos(a.flinchCone) && e.flinchCd <= 0 && Math.random() < a.flinchChance) {
         // it is looking straight down our throat: get out of the cone before the shot, not after
         e.state = "flinch";
         e.stateT = a.flinchT;
@@ -192,7 +196,7 @@ export class Enemies {
         _right.set(-1, 0, 0).applyQuaternion(e.quat);
         e.hold.copy(_fwd).addScaledVector(_right, Math.random() < 0.5 ? 1.2 : -1.2).addScaledVector(UP, Math.random() < 0.5 ? 1.0 : -1.0).normalize();
       }
-      if (e.state === "pursue" && tgt.alive && tgt.fwd && dist < a.saddleDist && dist > a.breakDist && noseOn > Math.cos(a.noseCone)) {
+      if (a.dogfight > 0 && e.state === "pursue" && tgt.alive && tgt.fwd && dist < a.saddleDist && dist > a.breakDist && noseOn > Math.cos(a.noseCone)) {
         // the target is facing us: refuse the joust, go for its tail
         e.state = "saddle";
         e.stateT = a.saddleMax;
@@ -218,9 +222,9 @@ export class Enemies {
         _want.copy(_lead);
         targetSpeed = dist > 400 ? a.dash : a.cruise;
         if (dist < w.range * 0.6 && _fwd.dot(_lead) > Math.cos(a.fireCone) && e.fireCd <= 0) {
-          e.fireCd = 1 / (w.enemyFireRate * D.enemyFireRate);
-          _tmp.copy(_lead).addScaledVector(_right.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5), w.enemySpread * D.enemySpread * 2).normalize();
-          shots.fire("enemy", _lead.copy(e.pos).addScaledVector(_fwd, 5), _tmp, e.vel);
+          e.fireCd = 1 / (w.enemyFireRate * a.fireRate * D.enemyFireRate);
+          _tmp.copy(_lead).addScaledVector(_right.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5), w.enemySpread * a.spread * D.enemySpread * 2).normalize();
+          shots.fire("enemy", _lead.copy(e.pos).addScaledVector(_fwd, a.radius), _tmp, e.vel, a.damage);
         }
       } else if (e.state === "saddle") {
         // aim for a point behind and beside the target, on the flank we are already on
@@ -272,7 +276,7 @@ export class Enemies {
   private rockHit(e: Enemy): void {
     const R = this.rocks;
     for (let i = 0; i < R.count; i++) {
-      const r = R.radii[i]! * 0.8 + T.enemy.radius;
+      const r = R.radii[i]! * 0.8 + e.radius;
       const dx = e.pos.x - R.centers[i * 3]!, dy = e.pos.y - R.centers[i * 3 + 1]!, dz = e.pos.z - R.centers[i * 3 + 2]!;
       const d2 = dx * dx + dy * dy + dz * dz;
       if (d2 >= r * r) continue;
@@ -280,10 +284,10 @@ export class Enemies {
       _tmp.set(dx / d, dy / d, dz / d);
       const into = -e.vel.dot(_tmp);
       e.pos.addScaledVector(_tmp, r - d + 0.1);
-      if (into > 5 && this.onCrash) this.onCrash(_lead.copy(e.pos).addScaledVector(_tmp, -T.enemy.radius), _tmp, into);
+      if (into > 5 && this.onCrash) this.onCrash(_lead.copy(e.pos).addScaledVector(_tmp, -e.radius), _tmp, into);
       if (into > 0) e.vel.addScaledVector(_tmp, 2 * into).multiplyScalar(0.5);
       e.speed *= 0.5;
-      const dmg = Flight.impactDamage(into) * T.enemy.hp * D.enemyHp;
+      const dmg = Flight.impactDamage(into) * e.stats.hp * D.enemyHp;
       if (dmg > 0 && this.damage(e, dmg)) this.crashed.push(e);
       return;
     }
@@ -295,7 +299,7 @@ export class Enemies {
       if (!e.alive) continue;
       e.rig.root.position.lerpVectors(e.prevPos, e.pos, alpha);
       e.rig.root.quaternion.slerpQuaternions(e.prevQuat, e.quat, alpha);
-      e.rig.update(dt, e.speed / T.enemy.dash, e.state !== "pursue");
+      e.rig.update(dt, e.speed / e.stats.dash, e.state !== "pursue");
       const flash = e.sinceHit < 0.09 ? 1 : 0;
       for (const m of e.mats) {
         if (m.emissiveIntensity === flash) continue;
