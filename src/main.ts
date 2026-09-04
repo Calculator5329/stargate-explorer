@@ -14,6 +14,7 @@ import { InspectView, parseView } from "@/render/inspect";
 import { PerfOverlay } from "@/render/perf";
 import { World } from "@/world/world";
 import { SKY_PRESETS, parseSkyPreset } from "@/world/skybox";
+import { parseSystem } from "@/world/systems";
 import { ShipRig } from "@/ships/rig";
 import { parseShip } from "@/ships/registry";
 import { pickVariant } from "@/ships/variants";
@@ -23,14 +24,19 @@ import { Hud } from "@/ui/hud";
 import { createDebugPanel } from "@/ui/debug";
 import { Game } from "@/game";
 import { parseLevel } from "@/mission/levels";
+import { Travel, systemOf } from "@/travel/travel";
 const params = new URLSearchParams(location.search), quality = parseQuality(params.get("quality"));
 const save = loadSave(), S = save.settings;
 setDifficulty(S.difficulty);
-const view = parseView(params.get("view")), sky = parseSkyPreset(params.get("sky"));
+const view = parseView(params.get("view"));
+const level = parseLevel(params.get("mission"));
+const system = { ...parseSystem(params.get("system") ?? level.system) };
+if (params.has("sky")) system.sky = parseSkyPreset(params.get("sky"));
+const sky = system.sky;
 const canvas = document.body.appendChild(document.createElement("canvas"));
 const r = new Renderer(canvas, quality);
 r.setGrade(SKY_PRESETS[sky].grade);
-const world = new World(r.scene, { sky, planet: parsePlanetPreset(params.get("planet")), planetSegments: QUALITY[quality].planetSegments, shadowMap: r.tier.shadows });
+const world = new World(r.scene, { system, ...(params.has("planet") ? { planet: parsePlanetPreset(params.get("planet")) } : {}), planetSegments: QUALITY[quality].planetSegments, shadowMap: r.tier.shadows });
 const ship = parseShip(params.get("ship") ?? save.progress.ship), rig = new ShipRig(HULLS[params.get("hull") ?? ""] ?? pickVariant(ship.def, params));
 r.scene.add(rig.root);
 world.sun.follow(rig.root);
@@ -44,9 +50,30 @@ if (inspect) world.asteroids.group.visible = world.dust.lines.visible = false; /
 const hud = new Hud(document.getElementById("hud")!);
 const perf = new PerfOverlay(document.querySelector<HTMLElement>("#hud .perf")!);
 if (inspect) hud.hideAll();
-const level = parseLevel(params.get("mission"));
 const game = inspect ? null : new Game(r.scene, world, rig.root, canvas, flight, save, level);
-const hub = new Hub(document.getElementById("hub")!, save, level, () => undefined);
+const travel = game ? new Travel(document.getElementById("dial")!, r.scene, game.audio) : null;
+const hub = new Hub(document.getElementById("hub")!, save, level, () => undefined, (lvl, shipId) => {
+  const q = new URLSearchParams(location.search);
+  q.set("mission", lvl.id);
+  q.set("ship", shipId);
+  q.delete("system");
+  q.delete("hub");
+  menu.close();
+  travel?.depart(systemOf(lvl.system), q);
+});
+if (game) {
+  // the way home: through the gate that opens when a mission is won, or G on the end card
+  game.onGate = () => {
+    const q = new URLSearchParams(location.search);
+    q.set("hub", "1");
+    travel?.depart(systemOf(level.system), q);
+  };
+  window.addEventListener("keydown", (e) => {
+    if (e.code === "KeyG" && game.mission.done && !game.replay.playing) hub.show();
+  });
+  if (params.get("arrive") === "1") travel?.arrive();
+  if (params.get("hub") === "1") hub.show();
+}
 const menu = new Menu(document.getElementById("menu")!, canvas, save, {
   apply: (s) => ((scheme.arcade = s.scheme === "arcade"), (scheme.assist = s.assist), (input.sens = s.sens), setDifficulty(s.difficulty), game?.audio.setMute(s.mute)),
   restart: () => location.reload(),
@@ -56,7 +83,7 @@ const menu = new Menu(document.getElementById("menu")!, canvas, save, {
   },
   hasReplay: () => game?.replay.hasHighlight ?? false,
 }, game !== null && !input.freeLock, level.title);
-Object.assign(window, { __game: game, __flight: flight, __rocks: world.asteroids });
+Object.assign(window, { __game: game, __flight: flight, __rocks: world.asteroids, __travel: travel, __hub: hub });
 // headless tests (scripts/_*.mjs) drive the game through these
 createDebugPanel();
 
@@ -83,6 +110,7 @@ const loop = new Loop({
       hud.update(flight, input, hazards.outside);
       if (menu.open) hud.hideHint();
       game?.render(alpha, dt, r.camera, hud, flight);
+      travel?.update(dt, r.camera);
     }
     world.update(r.camera.position);
     r.render();

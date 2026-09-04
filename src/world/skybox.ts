@@ -13,6 +13,8 @@ export interface SkyPreset {
   /** hot core where both lobes overlap */
   core: THREE.Color;
   nebula: number;
+  /** Optional thin nebula band half-width, measured as sine of latitude. */
+  bandWidth?: number;
   grade: Grade;
 }
 
@@ -24,6 +26,8 @@ interface PresetIn {
   d2: [number, number, number];
   core: number;
   nebula: number;
+  /** Optional thin nebula band half-width, measured as sine of latitude. */
+  bandWidth?: number;
   grade: Grade;
 }
 
@@ -35,15 +39,18 @@ const preset = (p: PresetIn): SkyPreset => ({
   dir2: new THREE.Vector3(...p.d2).normalize(),
   core: new THREE.Color(p.core),
   nebula: p.nebula,
+  ...(p.bandWidth !== undefined ? { bandWidth: p.bandWidth } : {}),
   grade: p.grade,
 });
 
-/** `?sky=abydos|deepSpace|chulak`. Placeholder franchise names, see DECISIONS.md. */
+/** `?sky=<key>`. Placeholder franchise names, see DECISIONS.md. */
 export const SKY_PRESETS = {
   // Ethan's reference frame: vivid orange + purple lobes, hot pink core.
   abydos: preset({ base: 0x09051a, c1: 0xe8712c, d1: [0.35, 0.15, 0.9], c2: 0x6a2bb0, d2: [-0.6, -0.1, 0.5], core: 0xffb08a, nebula: 1.0, grade: grade(0xf2ecff, 0xfff4e6) }),
   deepSpace: preset({ base: 0x020308, c1: 0x1e2c8a, d1: [0.2, 0.7, 0.1], c2: 0x4a1a6e, d2: [-0.5, -0.3, 0.6], core: 0x8fb4ff, nebula: 0.7, grade: grade(0xe8ecff, 0xf4f6ff) }),
   chulak: preset({ base: 0x030603, c1: 0x2b8a44, d1: [0.6, 0.1, 0.5], c2: 0xb07a20, d2: [-0.3, 0.6, -0.6], core: 0xe8ffb0, nebula: 0.9, grade: grade(0xecf5e6, 0xfff8dc) }),
+  ember: preset({ base: 0x080102, c1: 0xff580c, d1: [0.7, -0.2, 0.6], c2: 0xa80d20, d2: [-0.4, 0.3, 0.8], core: 0xffba38, nebula: 0.85, grade: grade(0xffe8e0, 0xfff2da) }),
+  void: preset({ base: 0x010409, c1: 0x00c9ef, d1: [0.3, 0.85, 0.35], c2: 0x006aa8, d2: [-0.5, -0.3, 0.6], core: 0x42f4ff, nebula: 0.35, bandWidth: 0.025, grade: grade(0xdcefff, 0xedfcff) }),
 } satisfies Record<string, SkyPreset>;
 export type SkyName = keyof typeof SKY_PRESETS;
 
@@ -61,7 +68,7 @@ void main() {
 
 const FRAG = /* glsl */ `
 uniform vec3 uBase, uCol1, uCol2, uCore, uDir1, uDir2, uBandN;
-uniform float uNebula, uStars;
+uniform float uNebula, uStars, uBandWidth;
 varying vec3 vDir;
 ${NOISE_GLSL}
 // One star per grid cell above a brightness threshold (band lowers the
@@ -114,6 +121,11 @@ void main() {
          + starLayer(d, 120.0, 0.92, 0.22, 0.0, 0.06 * mw) * 0.9
          + starLayer(d, 300.0, 0.955, 0.45, 0.0, 0.12 * mw) * 0.5;
   vec3 haze = vec3(0.42, 0.48, 0.66) * mw * (0.045 + 0.04 * swirl);
+  if (uBandWidth > 0.0) {
+    float band = 1.0 - step(uBandWidth, abs(dot(d, uDir1)));
+    neb = mix(uCol2, uCol1, posterize(swirl, 3.0)) * band + uCore * hot * band;
+    haze = vec3(0.0);
+  }
   vec3 col = uBase + neb * uNebula + (s + haze) * uStars * (1.0 - 0.35 * (pa + pb));
   gl_FragColor = vec4(col, 1.0);
 }`;
@@ -134,6 +146,7 @@ export class Skybox {
       uDir2: { value: p.dir2 },
       uCore: { value: p.core },
       uNebula: { value: p.nebula },
+      uBandWidth: { value: p.bandWidth ?? 0 },
       uStars: { value: 1 },
       uBandN: { value: new THREE.Vector3(0.3, 0.85, 0.35).normalize() },
     };

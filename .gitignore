@@ -12,3 +12,4 @@ docs/shots/*.mp4
 
 # scratch captures from test scripts
 docs/shots/_*.png
+.astra/

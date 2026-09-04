@@ -3,19 +3,21 @@ import { writeSave } from "@/core/save";
 import { LEVELS, type LevelDef } from "@/mission/levels";
 import { SHIPS } from "@/ships/registry";
 import { fmt } from "@/mission/mission";
+import { SYSTEMS } from "@/world/systems";
 
 /**
  * Mission select. Cards for every level (locked until its `requires` is
  * cleared, best time shown once cleared) and a ship row (locked until
  * unlocked by a mission). LAUNCH reloads with `?mission=&ship=`; the ship
- * choice also persists so a plain reload keeps it.
+ * choice also persists so a plain reload keeps it. Missions are grouped by
+ * the system they happen in; LAUNCH hands the level to `onLaunch` (the gate).
  */
 export class Hub {
   private mission: string;
   private ship: string;
   private readonly el: HTMLElement;
 
-  constructor(root: HTMLElement, private readonly save: Save, current: LevelDef, onBack: () => void) {
+  constructor(root: HTMLElement, private readonly save: Save, current: LevelDef, onBack: () => void, private readonly onLaunch: (level: LevelDef, ship: string) => void) {
     this.el = root;
     this.mission = current.id;
     this.ship = save.progress.ship;
@@ -45,14 +47,23 @@ export class Hub {
     const P = this.save.progress;
     const ms = this.el.querySelector<HTMLElement>(".missions")!;
     ms.textContent = "";
-    for (const l of LEVELS) {
+    for (const sys of SYSTEMS) {
+      const levels = LEVELS.filter((l) => l.system === sys.id);
+      if (levels.length === 0) continue;
+      const h = document.createElement("h3");
+      const anyOpen = levels.some((l) => this.unlocked(l));
+      h.className = anyOpen ? "" : "locked";
+      h.innerHTML = `<b>${sys.name}</b><small>${anyOpen ? sys.blurb : "NO GATE ADDRESS YET"}</small>`;
+      ms.appendChild(h);
+      for (const l of levels) {
       const open = this.unlocked(l), rec = P.missions[l.id];
       const b = document.createElement("button");
       b.className = `m${open ? "" : " locked"}${l.id === this.mission ? " sel" : ""}`;
       const status = !open ? `LOCKED · clear ${LEVELS.find((x) => x.id === l.requires)?.title ?? "?"}` : rec ? `CLEARED ×${rec.completions} · best ${fmt(rec.bestTime)}` : "NEW";
       b.innerHTML = `<b>${l.title}</b><small>${l.blurb}</small><i>${status}${l.unlocks && open && !rec ? ` · unlocks ${SHIPS[l.unlocks]?.def.name ?? l.unlocks}` : ""}</i>`;
-      if (open) b.addEventListener("click", () => ((this.mission = l.id), this.build()));
-      ms.appendChild(b);
+        if (open) b.addEventListener("click", () => ((this.mission = l.id), this.build()));
+        ms.appendChild(b);
+      }
     }
     const ss = this.el.querySelector<HTMLElement>(".ships")!;
     ss.textContent = "";
@@ -70,10 +81,8 @@ export class Hub {
   private launch(): void {
     this.save.progress.ship = this.ship;
     writeSave(this.save);
-    const q = new URLSearchParams(location.search);
-    q.set("mission", this.mission);
-    q.set("ship", this.ship);
-    location.search = q.toString();
+    this.hide();
+    this.onLaunch(LEVELS.find((l) => l.id === this.mission) ?? LEVELS[0]!, this.ship);
   }
 }
 

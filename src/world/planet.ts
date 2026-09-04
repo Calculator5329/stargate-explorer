@@ -29,6 +29,10 @@ export interface PlanetOptions {
   sunDir: THREE.Vector3;
   palette: PlanetPalette;
   ring?: RingDef;
+  /** Number of repeating latitude bands; omitted for continents. */
+  bands?: number;
+  /** Overrides the global sea level, including during debug-panel updates. */
+  seaLevel?: number;
 }
 
 /** Ethan's 2026-09-04 reference frame: saturated orange land, two-tone blue sea, indigo night side, pale limb. No caps (T.planet.iceLine ≥ 1). */
@@ -43,15 +47,44 @@ export const PALETTE_DESERT: PlanetPalette = {
   night: 0x2a1d5c,
 };
 
-/** A named planet: palette, noise seed, optional ring. Systems pick one; `?planet=<key>` previews it. */
+/** A named planet: palette, noise seed, optional ring and surface overrides. Systems pick one; `?planet=<key>` previews it. */
 export interface PlanetPreset {
   palette: PlanetPalette;
   seed: number;
   ring?: RingDef;
+  /** Number of repeating latitude bands; omitted for continents. */
+  bands?: number;
+  /** Overrides the global sea level, including during debug-panel updates. */
+  seaLevel?: number;
 }
 
 export const PLANET_PRESETS: Record<string, PlanetPreset> = {
   desert: { palette: PALETTE_DESERT, seed: 4.2 },
+  ice: {
+    palette: { deep: 0x071d52, shallow: 0x124eab, low: 0xf2faff, mid: 0x97dcff, high: 0x238fdf, ice: 0xffffff, rim: 0x52dfff, night: 0x102c63 },
+    seed: 12.7,
+  },
+  lava: {
+    palette: { deep: 0xe62d08, shallow: 0xff8c12, low: 0x171322, mid: 0x29203d, high: 0x49305c, ice: 0xffb52b, rim: 0xff510c, night: 0x410f2b },
+    seed: 28.3,
+  },
+  jungle: {
+    palette: { deep: 0x064b86, shallow: 0x08d8bd, low: 0x087c37, mid: 0x07532d, high: 0x123928, ice: 0xd5fff0, rim: 0x2cf5ca, night: 0x092f46 },
+    seed: 43.9,
+  },
+  gasGiant: {
+    palette: { deep: 0xa54512, shallow: 0xe88b16, low: 0xffc344, mid: 0xd66b13, high: 0x8b3216, ice: 0xffde83, rim: 0xffba38, night: 0x3d1d4f },
+    seed: 61.4,
+    bands: 7,
+    seaLevel: -0.04,
+    ring: { inner: 2300, outer: 3600, tilt: 0.38, color: 0xf6ac32 },
+  },
+  moon: {
+    palette: { deep: 0x303746, shallow: 0x535e70, low: 0xbcc5cf, mid: 0x7c899d, high: 0x46536b, ice: 0xdbe4ed, rim: 0x779bd4, night: 0x201e42 },
+    seed: 87.6,
+    // fbm is nonnegative: hh cannot fall below -0.86.
+    seaLevel: -1,
+  },
 };
 
 export function parsePlanetPreset(v: string | null): string {
@@ -70,7 +103,7 @@ void main() {
 // Hard steps everywhere: land/sea, 3 land tones, 2 sea tones, 3 light steps.
 const SURFACE_FRAG = /* glsl */ `
 uniform vec3 uSunDir, uDeep, uShallow, uLow, uMid, uHigh, uIce, uNight;
-uniform float uSeaLevel, uIceLine, uSeed;
+uniform float uSeaLevel, uTerrainLevel, uIceLine, uSeed, uBands;
 varying vec3 vN;
 varying vec3 vObj;
 ${NOISE_GLSL}
@@ -79,10 +112,14 @@ void main() {
   float h = fbm(n * 2.4 + vec3(uSeed)) * 1.6 - 0.8;
   float detail = fbm(n * 9.0 + vec3(uSeed * 1.7));
   float hh = h + 0.12 * (detail - 0.5);
+  if (uBands > 0.0) {
+    // Latitude replaces terrain height; palette selection remains hard-stepped.
+    hh = fract((n.y * 0.5 + 0.5) * uBands + uSeed) * 1.6 - 0.8;
+  }
   float land = step(uSeaLevel, hh);
   vec3 sea = mix(uDeep, uShallow, step(uSeaLevel - 0.16, hh));
-  vec3 ground = mix(uLow, uMid, step(uSeaLevel + 0.13, hh));
-  ground = mix(ground, uHigh, step(uSeaLevel + 0.30, hh));
+  vec3 ground = mix(uLow, uMid, step(uTerrainLevel + 0.13, hh));
+  ground = mix(ground, uHigh, step(uTerrainLevel + 0.30, hh));
   vec3 alb = mix(sea, ground, land);
   float ice = step(uIceLine, abs(n.y) + 0.06 * (detail - 0.5));
   alb = mix(alb, uIce, ice);
@@ -141,13 +178,19 @@ export class Planet {
   readonly group = new THREE.Group();
   private readonly surfaceU;
   private readonly atmoU;
+  private readonly seaLevel: number | undefined;
 
   constructor(o: PlanetOptions) {
     const p = o.palette;
+    // Legacy callers forward palette/seed individually, so recover named defaults here.
+    const preset = Object.values(PLANET_PRESETS).find((p) => p.palette === o.palette && p.seed === o.seed);
+    this.seaLevel = o.seaLevel ?? preset?.seaLevel;
     const c = (v: number) => ({ value: new THREE.Color(v) });
     this.surfaceU = {
       uSunDir: { value: o.sunDir },
-      uSeaLevel: { value: T.planet.seaLevel },
+      uSeaLevel: { value: this.seaLevel ?? T.planet.seaLevel },
+      uTerrainLevel: { value: T.planet.seaLevel },
+      uBands: { value: o.bands ?? preset?.bands ?? 0 },
       uIceLine: { value: T.planet.iceLine },
       uSeed: { value: o.seed },
       uDeep: c(p.deep),
@@ -200,7 +243,8 @@ export class Planet {
   }
 
   update(): void {
-    this.surfaceU.uSeaLevel.value = T.planet.seaLevel;
+    this.surfaceU.uSeaLevel.value = this.seaLevel ?? T.planet.seaLevel;
+    this.surfaceU.uTerrainLevel.value = T.planet.seaLevel;
     this.surfaceU.uIceLine.value = T.planet.iceLine;
     this.atmoU.uStrength.value = T.planet.atmosphereStrength;
     this.atmoU.uRimWidth.value = T.planet.rimWidth;

@@ -109,7 +109,7 @@ export class Hud {
     this.root.classList.toggle("replaying", on);
   }
 
-  updateCombat(combat: Combat, mission: Mission, cam: Camera, playerVel: Vector3, hasReplay = false): void {
+  updateCombat(combat: Combat, mission: Mission, cam: Camera, playerVel: Vector3, hasReplay = false, gateUp = false): void {
     const P = combat.player;
     this.hpEl.style.width = `${((P.hp / combat.maxHp) * 100).toFixed(1)}%`;
     this.hpEl.classList.toggle("hurt", P.hp < combat.maxHp * 0.35);
@@ -121,7 +121,7 @@ export class Hud {
     }
     this.target(combat, mission, cam, playerVel);
     this.cards(mission);
-    const again = hasReplay ? "R · FLY AGAIN      V · REPLAY THE KILL" : "R · FLY AGAIN";
+    const again = `${gateUp ? "FLY THE GATE HOME      G · MISSIONS      " : ""}R · FLY AGAIN${hasReplay ? "      V · REPLAY THE KILL" : ""}`;
     if (again !== this.lastAgain) {
       this.lastAgain = again;
       this.againEl.textContent = again;

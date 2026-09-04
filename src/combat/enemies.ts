@@ -95,7 +95,7 @@ export class Enemies {
   /** set by combat: crash dust at a rock scrape */
   onCrash: ((pos: THREE.Vector3, normal: THREE.Vector3, speed: number) => void) | null = null;
 
-  constructor(private readonly def: ShipDef, private readonly rocks: RockSpheres) {}
+  constructor(private readonly def: ShipDef, readonly rocks: RockSpheres) {}
 
   get aliveCount(): number {
     let n = 0;

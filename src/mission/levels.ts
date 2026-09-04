@@ -17,6 +17,8 @@ interface BaseLevel {
   title: string;
   /** one line for the mission-select card */
   blurb: string;
+  /** SystemDef id this mission happens in */
+  system: string;
   intro: string[];
   /** mission id that must be completed first */
   requires?: string;
@@ -70,6 +72,7 @@ export const LEVELS: LevelDef[] = [
   {
     id: "belt-clear",
     type: "clear",
+    system: "abydos",
     title: "CLEAR THE FIELD",
     blurb: "Three waves of death gliders in the belt. Learn the guns, learn the missiles.",
     intro: ["Gliders inbound through the belt.", "Clear them before they reach the gate."],
@@ -83,6 +86,7 @@ export const LEVELS: LevelDef[] = [
   {
     id: "gauntlet",
     type: "run",
+    system: "abydos",
     title: "THE GAUNTLET",
     blurb: "Ten gates threaded through the thickest rock in the belt, either way through. Mines on the rims; gliders join the chase halfway.",
     intro: ["The window closes in two minutes.", "The gates sit in the rock. Fly them, either way through."],
@@ -99,6 +103,7 @@ export const LEVELS: LevelDef[] = [
   {
     id: "escort",
     type: "protect",
+    system: "chulak",
     title: "COVER THE PROMETHEUS",
     blurb: "The Prometheus is limping to the gate with her shields down. Keep the gliders off her hull.",
     intro: ["Prometheus reports shields down, sublight only.", "Nothing reaches her. Nothing."],
@@ -115,6 +120,7 @@ export const LEVELS: LevelDef[] = [
   {
     id: "hatak",
     type: "strike",
+    system: "p3x774",
     title: "BRING DOWN THE HA'TAK",
     blurb: "A Goa'uld mothership is parked over the belt behind a minefield. Ring guns first, then the three shield nodes, then the hull.",
     intro: ["Ha'tak in orbit, shields up, gliders launching.", "Kill the ring guns, drop the shield nodes, then burn the pyramid."],

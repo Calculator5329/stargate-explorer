@@ -80,6 +80,11 @@ export class Menu {
     this.set(true, true);
   }
 
+  /** Close from outside (the gate is dialing). */
+  close(): void {
+    this.set(false);
+  }
+
   /** Show or hide; `first` is the start screen (no "paused" wording). */
   private set(open: boolean, first = false): void {
     this.replayBtn.style.display = open && this.hasReplay() ? "" : "none";
