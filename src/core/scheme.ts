@@ -27,6 +27,13 @@ export class Scheme {
     return this.arcade ? "arcade" : "classic";
   }
 
+  /** flight assist: velocity follows the nose. Off = drift mode (X toggles). */
+  assist = true;
+  toggleAssist(): void {
+    this.assist = !this.assist;
+    this.sinceSwitch = 0;
+  }
+
   toggle(): void {
     this.arcade = !this.arcade;
     this.sinceSwitch = 0;

@@ -65,6 +65,7 @@ export class Input {
       if (e.code === "Space") e.preventDefault();
       if (e.repeat) return;
       if (e.code === "KeyC") this.scheme.toggle();
+      if (e.code === "KeyX") this.scheme.toggleAssist();
       if (e.code === "KeyA" || e.code === "KeyD") {
         const now = performance.now();
         if (this.lastTap.code === e.code && now - this.lastTap.t < T.flight.doubleTapMs) {

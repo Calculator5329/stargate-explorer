@@ -7,8 +7,8 @@ import type { Combat } from "@/combat/combat";
 import type { Mission } from "@/mission/mission";
 
 const HINTS = {
-  arcade: "click to fly · mouse steers · W pull up / S dive · A/D roll (double-tap: barrel roll) · Shift boost · Space brake · C classic controls · ` tuning",
-  classic: "click to fly · mouse steers · W/S throttle · A/D roll (double-tap: barrel roll) · Space drift · Shift boost · C arcade controls · ` tuning",
+  arcade: "click to fly · mouse steers · W pull up / S dive · A/D roll (double-tap: barrel roll) · Shift boost · Space brake · LMB fire · C classic · X flight assist · ` tuning",
+  classic: "click to fly · mouse steers · W/S throttle · A/D roll (double-tap: barrel roll) · Space drift · Shift boost · LMB fire · C arcade · X flight assist · ` tuning",
 };
 
 /** DOM HUD: speed readout, throttle/speed bar, hint per control scheme, arena warning, hit flash. */
@@ -35,6 +35,7 @@ export class Hud {
   private lastSpeed = -1;
   private lastBar = -1;
   private lastScheme = "";
+  private lastAssist = true;
 
   constructor(private readonly root: HTMLElement) {
     this.speedEl = must(root.querySelector<HTMLElement>(".speed .v"));
@@ -67,10 +68,11 @@ export class Hud {
 
   update(flight: Flight, input: Input, outside: boolean): void {
     const scheme = input.scheme;
-    if (scheme.name !== this.lastScheme) {
+    if (scheme.name !== this.lastScheme || scheme.assist !== this.lastAssist) {
       this.lastScheme = scheme.name;
+      this.lastAssist = scheme.assist;
       this.hintEl.textContent = HINTS[scheme.name];
-      this.schemeEl.textContent = `${scheme.name.toUpperCase()} CONTROLS`;
+      this.schemeEl.textContent = `${scheme.name.toUpperCase()} CONTROLS${scheme.assist ? "" : " · ASSIST OFF"}`;
     }
     this.schemeEl.style.opacity = String(Math.max(0, Math.min(1, 2.5 - scheme.sinceSwitch)));
     this.warnEl.classList.toggle("hidden", !outside);

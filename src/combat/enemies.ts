@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { T, clamp } from "@/core/tunables";
+import { Flight } from "@/sim/flight";
 import type { ShipDef } from "@/ships/defs";
 import { ShipRig } from "@/ships/rig";
 import type { Projectiles } from "@/combat/projectiles";
@@ -195,6 +196,30 @@ export class Enemies {
       _fwd.set(0, 0, 1).applyQuaternion(e.quat);
       e.vel.lerp(_tmp.copy(_fwd).multiplyScalar(e.speed), 1 - Math.exp(-6 * dt));
       e.pos.addScaledVector(e.vel, dt);
+      this.rockHit(e);
+    }
+  }
+
+  /** Gliders that flew into a rock this tick; the combat layer drains this for the explosion. */
+  readonly crashed: Enemy[] = [];
+
+  /** Sphere test against the belt: bounce, and take the same impact damage the player does. */
+  private rockHit(e: Enemy): void {
+    const R = this.rocks;
+    for (let i = 0; i < R.count; i++) {
+      const r = R.radii[i]! * 0.8 + T.enemy.radius;
+      const dx = e.pos.x - R.centers[i * 3]!, dy = e.pos.y - R.centers[i * 3 + 1]!, dz = e.pos.z - R.centers[i * 3 + 2]!;
+      const d2 = dx * dx + dy * dy + dz * dz;
+      if (d2 >= r * r) continue;
+      const d = Math.sqrt(d2) || 1;
+      _tmp.set(dx / d, dy / d, dz / d);
+      const into = -e.vel.dot(_tmp);
+      e.pos.addScaledVector(_tmp, r - d + 0.1);
+      if (into > 0) e.vel.addScaledVector(_tmp, 2 * into).multiplyScalar(0.5);
+      e.speed *= 0.5;
+      const dmg = Flight.impactDamage(into) * T.enemy.hp;
+      if (dmg > 0 && this.damage(e, dmg)) this.crashed.push(e);
+      return;
     }
   }
 

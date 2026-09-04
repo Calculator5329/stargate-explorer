@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { T, clamp } from "@/core/tunables";
-import type { Flight } from "@/sim/flight";
+import { Flight } from "@/sim/flight";
 import type { Input } from "@/core/input";
 import { Projectiles, type Shot } from "@/combat/projectiles";
 import { Enemies, type Enemy, type RockSpheres } from "@/combat/enemies";
@@ -74,6 +74,16 @@ export class Combat {
     P.pos.copy(flight.pos);
     P.vel.copy(flight.velDir).multiplyScalar(flight.speed);
     if (P.alive && P.sinceHit > T.player.regenDelay) P.hp = Math.min(T.player.hp, P.hp + T.player.regen * dt);
+    if (flight.lastImpact > 0) {
+      const dmg = Flight.impactDamage(flight.lastImpact) * T.player.hp;
+      flight.lastImpact = 0;
+      if (dmg > 0 && P.alive) {
+        P.hp -= dmg;
+        P.sinceHit = 0;
+        this.audio.damage();
+        if (P.hp <= 0) this.die(flight);
+      }
+    }
 
     // player cannons: alternate guns at fireRate
     if (P.alive && input.fire && input.locked) {
@@ -94,6 +104,8 @@ export class Combat {
     this.muzzleT -= dt;
 
     this.enemies.tick(dt, P, this.shots);
+    for (const e of this.enemies.crashed) this.destroy(e, false);
+    this.enemies.crashed.length = 0;
     // move rounds, then test the swept segment of each against its targets
     for (const s of this.shots.shots) {
       if (!s.alive) continue;
@@ -132,13 +144,15 @@ export class Combat {
     this.player.sinceHit = 0;
     flight.sinceHit = 0.25; // a light shake and flash, not the rock-hit slam
     this.audio.damage();
-    if (this.player.hp <= 0) {
-      this.player.hp = 0;
-      this.player.alive = false;
-      this.fx.spawn(flight.pos, this.player.vel, 6);
-      this.audio.explosion(1);
-      this.ship.visible = false;
-    }
+    if (this.player.hp <= 0) this.die(flight);
+  }
+
+  private die(flight: Flight): void {
+    this.player.hp = 0;
+    this.player.alive = false;
+    this.fx.spawn(flight.pos, this.player.vel, 6);
+    this.audio.explosion(1);
+    this.ship.visible = false;
   }
 
   private hitRocks(s: Shot): void {
@@ -153,8 +167,8 @@ export class Combat {
     }
   }
 
-  private destroy(e: Enemy): void {
-    this.player.kills++;
+  private destroy(e: Enemy, byPlayer = true): void {
+    if (byPlayer) this.player.kills++;
     this.fx.spawn(e.pos, e.vel, 5);
     this.audio.explosion(0.8);
   }

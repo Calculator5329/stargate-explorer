@@ -2,6 +2,11 @@
 
 Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
+## 2026-09-04 (overnight) — Momentum, rock damage
+
+- Flight has a real velocity vector: forward component chases the target speed (`accel`, coasts down at `coastDecel` so a released boost carries), lateral component decays at `latDamp` (3.2/s, was an effective 9/s snap), so hard turns slide. X toggles flight assist off: `latDampOff` 0.15/s, speed only from Shift thrust / Space retro (W/S thrust in classic). HUD tag shows ASSIST OFF.
+- Rock impacts hurt: damage = ((normal speed − 35) / (150 − 35))² × max hp, for the player and for gliders (which bounce, lose half their speed, and explode when it kills them). Head-on at cruise is fatal; a graze scrapes.
+
 ## 2026-09-04 — Feedback round 4 (ship + plumes)
 
 - F-11 pass 3 from Ethan's reference images: slender fuselage, one big thin delta with a straight trailing edge, two round intake nacelles above the wing, wingtip plates, no tail fins (`docs/shots/f302-pass8-*`). 4.0k tris in the top view (pass 2 was 7.5k).

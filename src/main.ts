@@ -33,7 +33,7 @@ const hud = new Hud(document.getElementById("hud")!);
 const perf = new PerfOverlay(document.querySelector<HTMLElement>("#hud .perf")!);
 if (inspect) hud.hideAll();
 const game = inspect ? null : new Game(r.scene, world, rig.root, canvas);
-Object.assign(window, { __game: game, __flight: flight }); // headless tests (scripts/_*.mjs) drive the game through these
+Object.assign(window, { __game: game, __flight: flight, __rocks: world.asteroids }); // headless tests (scripts/_*.mjs) drive the game through these
 createDebugPanel();
 
 const _p = new Vector3(), _v = new Vector3(), _q = new Quaternion();

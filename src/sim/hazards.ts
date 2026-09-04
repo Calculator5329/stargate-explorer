@@ -60,7 +60,9 @@ export class Hazards {
     _q.setFromUnitVectors(_fwd, _n);
     _q.slerp(new Quaternion(), 1 - clamp(f * T.arena.turnRate * dt, 0, 1)); // partial rotation toward centre
     flight.quat.premultiply(_q).normalize();
+    const sp = flight.vel.length();
     flight.velDir.lerp(_n, clamp(f * T.arena.turnRate * dt, 0, 1)).normalize();
+    flight.vel.copy(flight.velDir).multiplyScalar(sp);
   }
 
   /** Face-plane test in rock space; `scale` is the rock's uniform scale (its sphere radius / 1.05). */

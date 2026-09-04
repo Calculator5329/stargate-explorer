@@ -23,8 +23,14 @@ export const T = {
     bankIntoTurn: 0.9,
     /** how hard the soft horizon pulls the wings level (1/s) */
     autoLevel: 1.2,
-    /** how fast the velocity vector chases the nose (1/s); lower = more inertia */
-    velFollow: 9,
+    /** lateral velocity damping with flight assist on (1/s); lower = more slide through turns */
+    latDamp: 3.2,
+    /** same, assist off (X): near-Newtonian drift */
+    latDampOff: 0.15,
+    /** deceleration when coasting down from above the target speed (boost released), m/s² */
+    coastDecel: 45,
+    /** assist off: forward thrust from Shift and retro from Space, m/s² */
+    thrust: 60,
     /** speed bleed while drifting (m/s²) */
     driftDecel: 30,
     /** A/D double-tap window (ms) */
@@ -34,6 +40,9 @@ export const T = {
     barrelHop: 28,
     /** fraction of speed kept after bouncing off a rock */
     bounceKeep: 0.45,
+    /** rock impact (normal speed, m/s): below `grazeSpeed` no damage, at `killSpeed` certain death */
+    grazeSpeed: 35,
+    killSpeed: 150,
     /** arcade scheme: held speed, brake floor and how fast the brake bites */
     cruiseSpeed: 150,
     brakeSpeed: 45,
