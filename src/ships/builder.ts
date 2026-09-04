@@ -22,6 +22,7 @@ export function buildShip(def: ShipDef): THREE.Group {
   }
   for (const f of def.fins) fin(soup, f);
   for (const e of def.engines) engine(soup, e);
+  for (const e of def.pods ?? []) pod(soup, e);
   if (def.canopy) canopy(soup, def.canopy);
   for (const h of def.hatches) {
     hatch(soup, h, false);
@@ -289,7 +290,15 @@ function engine(soup: Soup, e: EngineDef): void {
   const shift = (rings: THREE.Vector3[][]) => rings.map((rg) => rg.map((p) => p.setX(p.x + x)));
 
   soup.begin();
-  loft(soup, shift([sec(-L / 2, 0.92), sec(-L / 2 + 0.5, 1), sec(L / 2 - 0.7, 1), sec(L / 2, 0.78)].map((s) => ring(s, 12))), underside, { capEnd: 0.3 });
+  const front = e.intake ? [sec(L / 2 - 0.6, 1, 3.4), sec(L / 2, 1.0, 3.6)] : [sec(L / 2 - 0.7, 1), sec(L / 2, 0.78)];
+  loft(soup, shift([sec(-L / 2, 0.92), sec(-L / 2 + 0.5, 1), ...front].map((s) => ring(s, 12))), underside, e.intake ? {} : { capEnd: 0.3 });
+  if (e.intake) {
+    soup.begin();
+    const lip = [sec(L / 2, 0.98, 3.6), sec(L / 2 + 0.08, 1.02, 3.6), sec(L / 2, 0.86, 3.6)];
+    loft(soup, shift(lip.map((s) => ring(s, 12))), () => "dark");
+    soup.begin();
+    loft(soup, shift([sec(L / 2, 0.86, 3.6), sec(L / 2 - 0.9, 0.5, 3.0)].map((s) => ring(s, 12))), () => "dark", { inward: true });
+  }
 
   soup.begin();
   const rear = -L / 2;
@@ -299,6 +308,17 @@ function engine(soup: Soup, e: EngineDef): void {
   soup.begin();
   const throat = [sec(rear - 0.56, 0.8, 2.2), sec(rear - 0.1, 0.52, 2.2)];
   loft(soup, shift(throat.map((s) => ring(s, 12))), () => "dark", { inward: true });
+}
+
+/** Plume-less nacelle: body-coloured tube, dark rear cap, pointed nose. */
+function pod(soup: Soup, e: EngineDef): void {
+  const [x, y, z] = e.pos;
+  const r = e.radius;
+  const L = e.length;
+  const sec = (dz: number, k: number): HullSection => ({ z: z + dz, w: r * k, h: r * k, n: 2.4, yOff: y });
+  soup.begin();
+  const rings = [sec(-L / 2, 0.85), sec(-L / 2 + 0.3, 1), sec(L / 2 - 1.0, 1), sec(L / 2, 0.6)].map((s) => ring(s, 12).map((p) => p.setX(p.x + x)));
+  loft(soup, rings, (n, _c, k) => (k === -1 && n.z < -0.5 ? "dark" : underside(n)), { capStart: 0.05, capEnd: 0.7 });
 }
 
 function canopy(soup: Soup, c: CanopyDef): void {

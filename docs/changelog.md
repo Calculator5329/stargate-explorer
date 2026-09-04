@@ -2,6 +2,19 @@
 
 Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
+## 2026-09-03 — Feedback round 1
+
+- Controls: A/D roll; Space drift; double-tap A/D barrel roll. Q/E freed.
+- Flight: velocity vector follows the nose with inertia (`velFollow`), drift freezes it, collisions reflect it (`Flight.bounce`).
+- `sim/hazards.ts`: rock collision (bounce, speed bleed, shake, HUD flash) and the arena current past 1500 m with a HUD warning.
+- `fx/dust.ts`: camera-riding speed dust, streaked along velocity, invisible when slow. Camera pulls back and rumbles on boost.
+- `fx/plume.ts`: banded outer cone + hot inner cone per engine, replacing crossed quads.
+- Asteroids: instanced outline shells + baked crease lines; screen-space `EdgePass` off in all tiers (class kept). Belt: 900 rocks, radius 60–1400, ±420 m. The "see-through" outlines were torn facets (per-occurrence jitter on an already non-indexed icosahedron); jitter is now per unique vertex (DECISIONS correction).
+- Ship: F-11 re-authored after the show's fighter in gunmetal; builder gains open intakes (`EngineDef.intake`) and plume-less pods (`ShipDef.pods`).
+- Sky: star field rewritten (magnitude spread, temperature tint, rare flares, milky-way band + haze).
+- Inspect views hide the belt and dust; side view now looks at the lit port side.
+- Captures: `boost` view (holds W + Shift for 6 s).
+
 ## 2026-09-03 — M1 graphics baseline (direction A)
 
 - Chase camera springs its offset from the ship instead of its world position; the old spring lagged 25 m at 100 m/s and made the ship shrink with speed (2026-09-03).

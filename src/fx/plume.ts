@@ -3,71 +3,54 @@ import { T } from "@/core/tunables";
 import type { EngineDef } from "@/ships/defs";
 import { noEdge } from "@/render/layers";
 
+// Unit cone along −Z: radius 1 at the nozzle, tapering toward the tip. The
+// vertex shader applies length/width; `t` (0 nozzle → 1 tip) comes from z.
 const VERT = /* glsl */ `
-uniform float uLength, uWidth;
-varying vec2 vUv;
+uniform float uLength, uWidth, uRadius;
+varying float vT, vAng;
 void main() {
-  vUv = uv;
   vec3 p = position;
-  float t = -p.z;
-  p.xy *= uWidth * mix(1.0, 0.3, t);
+  vT = -p.z;
+  vAng = atan(p.y, p.x);
+  p.xy *= uWidth * uRadius;
   p.z *= uLength;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
 }`;
 
-// Hard-edged chevron plume: V notches every third of the length, a white core that widens on boost.
+// Hard-banded plume: three brightness bands along the length, angled chevron
+// notches, a flickering end. The core cone (uCoreCone = 1) is plain and hot.
 const FRAG = /* glsl */ `
 uniform vec3 uColor, uCore;
-uniform float uBoost, uTime, uFlicker;
-varying vec2 vUv;
+uniform float uBoost, uTime, uFlicker, uCoreCone;
+varying float vT, vAng;
 void main() {
-  float t = vUv.y;
-  float x = abs(vUv.x - 0.5) * 2.0;
-  float end = 1.0 - uFlicker * (0.5 + 0.5 * sin(uTime * 37.0 + t * 21.0));
-  float body = step(t, end) * step(x, 1.0 - 0.12 * t);
-  float chev = step(0.14, fract(t * 3.0 + x * 0.9));
-  float core = step(x, 0.32 + 0.45 * uBoost) * step(t, 0.7 * end);
-  vec3 col = mix(uColor, uCore, core);
-  float a = body * chev;
+  float t = vT;
+  float end = 1.0 - uFlicker * (0.5 + 0.5 * sin(uTime * 37.0 + vAng * 2.0));
+  float body = step(t, end);
+  float chev = mix(step(0.16, fract(t * 3.0 + 0.3 * abs(sin(vAng * 1.5)))), 1.0, uCoreCone);
+  float band = 1.0 - 0.3 * step(0.45, t) - 0.3 * step(0.8, t);
+  vec3 col = mix(uColor * band, uCore, max(uCoreCone, step(t, 0.12 + 0.2 * uBoost)));
+  float a = body * chev * (0.55 + 0.25 * uCoreCone);
   gl_FragColor = vec4(col * a, a);
 }`;
 
-/** Two crossed quads per engine, unit-sized; the vertex shader applies length and width. */
-function crossQuads(): THREE.BufferGeometry {
-  const pos: number[] = [];
-  const uv: number[] = [];
-  const quad = (ax: number, ay: number) => {
-    // corners: (−1,0) (1,0) (1,−1) (−1,−1) in (across, along)
-    const c = [
-      [-1, 0],
-      [1, 0],
-      [1, -1],
-      [-1, -1],
-    ] as const;
-    const idx = [0, 1, 2, 0, 2, 3];
-    for (const i of idx) {
-      const [s, z] = c[i]!;
-      pos.push(s * ax, s * ay, z);
-      uv.push((s + 1) / 2, -z);
-    }
-  };
-  quad(1, 0);
-  quad(0, 1);
-  const g = new THREE.BufferGeometry();
-  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-  g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+function cone(tipRadius: number): THREE.BufferGeometry {
+  const g = new THREE.CylinderGeometry(tipRadius, 1, 1, 18, 3, true);
+  g.rotateX(-Math.PI / 2); // +Y (tip) → −Z
+  g.translate(0, 0, -0.5); // base at z = 0
   return g;
 }
 
-/** Engine plumes for one ship: length follows throttle, boost adds a wide white core. */
+/** Engine plumes for one ship: a banded outer cone plus a hot inner core; length follows throttle, boost widens the core. */
 export class Plume {
   readonly group = new THREE.Group();
-  private readonly u;
+  private readonly outer;
+  private readonly inner;
   private length = 0;
   private time = 0;
 
   constructor(engines: EngineDef[], glow: number) {
-    this.u = {
+    const shared = {
       uLength: { value: 1 },
       uWidth: { value: 1 },
       uColor: { value: new THREE.Color(glow).multiplyScalar(1.7) },
@@ -76,23 +59,33 @@ export class Plume {
       uTime: { value: 0 },
       uFlicker: { value: T.plume.flicker },
     };
-    const mat = new THREE.ShaderMaterial({
-      vertexShader: VERT,
-      fragmentShader: FRAG,
-      uniforms: this.u,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    const geo = crossQuads();
+    const mat = (coreCone: number, radius: number) =>
+      new THREE.ShaderMaterial({
+        vertexShader: VERT,
+        fragmentShader: FRAG,
+        uniforms: { ...shared, uCoreCone: { value: coreCone }, uRadius: { value: radius } },
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+    this.outer = shared;
+    this.inner = { uLength: { value: 1 }, uBoost: shared.uBoost };
+    const outerGeo = cone(0.22);
+    const innerGeo = cone(0.1);
     for (const e of engines) {
-      const m = noEdge(new THREE.Mesh(geo, mat));
-      m.position.set(e.pos[0], e.pos[1], e.pos[2] - e.length / 2 - 0.3);
-      m.scale.set(e.radius, e.radius, 1); // length stays in metres
-      m.frustumCulled = false;
-      m.renderOrder = 5;
-      this.group.add(m);
+      const o = noEdge(new THREE.Mesh(outerGeo, mat(0, 1)));
+      const i = noEdge(new THREE.Mesh(innerGeo, mat(1, 0.45)));
+      // the inner cone has its own length uniform (shorter) but shares everything else
+      (i.material as THREE.ShaderMaterial).uniforms.uLength = this.inner.uLength;
+      for (const m of [o, i]) {
+        m.position.set(e.pos[0], e.pos[1], e.pos[2] - e.length / 2 - 0.3);
+        m.scale.setScalar(e.radius);
+        m.scale.z = 1; // length stays in metres
+        m.frustumCulled = false;
+        m.renderOrder = 5;
+        this.group.add(m);
+      }
     }
   }
 
@@ -101,11 +94,12 @@ export class Plume {
     const p = T.plume;
     const target = boost ? p.boostLength : p.length * (0.35 + 0.65 * throttle);
     this.length += (target - this.length) * Math.min(1, dt * 6);
-    this.u.uLength.value = this.length;
-    this.u.uWidth.value = p.width;
-    this.u.uFlicker.value = p.flicker;
-    this.u.uTime.value = this.time;
-    const b = this.u.uBoost.value as number;
-    this.u.uBoost.value = b + ((boost ? 1 : 0) - b) * Math.min(1, dt * 8);
+    this.outer.uLength.value = this.length;
+    this.inner.uLength.value = this.length * 0.72;
+    this.outer.uWidth.value = p.width;
+    this.outer.uFlicker.value = p.flicker;
+    this.outer.uTime.value = this.time;
+    const b = this.outer.uBoost.value;
+    this.outer.uBoost.value = b + ((boost ? 1 : 0) - b) * Math.min(1, dt * 8);
   }
 }

@@ -6,12 +6,17 @@ import { T, clamp } from "@/core/tunables";
  * model only ever sees a [-1, 1] stick regardless of frame rate.
  *
  *   stick.x  +1 = nose right      stick.y  +1 = nose up
- *   roll     +1 = roll right (E)  -1 = roll left (Q)
+ *   roll     +1 = roll right (D)  -1 = roll left (A)
+ *   barrel   ±1 for one tick when A or D is double-tapped
+ *   drift    Space held: nose turns, velocity keeps going
  */
 export class Input {
   readonly stick = { x: 0, y: 0 };
   throttleDelta = 0;
   roll = 0;
+  /** −1 / +1 on the tick a double-tap lands, else 0 */
+  barrel = 0;
+  drift = false;
   boost = false;
   /** Tracked for M2; nothing consumes it yet. */
   fire = false;
@@ -20,6 +25,8 @@ export class Input {
   private mdx = 0;
   private mdy = 0;
   private readonly keys = new Set<string>();
+  private lastTap = { code: "", t: -1 };
+  private pendingBarrel = 0;
 
   constructor(el: HTMLElement, enabled = true) {
     if (!enabled) return;
@@ -43,6 +50,15 @@ export class Input {
     });
     document.addEventListener("keydown", (e) => {
       if (e.code === "Backquote") return; // debug panel toggle, not flight input
+      if (e.code === "Space") e.preventDefault();
+      if (e.repeat) return;
+      if (e.code === "KeyA" || e.code === "KeyD") {
+        const now = performance.now();
+        if (this.lastTap.code === e.code && now - this.lastTap.t < T.flight.doubleTapMs) {
+          this.pendingBarrel = e.code === "KeyD" ? 1 : -1;
+          this.lastTap.t = -1;
+        } else this.lastTap = { code: e.code, t: now };
+      }
       this.keys.add(e.code);
     });
     document.addEventListener("keyup", (e) => this.keys.delete(e.code));
@@ -59,7 +75,10 @@ export class Input {
 
     const k = this.keys;
     this.throttleDelta = (k.has("KeyW") ? 1 : 0) - (k.has("KeyS") ? 1 : 0);
-    this.roll = (k.has("KeyE") ? 1 : 0) - (k.has("KeyQ") ? 1 : 0);
+    this.roll = (k.has("KeyD") ? 1 : 0) - (k.has("KeyA") ? 1 : 0);
+    this.drift = k.has("Space");
     this.boost = k.has("ShiftLeft") || k.has("ShiftRight");
+    this.barrel = this.pendingBarrel;
+    this.pendingBarrel = 0;
   }
 }

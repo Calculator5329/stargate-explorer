@@ -25,7 +25,7 @@ export class InspectView {
     cam.up.set(0, 1, 0);
     switch (mode) {
       case "side":
-        cam.position.set(-d, 0, 0); // starboard side; +X is port
+        cam.position.set(d, 0, 0); // port side (+X), the side the sun lights
         break;
       case "top":
         cam.position.set(0, d, 0);

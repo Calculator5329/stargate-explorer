@@ -81,3 +81,19 @@ Append-only log. One entry per decision that constrains future work. Format: dat
 **Consequences:** `node scripts/capture-shots.mjs [date]` writes the five standard views to `docs/shots/` at 1280×720 with the dev server running. Frame timing must come from a visible tab on real hardware; STATUS.md keeps that row as "unmeasured" until then.
 
 <!-- next entry below -->
+
+### 2026-09-03 — The player fighter follows the show's F-302 closely (supersedes "designs stay original")
+**Why:** Ethan, on the M1 captures: the ship "should look a lot more like the show ... that gray ... F-302". The 2026-09-03 M1 hull was flagged in chat as "in the spirit of" and he asked for closer. This is a private, unpublished repo.
+**Consequences:** `ships/defs.ts` models the F-11 on the F-302's proportions and layout (wedge nose, forward tandem canopy, aft-deck intake engines, canted fins, booster pods) in gunmetal. Identifiers and copy still avoid franchise names. **Publication of any kind must re-open this**: the visibility policy's `ask` default applies, and a likeness this close is an IP question for Ethan, not for an agent.
+
+### 2026-09-03 — Screen-space edge pass retired in favour of geometry outlines everywhere
+**Why:** the sobel pass drew angle-dependent, aliased lines on asteroid facets that Ethan read as "see-through" outlines. Depth/normal thresholds cannot be stable on a tumbling faceted rock.
+**Consequences:** every outlined thing carries its own geometry: inverted-hull shells (ships and, instanced, rocks) plus baked crease lines for rocks (own edge extraction; `EdgesGeometry` emitted every edge on this soup). `EdgePass` stays in the tree with `tier.edges` false everywhere; delete it if nothing wants it by M3. Draw calls drop (one fewer full-scene render).
+
+### 2026-09-03 — Flight keeps a velocity vector separate from the nose
+**Why:** pure nose-following felt like a camera on rails; drift, collisions and barrel rolls all need a velocity that can disagree with the heading for a moment.
+**Consequences:** `Flight.velDir` chases the nose at `velFollow` (9/s, so normal flight is unchanged in feel), freezes while Space is held, reflects on `bounce()`. Anything that moves the ship must go through `velDir`/`pos`, never by editing `quat` alone. Controls are A/D roll, Space drift, double-tap A/D barrel roll; Q/E are free.
+
+### 2026-09-03 — CORRECTION: the "see-through" rock outlines were torn geometry, not the edge pass
+**Why:** the entry above blames the sobel pass. Measured afterwards with a node script: `IcosahedronGeometry(1, 1)` is already non-indexed, so applying the per-vertex y-squash jitter per vertex *occurrence* moved shared corners to different places on each face (232 of 240 edges unmatched). The hairline cracks showed the dark inverted-hull shell behind them and shifted with view angle, which is exactly what Ethan described. The screen-space pass only made them more visible.
+**Consequences:** `rockGeometry` keys its `[scale, squash]` jitter per unique position so shared corners stay welded; the crease extraction (`creaseEdges`, 55°) then finds sparse creases instead of every edge. The edge-pass retirement stands on its own merits (one fewer full-scene render, no angle-dependent lines), but it was not the fix. Any future procedural mesh that gets a shell must be welded first; `outlineGeometry()` in `render/outline.ts` does the welding for ships.

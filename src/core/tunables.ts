@@ -23,6 +23,17 @@ export const T = {
     bankIntoTurn: 0.9,
     /** how hard the soft horizon pulls the wings level (1/s) */
     autoLevel: 1.2,
+    /** how fast the velocity vector chases the nose (1/s); lower = more inertia */
+    velFollow: 9,
+    /** speed bleed while drifting (m/s²) */
+    driftDecel: 30,
+    /** A/D double-tap window (ms) */
+    doubleTapMs: 260,
+    /** barrel roll rate (rad/s) and sideways hop (m/s at mid-roll) */
+    barrelRate: 9.5,
+    barrelHop: 28,
+    /** fraction of speed kept after bouncing off a rock */
+    bounceKeep: 0.45,
   },
   camera: {
     distance: 16,
@@ -33,8 +44,28 @@ export const T = {
     swayYaw: 2.0,
     swayPitch: 1.0,
     fovBase: 62,
-    fovSpeed: 12,
+    fovSpeed: 14,
     upFollow: 6,
+    /** extra pull-back on boost (m) */
+    distanceBoost: 2.5,
+    /** shake amplitude (m) right after a collision, and the constant boost rumble */
+    hitShake: 0.7,
+    boostShake: 0.05,
+  },
+  arena: {
+    /** play-field radius; beyond it a soft current turns you back */
+    radius: 1500,
+    turnRate: 1.4,
+    shipRadius: 4.5,
+  },
+  fx: {
+    dustCount: 700,
+    dustBox: 220,
+    /** streak length = velocity × this (s) */
+    streakSec: 0.045,
+    /** speed at which dust starts to show, and its max alpha */
+    dustFrom: 70,
+    dustAlpha: 0.55,
   },
   render: {
     exposure: 1.0,

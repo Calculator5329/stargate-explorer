@@ -64,6 +64,21 @@ Get one ship and one system to row A of `docs/art-direction-options.png`. Ordere
 
 **Migration hook for B (don't build now, don't block it):** keep `ships/loader.ts` alive and make the outline/toon passes toggleable per material, so a glTF hull can drop in with PBR materials later.
 
+### M1.5 — Feedback round 1 (Ethan, 2026-09-03)  *(done 2026-09-03)*
+
+Ethan's notes on the M1 captures, in his words where it matters: "very good start"; A/D should roll, not Q/E; booster has visual artifacts; asteroids fly-through and their outlines "see-through" and angle-dependent; the ship "should look a lot more like the show ... that gray ... F-302"; nebula fine as is, stars "don't look accurate"; more indication of speed; a bounded field dense enough to read speed against; ideas for dogfight feel.
+
+- [x] A/D roll (Q/E dropped); hint text updated. *(2026-09-03)*
+- [x] Plume rebuilt as banded cones with a hot inner core; the crossed quads that showed as diagonal dark bands are gone. *(2026-09-03)*
+- [x] Asteroids: instanced inverted-hull shells + baked crease lines (55°) replace the screen-space edge pass, which is now off in every tier. Root cause of the see-through lines was torn rock geometry (jitter per vertex occurrence), fixed by welding the jitter per unique vertex. *(2026-09-03)*
+- [x] Collision: sphere vs rock, bounce with speed bleed, camera shake, red HUD flash. *(2026-09-03)*
+- [x] Arena: 1500 m field, belt densified to 900 rocks inside it; past the edge a soft current turns you back and the HUD says so. *(2026-09-03)*
+- [x] Speed cues: velocity-streaked dust that fades in above 70 m/s, camera pull-back and rumble on boost, wider FOV swing. *(2026-09-03)*
+- [x] Flight feel experiments: velocity vector now chases the nose with inertia; Space drifts (nose free, velocity frozen); double-tap A/D barrel-rolls with a sideways hop. All tunable, all reversible. *(2026-09-03)*
+- [x] Hull re-authored to follow the show's fighter: gunmetal palette, wedge nose with chines, tandem canopy forward, intake-fed engines on the aft deck, canted fins on the nacelles, under-wing booster pods. `?palette=cream` is not wired; the cream palette stays in `palettes.ts`. *(2026-09-03)*
+- [x] Stars: dim 1 px points with a warm/white/blue spread, flares only on the rare bright ones, faint milky-way band with haze; no sub-pixel sparkle. *(2026-09-03)*
+- **Exit:** Ethan's second look at `docs/shots/2026-09-04-*.png` (boost view added). Open feel questions are listed in STATUS.md.
+
 ### M2 — Combat loop
 - [ ] <!-- workspace:id=work:7b8a8fda-764e-5a7a-ab08-c8e32aaada66 --> Guns: hitscan-or-fast-projectile, muzzle flash, tracer, impact spark. Fire on LMB (`input.fire` already exists).
 - [ ] <!-- workspace:id=work:cd7ab24a-d901-5d00-b5ca-ff2d953a304a --> Target: one enemy fighter with a simple pursue/evade state machine.

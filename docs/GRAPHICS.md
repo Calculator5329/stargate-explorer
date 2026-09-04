@@ -43,7 +43,7 @@ Think *Rogue Squadron* remaster concept art, *Sky: Children of the Light*. Toon 
 ## 2b. Reading the row-A reference — what makes it work
 Study the reference before touching code. The look is not "few polygons"; it's these five things together:
 1. **Hard black outlines** on every silhouette and panel edge, ~1.5–2 px at 1080p, slightly thinner on interior edges.
-2. **Three-tone palette per ship** — cream body, red accents (stripes, leading edges, tips), charcoal underside/nozzles — with almost no hue variation within a tone. Blue is reserved for canopy + plume. *(2026-09-03: was cream/gold/cyan; changed to match Ethan's reference frame, `ships/palettes.ts` `tauri`.)*
+2. **Three-tone palette per ship** — gunmetal body, darker gray chines/leading edges, charcoal underside/nozzles — with almost no hue variation within a tone. Blue is reserved for canopy + plume. *(2026-09-03: cream/red from the reference frame lasted one round; Ethan asked for the show's gray, so `tauri` is gunmetal and the cream set survives as `cream` in `ships/palettes.ts`.)*
 3. **Real panel detail in the geometry**: inset panels, a stepped canopy frame, hatches, a nozzle with visible rings, small decals (chevrons, numbers). Detail is *modelled*, not textured.
 4. **Flat-facet lighting with a hard shadow terminator** — two-step ramp, a cool fill on the dark side so it never goes to black.
 5. **Environment matches**: faceted asteroids with visible facets, planet with hard-edged continents and a crisp atmosphere line, nebula that is painted-flat with a few stepped tones rather than smooth fbm.

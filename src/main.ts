@@ -2,6 +2,7 @@ import { Quaternion, Vector3 } from "three";
 import { Loop } from "@/core/loop";
 import { Input } from "@/core/input";
 import { Flight } from "@/sim/flight";
+import { Hazards } from "@/sim/hazards";
 import { QUALITY, Renderer, parseQuality } from "@/render/renderer";
 import { ChaseCamera } from "@/render/camera";
 import { InspectView, parseView } from "@/render/inspect";
@@ -21,22 +22,23 @@ const world = new World(r.scene, { sky, planetSegments: QUALITY[quality].planetS
 const rig = new ShipRig(F11_HALBERD);
 r.scene.add(rig.root);
 world.sun.follow(rig.root);
-const input = new Input(canvas, view === null), flight = new Flight();
+const input = new Input(canvas, view === null), flight = new Flight(), hazards = new Hazards(world.asteroids);
 const chase = new ChaseCamera(r.camera);
 const inspect = view ? new InspectView(r.camera, rig.root, view, params.get("spin") !== "0", Number(params.get("dist") ?? 1) || 1) : null;
-const silhouette = params.get("silhouette") === "1";
-if (silhouette) (r.setSilhouette(true), rig.setSilhouette(true), (world.root.visible = false));
+if (params.get("silhouette") === "1") (r.setSilhouette(true), rig.setSilhouette(true), (world.root.visible = false));
+if (inspect) world.asteroids.group.visible = world.dust.lines.visible = false; // the belt would sit on top of the ship
 const hud = new Hud(document.getElementById("hud")!);
 const perf = new PerfOverlay(document.querySelector<HTMLElement>("#hud .perf")!);
 if (inspect) hud.hideHint();
 createDebugPanel();
 
-const _p = new Vector3(), _q = new Quaternion();
+const _p = new Vector3(), _v = new Vector3(), _q = new Quaternion();
 const loop = new Loop({
   sim(dt) {
     if (inspect) return;
     input.tick(dt);
     flight.tick(dt, input);
+    hazards.tick(flight, dt);
     world.tick(dt);
   },
   render(alpha, dt) {
@@ -47,8 +49,9 @@ const loop = new Loop({
       rig.root.position.copy(_p);
       rig.root.quaternion.copy(_q);
       rig.update(dt, flight.throttle, input.boost);
-      chase.update(dt, _p, _q, flight.speed, input.stick);
-      hud.update(flight.speed, flight.throttle, input.locked);
+      chase.update(dt, _p, _q, flight.speed, input.stick, input.boost, flight.sinceHit);
+      world.dust.update(_p, _v.copy(flight.velDir).multiplyScalar(flight.speed), flight.speed);
+      hud.update(flight.speed, flight.throttle, input.locked, hazards.outside, flight.sinceHit);
     }
     world.update(r.camera.position);
     r.render();

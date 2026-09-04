@@ -15,7 +15,7 @@ export type Quality = "low" | "med" | "high";
 export interface QualityTier {
   dpr: number;
   bloom: boolean;
-  /** post edge pass (the inverted-hull shells on ships are always on) */
+  /** screen-space edge pass; off everywhere since 2026-09-03 (angle-dependent flicker on rocks), shells + baked lines outline instead */
   edges: boolean;
   /** shadow map size, 0 = off */
   shadows: number;
@@ -26,8 +26,8 @@ export interface QualityTier {
 /** `?quality=` tiers. Low is the fallback for integrated GPUs. */
 export const QUALITY = {
   low: { dpr: 1, bloom: false, edges: false, shadows: 0, msaa: 0, planetSegments: 32 },
-  med: { dpr: 1.5, bloom: true, edges: true, shadows: 1024, msaa: 4, planetSegments: 64 },
-  high: { dpr: 2, bloom: true, edges: true, shadows: 2048, msaa: 4, planetSegments: 96 },
+  med: { dpr: 1.5, bloom: true, edges: false, shadows: 1024, msaa: 4, planetSegments: 64 },
+  high: { dpr: 2, bloom: true, edges: false, shadows: 2048, msaa: 4, planetSegments: 96 },
 } satisfies Record<Quality, QualityTier>;
 
 export function parseQuality(v: string | null): Quality {

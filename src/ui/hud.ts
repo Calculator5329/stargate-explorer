@@ -3,6 +3,8 @@ export class Hud {
   private readonly speedEl: HTMLElement;
   private readonly barEl: HTMLElement;
   private readonly hintEl: HTMLElement;
+  private readonly warnEl: HTMLElement;
+  private readonly flashEl: HTMLElement;
   private lastSpeed = -1;
   private lastThrottle = -1;
 
@@ -10,13 +12,17 @@ export class Hud {
     this.speedEl = must(root.querySelector<HTMLElement>(".speed .v"));
     this.barEl = must(root.querySelector<HTMLElement>(".throttle > i"));
     this.hintEl = must(root.querySelector<HTMLElement>(".hint"));
+    this.warnEl = must(root.querySelector<HTMLElement>(".warn"));
+    this.flashEl = must(root.querySelector<HTMLElement>(".flash"));
   }
 
   hideHint(): void {
     this.hintEl.classList.add("hidden");
   }
 
-  update(speed: number, throttle: number, locked: boolean): void {
+  update(speed: number, throttle: number, locked: boolean, outside: boolean, sinceHit: number): void {
+    this.warnEl.classList.toggle("hidden", !outside);
+    this.flashEl.style.opacity = String(Math.max(0, 0.55 - sinceHit * 1.6));
     const s = Math.round(speed);
     if (s !== this.lastSpeed) {
       this.speedEl.textContent = String(s);

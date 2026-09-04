@@ -7,4 +7,4 @@ npm run dev                          # in another shell, port 5187
 node scripts/capture-shots.mjs       # today's date; or pass YYYY-MM-DD [baseUrl]
 ```
 
-First run only: `npx playwright install chromium`. The script writes five views: `side` (`?view=side&spin=0`), `rear`, `top` (`dist=0.55`), `chase` (no params) and `silhouette`. Compare against the previous date before committing. SwiftShader draws the pixels, so ignore the fps readout in these. Bulk video stays out of git (`*.mp4` ignored).
+First run only: `npx playwright install chromium`. The script writes six views: `side` (`?view=side&spin=0`, port side), `rear`, `top` (`dist=0.55`), `chase` (no params), `boost` (chase after holding W + Shift for 6 s: dust streaks, pull-back, long plumes) and `silhouette`. Compare against the previous date before committing. SwiftShader draws the pixels, so ignore the fps readout in these. Bulk video stays out of git (`*.mp4` ignored).

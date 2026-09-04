@@ -60,27 +60,34 @@ void main() {
 }`;
 
 const FRAG = /* glsl */ `
-uniform vec3 uBase, uCol1, uCol2, uCore, uDir1, uDir2;
+uniform vec3 uBase, uCol1, uCol2, uCore, uDir1, uDir2, uBandN;
 uniform float uNebula, uStars;
 varying vec3 vDir;
 ${NOISE_GLSL}
-// One star per grid cell above a brightness threshold; the biggest layer gets a 4-point flare.
-vec3 starLayer(vec3 d, float scale, float thresh, float size, float flare) {
+// One star per grid cell above a brightness threshold (band lowers the
+// threshold inside the milky-way band). Most stars are faint 1 px points with a
+// warm/white/blue temperature spread; a few in the coarse layer are bright and
+// carry a short 4-point flare. Sizes are chosen so no star is sub-pixel.
+vec3 starLayer(vec3 d, float scale, float thresh, float size, float flare, float band) {
   vec3 p = d * scale;
   vec3 c = floor(p);
   vec3 h = hash33(c);
-  vec3 sp = c + 0.2 + h * 0.6;
+  vec3 sp = c + 0.1 + h * 0.8;
   vec3 off = p - sp;
   float dist = length(off);
-  float on = step(thresh, h.x) * (0.4 + 0.6 * hash31(c + 7.7));
-  vec3 tint = mix(vec3(1.0, 0.88, 0.75), vec3(0.75, 0.86, 1.0), h.y);
-  float core = smoothstep(size, size * 0.3, dist);
+  float bright = hash31(c + 7.7);
+  float on = step(thresh - band, h.x);
+  float mag = 0.12 + 0.88 * bright * bright * bright;
+  float sz = size * (0.55 + 1.0 * bright * bright);
+  vec3 tint = mix(mix(vec3(1.0, 0.80, 0.60), vec3(1.0, 0.97, 0.92), smoothstep(0.0, 0.45, h.y)), vec3(0.70, 0.80, 1.0), smoothstep(0.55, 1.0, h.y));
+  float core = smoothstep(sz, sz * 0.25, dist);
+  float big = step(0.94, bright) * flare;
   vec3 t1 = normalize(cross(d, vec3(0.0, 1.0, 0.0)));
   vec3 t2 = cross(d, t1);
   float fx = abs(dot(off, t1)), fy = abs(dot(off, t2));
-  float cross4 = (smoothstep(size * 4.0, 0.0, fx) * smoothstep(size * 0.35, 0.0, fy)
-                + smoothstep(size * 4.0, 0.0, fy) * smoothstep(size * 0.35, 0.0, fx)) * flare * 0.55;
-  return tint * on * (core + cross4);
+  float cross4 = (smoothstep(sz * 3.2, 0.0, fx) * smoothstep(sz * 0.3, 0.0, fy)
+                + smoothstep(sz * 3.2, 0.0, fy) * smoothstep(sz * 0.3, 0.0, fx)) * big * 0.45;
+  return tint * on * mag * (core * (1.0 + 0.8 * big) + cross4);
 }
 float posterize(float x, float n) { return floor(clamp(x, 0.0, 0.999) * n) / (n - 1.0); }
 void main() {
@@ -100,10 +107,12 @@ void main() {
   float grain = 0.86 + 0.14 * swirl;
   vec3 neb = (uCol1 * mix(0.12, 0.9, pa) * step(0.06, a) + uCol2 * mix(0.12, 0.85, pb) * step(0.06, b)) * grain + uCore * hot * 0.45;
   neb = min(neb, vec3(0.92));
-  vec3 s = starLayer(d, 55.0, 0.88, 0.10, 1.0) * 1.7
-         + starLayer(d, 140.0, 0.93, 0.06, 0.0) * 0.8
-         + starLayer(d, 330.0, 0.96, 0.05, 0.0) * 0.4;
-  vec3 col = uBase + neb * uNebula + s * uStars * (1.0 - 0.35 * (pa + pb));
+  float mw = exp(-pow(dot(d, uBandN), 2.0) * 20.0);
+  vec3 s = starLayer(d, 45.0, 0.90, 0.10, 1.0, 0.0) * 1.5
+         + starLayer(d, 120.0, 0.92, 0.22, 0.0, 0.06 * mw) * 0.9
+         + starLayer(d, 300.0, 0.955, 0.45, 0.0, 0.12 * mw) * 0.5;
+  vec3 haze = vec3(0.42, 0.48, 0.66) * mw * (0.045 + 0.04 * swirl);
+  vec3 col = uBase + neb * uNebula + (s + haze) * uStars * (1.0 - 0.35 * (pa + pb));
   gl_FragColor = vec4(col, 1.0);
 }`;
 
@@ -124,6 +133,7 @@ export class Skybox {
       uCore: { value: p.core },
       uNebula: { value: p.nebula },
       uStars: { value: 1 },
+      uBandN: { value: new THREE.Vector3(0.3, 0.85, 0.35).normalize() },
     };
     const mat = new THREE.ShaderMaterial({
       vertexShader: VERT,

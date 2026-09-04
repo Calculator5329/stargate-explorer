@@ -7,8 +7,14 @@ const VERT = /* glsl */ `
 uniform float uPixelScale;
 uniform float uWidth;
 void main() {
-  vec4 mv = modelViewMatrix * vec4(position, 1.0);
-  vec3 n = normalize(normalMatrix * normal);
+  vec4 pos = vec4(position, 1.0);
+  vec3 nrm = normal;
+  #ifdef USE_INSTANCING
+    pos = instanceMatrix * pos;
+    nrm = mat3(instanceMatrix) * nrm; // instances are uniformly scaled
+  #endif
+  vec4 mv = modelViewMatrix * pos;
+  vec3 n = normalize(normalMatrix * nrm);
   mv.xyz += n * (uWidth * uPixelScale * -mv.z);
   gl_Position = projectionMatrix * mv;
 }`;
@@ -43,14 +49,19 @@ export function updateOutlineUniforms(camera: THREE.PerspectiveCamera, viewportH
  * split at every crease). Returns a mesh to add as a sibling of the part.
  */
 export function outlineShell(positions: ArrayLike<number>): THREE.Mesh {
+  const mesh = new THREE.Mesh(outlineGeometry(positions), outlineMaterial);
+  mesh.name = "outline";
+  mesh.castShadow = false;
+  mesh.receiveShadow = false;
+  return noEdge(mesh);
+}
+
+/** Welded, smooth-normal copy of a flat-shaded soup, for a shell (also usable as an InstancedMesh geometry). */
+export function outlineGeometry(positions: ArrayLike<number>): THREE.BufferGeometry {
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(Array.from(positions), 3));
   const welded = mergeVertices(g, 1e-3);
   g.dispose();
   welded.computeVertexNormals();
-  const mesh = new THREE.Mesh(welded, outlineMaterial);
-  mesh.name = "outline";
-  mesh.castShadow = false;
-  mesh.receiveShadow = false;
-  return noEdge(mesh);
+  return welded;
 }
