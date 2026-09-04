@@ -141,7 +141,7 @@ const BRAWLER: ShipDef = {
   hatches: [{ pos: [0, 1.28, -1.8], size: [0.9, 1.4], face: "top" }],
   decals: [
     { kind: "number", text: "11", pos: [1.06, 0.1, 5.6], rot: [0, UP, 0], size: [0.7, 0.36], mirror: true, slot: "accent" },
-    { kind: "chevron", pos: [4.2, -0.1, -2.6], rot: [-UP, 0, Math.PI], size: [1.4, 1.4], mirror: true },
+    { kind: "chevron", pos: [4.2, 0.1, -2.6], rot: [-UP, 0, Math.PI], size: [1.4, 1.4], mirror: true },
   ],
   palette: { body: 0xe9e3d4, accent: 0xd63b2f, dark: 0x2a2d33, glow: 0x4fa3ff, canopy: 0x143a4c },
 };

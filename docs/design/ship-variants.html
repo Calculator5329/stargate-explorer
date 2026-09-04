@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Halberd look variants</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #0c0d10; color: #d7d9de; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { padding: 22px 28px 10px; border-bottom: 1px solid #23262c; }
+  h1 { margin: 0 0 6px; font-size: 20px; font-weight: 600; letter-spacing: 0.01em; }
+  header p { margin: 0; color: #8b8f98; max-width: 78ch; }
+  code { font: 12px ui-monospace, "JetBrains Mono", Menlo, monospace; color: #b9bec8; background: #171a1f; padding: 1px 5px; border-radius: 3px; }
+  .toolbar { display: flex; align-items: center; gap: 14px; padding: 12px 28px; border-bottom: 1px solid #23262c; position: sticky; top: 0; background: #0c0d10; z-index: 2; }
+  .toolbar button { background: #1d2127; color: #e6e8ec; border: 1px solid #333842; border-radius: 4px; padding: 7px 14px; font: inherit; cursor: pointer; }
+  .toolbar button:hover { background: #262b33; }
+  .toolbar button:disabled { opacity: 0.45; cursor: default; }
+  .toolbar .status { color: #8b8f98; min-width: 22ch; }
+  .row { display: grid; grid-template-columns: 240px 1fr; gap: 18px; padding: 20px 28px; border-bottom: 1px solid #1b1e24; }
+  .row.selected { background: #101319; }
+  .meta { display: flex; flex-direction: column; gap: 8px; }
+  .meta label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 16px; font-weight: 600; }
+  .meta input { width: 18px; height: 18px; accent-color: #f2b134; }
+  .meta .key { color: #f2b134; font: 12px ui-monospace, Menlo, monospace; }
+  .meta .caption { color: #a5a9b2; }
+  .meta .tris { color: #6f747d; font-size: 12px; }
+  .shots { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .shots figure { margin: 0; }
+  .shots img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #14161b; border: 1px solid #23262c; border-radius: 3px; }
+  .shots figcaption { margin-top: 4px; color: #6f747d; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .shots a { color: inherit; text-decoration: none; }
+  .shots a:hover img { border-color: #4a5160; }
+  footer { padding: 16px 28px 28px; color: #6f747d; font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Halberd look variants</h1>
+  <p>Four builds of the player fighter from the same parametric builder: the current def and three deliberate directions. Tick the ones worth keeping (any number), then <strong>Copy selection</strong> and paste the keys back into chat. Load one in the game with <code>?variant=a</code> (needs the two-line hook in <code>main.ts</code>). Captures: <code>node scripts/capture-variants.mjs</code>.</p>
+</header>
+<div class="toolbar">
+  <button id="copy" disabled>Copy selection</button>
+  <button id="clear">Clear</button>
+  <span class="status" id="status">Nothing selected</span>
+</div>
+
+<section class="row" data-key="current">
+  <div class="meta">
+    <label><input type="checkbox" value="current"> Current <span class="key">current</span></label>
+    <div class="caption">The def as shipped today (pass 8): slender rounded loft, gunmetal, one flat delta, round intake nacelles, wingtip plates, low tandem canopy. The baseline the other three are measured against.</div>
+    <div class="tris">1,164 hull tris · 2,820 drawn with outlines/decals</div>
+  </div>
+  <div class="shots">
+    <figure><a href="../shots/variants/current-side.png"><img src="../shots/variants/current-side.png" alt="current, side"></a><figcaption>side</figcaption></figure>
+    <figure><a href="../shots/variants/current-top.png"><img src="../shots/variants/current-top.png" alt="current, top"></a><figcaption>top</figcaption></figure>
+    <figure><a href="../shots/variants/current-rear.png"><img src="../shots/variants/current-rear.png" alt="current, rear"></a><figcaption>rear</figcaption></figure>
+    <figure><a href="../shots/variants/current-silhouette.png"><img src="../shots/variants/current-silhouette.png" alt="current, silhouette"></a><figcaption>silhouette</figcaption></figure>
+    <figure><a href="../shots/variants/current-chase.png"><img src="../shots/variants/current-chase.png" alt="current, chase"></a><figcaption>chase</figcaption></figure>
+  </div>
+</section>
+
+<section class="row" data-key="a">
+  <div class="meta">
+    <label><input type="checkbox" value="a"> A · Facet <span class="key">a</span></label>
+    <div class="caption">Sharper F-302 read. Boxy hull sections give hard chines; darker chine stripes; eleven recessed panels on the flanks and belly; a lower, longer three-frame tandem canopy; open gun ports buried in the cheeks; square-cornered intake nacelles; small canted tails on the nacelles. Same gunmetal.</div>
+    <div class="tris">1,792 hull tris · 4,076 drawn with outlines/decals</div>
+  </div>
+  <div class="shots">
+    <figure><a href="../shots/variants/a-side.png"><img src="../shots/variants/a-side.png" alt="a, side"></a><figcaption>side</figcaption></figure>
+    <figure><a href="../shots/variants/a-top.png"><img src="../shots/variants/a-top.png" alt="a, top"></a><figcaption>top</figcaption></figure>
+    <figure><a href="../shots/variants/a-rear.png"><img src="../shots/variants/a-rear.png" alt="a, rear"></a><figcaption>rear</figcaption></figure>
+    <figure><a href="../shots/variants/a-silhouette.png"><img src="../shots/variants/a-silhouette.png" alt="a, silhouette"></a><figcaption>silhouette</figcaption></figure>
+    <figure><a href="../shots/variants/a-chase.png"><img src="../shots/variants/a-chase.png" alt="a, chase"></a><figcaption>chase</figcaption></figure>
+  </div>
+</section>
+
+<section class="row" data-key="b">
+  <div class="meta">
+    <label><input type="checkbox" value="b"> B · Brawler <span class="key">b</span></label>
+    <div class="caption">Chunky toon hero, after the first reference frame. Fat short fuselage, one-metre round nacelles snug against the flanks, bubble canopy, broad thick wing, tall canted twin tails, chin cannon. Cream hull, red spine stripe, red cheek flashes and leading edges, red chevrons; plumes 35 % longer.</div>
+    <div class="tris">1,204 hull tris · 2,900 drawn with outlines/decals</div>
+  </div>
+  <div class="shots">
+    <figure><a href="../shots/variants/b-side.png"><img src="../shots/variants/b-side.png" alt="b, side"></a><figcaption>side</figcaption></figure>
+    <figure><a href="../shots/variants/b-top.png"><img src="../shots/variants/b-top.png" alt="b, top"></a><figcaption>top</figcaption></figure>
+    <figure><a href="../shots/variants/b-rear.png"><img src="../shots/variants/b-rear.png" alt="b, rear"></a><figcaption>rear</figcaption></figure>
+    <figure><a href="../shots/variants/b-silhouette.png"><img src="../shots/variants/b-silhouette.png" alt="b, silhouette"></a><figcaption>silhouette</figcaption></figure>
+    <figure><a href="../shots/variants/b-chase.png"><img src="../shots/variants/b-chase.png" alt="b, chase"></a><figcaption>chase</figcaption></figure>
+  </div>
+</section>
+
+<section class="row" data-key="c">
+  <div class="meta">
+    <label><input type="checkbox" value="c"> C · Lance <span class="key">c</span></label>
+    <div class="caption">Sleek interceptor. Nineteen-metre needle nose on a slim fuselage, high-sweep delta with tall wingtip plates and slight anhedral, canards, a ventral strake, thin long nacelles, missile pods under the wings. Graphite paint with an amber spine stripe and amber leading edges; low single-frame canopy.</div>
+    <div class="tris">1,380 hull tris · 3,252 drawn with outlines/decals</div>
+  </div>
+  <div class="shots">
+    <figure><a href="../shots/variants/c-side.png"><img src="../shots/variants/c-side.png" alt="c, side"></a><figcaption>side</figcaption></figure>
+    <figure><a href="../shots/variants/c-top.png"><img src="../shots/variants/c-top.png" alt="c, top"></a><figcaption>top</figcaption></figure>
+    <figure><a href="../shots/variants/c-rear.png"><img src="../shots/variants/c-rear.png" alt="c, rear"></a><figcaption>rear</figcaption></figure>
+    <figure><a href="../shots/variants/c-silhouette.png"><img src="../shots/variants/c-silhouette.png" alt="c, silhouette"></a><figcaption>silhouette</figcaption></figure>
+    <figure><a href="../shots/variants/c-chase.png"><img src="../shots/variants/c-chase.png" alt="c, chase"></a><figcaption>chase</figcaption></figure>
+  </div>
+</section>
+
+<footer>Defs: <code>src/ships/variants/index.ts</code>. Triangle counts are the slot meshes only (hull, wings, nacelles, canopy); outline shells roughly double the drawn total. Click any capture for the full 1280×720 frame.</footer>
+
+<script>
+  const boxes = [...document.querySelectorAll('input[type=checkbox]')];
+  const copy = document.getElementById('copy');
+  const status = document.getElementById('status');
+  const selected = () => boxes.filter((b) => b.checked).map((b) => b.value);
+  function refresh() {
+    const s = selected();
+    for (const b of boxes) b.closest('.row').classList.toggle('selected', b.checked);
+    copy.disabled = s.length === 0;
+    status.textContent = s.length ? `Selected: ${s.join(', ')}` : 'Nothing selected';
+  }
+  for (const b of boxes) b.addEventListener('change', refresh);
+  document.getElementById('clear').addEventListener('click', () => { for (const b of boxes) b.checked = false; refresh(); });
+  copy.addEventListener('click', async () => {
+    const text = selected().join(',');
+    try {
+      await navigator.clipboard.writeText(text);
+      status.textContent = `Copied: ${text}`;
+    } catch {
+      // file:// pages may be denied clipboard access; fall back to a prompt the user can copy from
+      window.prompt('Copy the selection:', text);
+    }
+  });
+  refresh();
+</script>
+</body>
+</html>
