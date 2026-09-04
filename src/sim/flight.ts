@@ -52,6 +52,8 @@ export class Flight {
   barrelLeft = 0;
   /** seconds since the last collision, for camera shake / HUD flash */
   sinceHit = 99;
+  /** set by combat when the hull fails: controls go dead, the ship tumbles on its last velocity */
+  dead = false;
   /** per-hull multipliers on the shared T.flight numbers (ships/registry.ts) */
   stats: ShipStats = { speed: 1, agility: 1, hull: 1, guns: 1, missiles: 6, size: 1 };
 
@@ -65,6 +67,14 @@ export class Flight {
     this.prevQuat.copy(this.quat);
     const f = T.flight;
     this.sinceHit += dt;
+    if (this.dead) {
+      this.quat.multiply(_q.setFromAxisAngle(_n.set(0.6, 0.3, 1).normalize(), 2.2 * dt)).normalize();
+      this.vel.multiplyScalar(Math.exp(-0.5 * dt));
+      this.speed = this.vel.length();
+      this.pos.addScaledVector(this.vel, dt);
+      this.boosting = false;
+      return;
+    }
 
     const arcade = input.scheme.arcade;
     if (!arcade) this.throttle = clamp(this.throttle + input.pitchKey * f.throttleRate * dt, 0, 1);

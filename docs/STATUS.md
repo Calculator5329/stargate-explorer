@@ -23,6 +23,7 @@ Snapshot of what actually works. This is the project state snapshot, not the wor
 - **Missiles:** RMB, cone lock over 0.9 s, homing, proximity fuse, 6 per sortie (16 on the Prometheus), restocked each wave.
 - **Menu / settings:** Esc pauses and opens the menu (scheme, assist, sensitivity, difficulty, mute, restart, missions); all persisted in localStorage.
 - **Missions:** Clear the Field, The Gauntlet (12 gates, 90 s), Cover the Prometheus (escort), Bring Down the Ha'tak (turrets → nodes → hull). Hub with lock chain, best times, ship choice. Ha'tak clear unlocks the Prometheus. All four verified headless end to end (playwright: teleport through gates, `extras[i].damage()` on the Ha'tak parts, read `mission.phase`).
+- **Mines** (`mission/mines.ts`): proximity mines on the Gauntlet gate rims and in a ring around the Ha'tak; lockable, shootable, 45 hull in the blast. **Death sequence**: tumble + burning bursts for 1.6 s before the final burst and the loss card.
 - **Prometheus** flyable: slower, heavier, bigger camera pull-back and collision radius.
 - **FX:** two-tone fireball + shockwave + chunks + smoke on every kill; crash dust on rock hits.
 
@@ -33,11 +34,11 @@ Snapshot of what actually works. This is the project state snapshot, not the wor
 - `ships/loader.ts` exists but is unused and untested against a real GLTF (B migration hook; a glTF hull would need `outlineShell()` and toon materials applied per mesh).
 
 ## Not started
-Bomber-scale enemy hull, gate transit / multiple systems (a deeper map), a race mission with AI racers, new obstacle types, gamepad, keybinds, invert, quality setting in the menu.
+Bomber-scale enemy hull, gate transit / multiple systems (a deeper map), a race mission with AI racers, obstacle types beyond mines, gamepad, keybinds, invert, quality setting in the menu.
 
 ## Known issues
 - **Nothing beyond "Clear the field" has been flown by a human** (2026-09-04 overnight). Gauntlet timing (90 s, 360 m spacing), escort hull (600), turret range/cadence (1 km, 1.6 s) and the difficulty multipliers are guesses. The Ha'tak fight's "shoot this next" legibility is untested.
-- Prometheus: no plumes light up at cruise in the capture (rig throttle path), guns fire from the fighter's muzzle offsets (under the bow), and the escort version in *Cover the Prometheus* has no rock avoidance beyond a slide.
+- Prometheus: no plumes light up at cruise in the capture (rig throttle path), and the escort version in *Cover the Prometheus* has no rock avoidance beyond a slide.
 - Ha'tak: a single bounding sphere for player collision (0.72 × radius), no collision for gliders or rounds against the hull itself; missiles only hurt the hull once the nodes are down (by design, but not signposted beyond the mission line).
 - **Awaiting Ethan's verdict on M2** (2026-09-04): play "Clear the field" once; the fight capture is `docs/shots/2026-09-04d-fight.png`. Ethan's two reference frames are still not in `docs/refs/`.
 - Headless SwiftShader runs the sim at ~0.5× real time, so a headless fight is slow motion; timing judgments need a real GPU.

@@ -41,6 +41,8 @@ export interface RunLevel extends BaseLevel {
   /** gliders that join the chase at this ring index (0 = none) */
   harassAt: number;
   harass: number;
+  /** proximity mines laid just outside each gate's rim */
+  minesPerGate: number;
 }
 
 export interface ProtectLevel extends BaseLevel {
@@ -58,6 +60,8 @@ export interface StrikeLevel extends BaseLevel {
   /** escort gliders at the start, and per shield node lost */
   escorts: number;
   reinforce: number;
+  /** proximity mines in a ring around the hull */
+  mines: number;
 }
 
 export type LevelDef = ClearLevel | RunLevel | ProtectLevel | StrikeLevel;
@@ -80,7 +84,7 @@ export const LEVELS: LevelDef[] = [
     id: "gauntlet",
     type: "run",
     title: "THE GAUNTLET",
-    blurb: "Thread twelve gates through the belt before the hyperspace window closes. Gliders join the chase halfway.",
+    blurb: "Thread twelve gates through the belt before the hyperspace window closes. Mines sit on the rims; gliders join the chase halfway.",
     intro: ["The window closes in ninety seconds.", "Fly the gates. Do not slow down."],
     requires: "belt-clear",
     rings: 12,
@@ -90,6 +94,7 @@ export const LEVELS: LevelDef[] = [
     timeLimit: 90,
     harassAt: 5,
     harass: 2,
+    minesPerGate: 2,
   },
   {
     id: "escort",
@@ -111,13 +116,14 @@ export const LEVELS: LevelDef[] = [
     id: "hatak",
     type: "strike",
     title: "BRING DOWN THE HA'TAK",
-    blurb: "A Goa'uld mothership is parked over the belt. Ring guns first, then the three shield nodes, then the hull.",
+    blurb: "A Goa'uld mothership is parked over the belt behind a minefield. Ring guns first, then the three shield nodes, then the hull.",
     intro: ["Ha'tak in orbit, shields up, gliders launching.", "Kill the ring guns, drop the shield nodes, then burn the pyramid."],
     requires: "escort",
     unlocks: "prometheus",
     distance: 1700,
     escorts: 2,
     reinforce: 2,
+    mines: 14,
   },
 ];
 

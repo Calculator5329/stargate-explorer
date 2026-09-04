@@ -6,6 +6,7 @@ import type { Lockable } from "@/combat/targets";
 import { Capital, type Turret } from "@/combat/capital";
 import { T } from "@/core/tunables";
 import { D } from "@/core/difficulty";
+import { Mines } from "@/mission/mines";
 
 const ZERO = new THREE.Vector3();
 const _to = new THREE.Vector3();
@@ -26,6 +27,7 @@ export class StrikeMission extends Mission {
   private readonly core: Lockable;
   private readonly cds: number[] = [];
   private stage: "guns" | "nodes" | "hull" = "guns";
+  private readonly mines: Mines;
 
   constructor(override readonly def: StrikeLevel, ctx: MissionCtx) {
     super(def, ctx);
@@ -68,6 +70,15 @@ export class StrikeMission extends Mission {
       },
     };
     ctx.combat.extras.push(...this.turrets, ...this.nodes, this.core);
+    // a ring of mines in the hull's plane, well outside the turrets' reach of the ring
+    this.mines = new Mines(ctx);
+    this.group.add(this.mines.group);
+    const side = new THREE.Vector3(1, 0, 0).applyQuaternion(q), up = new THREE.Vector3(0, 1, 0).applyQuaternion(q);
+    for (let i = 0; i < def.mines; i++) {
+      const a = (i / def.mines) * Math.PI * 2 + Math.random() * 0.2, rr = this.cap.radius * 2.1 + Math.random() * 60;
+      _m.copy(pos).addScaledVector(side, Math.cos(a) * rr).addScaledVector(fwd, Math.sin(a) * rr).addScaledVector(up, (Math.random() - 0.5) * 80);
+      this.mines.add(_m);
+    }
   }
 
   protected begin(): void {
@@ -116,6 +127,7 @@ export class StrikeMission extends Mission {
 
   protected run(dt: number): void {
     const f = this.ctx.flight, C = this.ctx.combat;
+    this.mines.tick();
     if (this.phase === "dying") {
       this.cap.update(dt);
       if (this.cap.die(dt, (p, s) => C.burst(p, ZERO, s * 3, 1))) this.win();
@@ -147,6 +159,10 @@ export class StrikeMission extends Mission {
     }
     if (this.stage === "hull") this.line = `Hull ${Math.max(0, Math.round((100 * this.cap.hp) / 600))}%`;
     this.marker = this.stage === "guns" ? this.nearest(this.turrets) : this.stage === "nodes" ? this.nearest(this.nodes) : this.core;
+  }
+
+  override render(dt: number): void {
+    this.mines.render(dt);
   }
 
   override summary(): string {

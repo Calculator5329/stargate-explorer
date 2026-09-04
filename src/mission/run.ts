@@ -5,6 +5,7 @@ import type { RunLevel } from "@/mission/levels";
 import { glowMaterial } from "@/render/toon";
 import { noEdge } from "@/render/layers";
 import type { Tracked } from "@/combat/targets";
+import { Mines } from "@/mission/mines";
 
 interface Ring extends Tracked {
   mesh: THREE.Mesh;
@@ -33,6 +34,7 @@ export class RunMission extends Mission {
   private readonly passed: THREE.Material;
   private harassed = false;
   private pulse = 0;
+  private readonly mines: Mines;
 
   constructor(override readonly def: RunLevel, ctx: MissionCtx) {
     super(def, ctx);
@@ -41,6 +43,8 @@ export class RunMission extends Mission {
     this.active = glowMaterial(0xffc25a, 2.6);
     this.idle = glowMaterial(0x6a86a8, 1.1);
     this.passed = glowMaterial(0x4a6a4a, 0.6);
+    this.mines = new Mines(ctx);
+    this.group.add(this.mines.group);
     this.layRings();
     this.marker = this.rings[0]!;
   }
@@ -69,6 +73,12 @@ export class RunMission extends Mission {
       mesh.quaternion.copy(_q.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir));
       this.group.add(mesh);
       this.rings.push({ mesh, pos: mesh.position, vel: ZERO, alive: true, radius: d.ringRadius, normal: dir.clone() });
+      // mines just outside the rim, in the gate plane
+      for (let k = 0; k < d.minesPerGate; k++) {
+        const a = Math.random() * Math.PI * 2, rr = d.ringRadius + 16 + Math.random() * 12;
+        _hit.set(Math.cos(a) * rr, Math.sin(a) * rr, 0).applyQuaternion(mesh.quaternion).add(p);
+        this.mines.add(_hit);
+      }
     }
     // fail-safe: gates that drift past the arena edge are pulled back inside
     const R = 1400;
@@ -83,6 +93,7 @@ export class RunMission extends Mission {
 
   protected run(dt: number): void {
     const f = this.ctx.flight, d = this.def;
+    this.mines.tick();
     this.left -= dt;
     if (this.left <= 0) {
       this.fail("The window closed with you still in the belt.", "WINDOW MISSED");
@@ -123,6 +134,7 @@ export class RunMission extends Mission {
 
   override render(dt: number): void {
     this.pulse += dt;
+    this.mines.render(dt);
     const n = this.rings[this.next];
     if (n) n.mesh.scale.setScalar(1 + 0.06 * Math.sin(this.pulse * 5));
   }

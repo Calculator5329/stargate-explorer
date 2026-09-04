@@ -127,8 +127,10 @@ Ethan asked for momentum, lethal rock hits, a canon secondary weapon, then "all 
 - [x] (2026-09-04, `mission/levels.ts` + runners `clear/run/protect/strike.ts`, `ui/hub.ts`) Mission framework with four types and a mission-select hub with saved progress: Clear the Field, The Gauntlet (12 gates vs the clock), Cover the Prometheus (escort), Bring Down the Ha'tak (turrets → shield nodes → hull; unlocks the Prometheus).
 - [x] (2026-09-04, `combat/capital.ts`, subagent) Ha'tak-style capital ship with turrets that shoot, weak points, staged death.
 - [x] (2026-09-04, `fx/explosion.ts` rewrite, subagent; `crash()` wired to player and glider rock hits) Two-tone fireball + shockwave ring + debris + smoke explosions; crash dust cones.
+- [x] (2026-09-04, `mission/mines.ts`) First new obstacle type: proximity mines. Two on every Gauntlet gate rim, a ring of fourteen around the Ha'tak. 45 hull in the blast, lockable and shootable (a hit sets them off in place, hurting gliders too).
+- [x] (2026-09-04, `Combat.hurt`/`dieTick`, `Flight.dead`) Player death sequence: controls die, the ship tumbles and burns for 1.6 s with small bursts before the final one; the loss card waits for it.
 - [ ] Ethan plays the four missions and the Prometheus and reports: difficulty preset that fits, gate count/time for the Gauntlet, whether the Ha'tak fight is legible (which part to shoot next).
-- [ ] Not done tonight: a "race" mission distinct from the gauntlet (needs AI racers), a deeper map (multiple systems, gate travel), new obstacle types beyond rocks and the hull, a heavier enemy hull (bomber), gamepad.
+- [ ] Not done tonight: a "race" mission distinct from the gauntlet (needs AI racers), a deeper map (multiple systems, gate travel), obstacle types beyond rocks, mines and the hull, a heavier enemy hull (bomber), gamepad.
 - **Exit:** Ethan's feedback on the four missions is about the game, not the tooling.
 
 ### M3 — Fleet & factions

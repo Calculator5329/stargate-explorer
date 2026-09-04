@@ -28,6 +28,8 @@ export interface PlayerState {
   vel: THREE.Vector3;
   pos: THREE.Vector3;
   sinceHit: number;
+  /** seconds left in the death sequence; 0 when not dying */
+  dying: number;
 }
 
 const _p = new THREE.Vector3();
@@ -37,6 +39,8 @@ const _seg = new THREE.Vector3();
 const _n = new THREE.Vector3();
 const _fwdv = new THREE.Vector3();
 const ZEROV = new THREE.Vector3();
+/** seconds between hull failure and the final burst */
+const DEATH_T = 1.6;
 
 /** Closest approach of the segment a→b to point c, squared. */
 function segDist2(a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3): number {
@@ -69,7 +73,7 @@ export class Combat {
   maxHp = T.player.hp;
   gunDamage = T.weapons.damage;
   private missileCd = 0;
-  readonly player: PlayerState = { hp: T.player.hp, alive: true, kills: 0, fired: 0, hits: 0, vel: new THREE.Vector3(), pos: new THREE.Vector3(), sinceHit: 99 };
+  readonly player: PlayerState = { hp: T.player.hp, alive: true, kills: 0, fired: 0, hits: 0, vel: new THREE.Vector3(), pos: new THREE.Vector3(), sinceHit: 99, dying: 0 };
   private fireAcc = 0;
   private gun = 0;
   private readonly muzzle: THREE.Mesh[] = [];
@@ -111,22 +115,18 @@ export class Combat {
       _p.copy(flight.pos).addScaledVector(flight.lastImpactNormal, -T.arena.shipRadius * flight.stats.size * 0.8);
       this.fx.crash(_p, flight.lastImpactNormal, flight.lastImpact);
       flight.lastImpact = 0;
-      if (dmg > 0 && P.alive) {
-        P.hp -= dmg;
-        P.sinceHit = 0;
-        this.audio.damage();
-        if (P.hp <= 0) this.die(flight);
-      }
+      if (dmg > 0) this.hurt(dmg, flight);
     }
+    if (P.dying > 0) this.dieTick(dt, flight);
 
     // player cannons: alternate guns at fireRate
-    if (P.alive && input.fire && input.locked) {
+    if (P.alive && P.dying === 0 && input.fire && input.locked) {
       this.fireAcc += dt * T.weapons.fireRate;
       while (this.fireAcc >= 1) {
         this.fireAcc -= 1;
-        const g = GUNS[this.gun]!;
+        const g = GUNS[this.gun]!, sz = flight.stats.size;
         this.gun = 1 - this.gun;
-        _p.set(g[0], g[1], g[2]).applyQuaternion(flight.quat).add(flight.pos);
+        _p.set(g[0] * sz, g[1] * sz, g[2] * sz).applyQuaternion(flight.quat).add(flight.pos);
         _d.set((Math.random() - 0.5) * T.weapons.spread * 2, (Math.random() - 0.5) * T.weapons.spread * 2, 1).normalize().applyQuaternion(flight.quat);
         if (this.shots.fire("player", _p, _d, P.vel)) {
           P.fired++;
@@ -180,8 +180,8 @@ export class Combat {
       this.lock = Math.min(1, this.lock + dt / M.lockTime);
       if (was < 1 && this.lock >= 1) this.audio.lock();
     }
-    if (input.alt && this.player.alive && this.ammo > 0 && this.missileCd <= 0 && best && this.lock >= 1) {
-      _p.set(0, -0.6, 2.0).applyQuaternion(flight.quat).add(flight.pos);
+    if (input.alt && this.player.alive && this.player.dying === 0 && this.ammo > 0 && this.missileCd <= 0 && best && this.lock >= 1) {
+      _p.set(0, -0.6 * flight.stats.size, 2.0 * flight.stats.size).applyQuaternion(flight.quat).add(flight.pos);
       if (this.missiles.fire(_p, _fwdv, this.player.vel, best)) {
         this.ammo--;
         this.missileCd = M.cooldown;
@@ -265,19 +265,47 @@ export class Combat {
     if (!this.player.alive || segDist2(_prev, s.pos, flight.pos) > r * r) return;
     this.shots.kill(s);
     this.fx.spark(s.pos);
-    this.player.hp -= T.weapons.enemyDamage * D.enemyDamage;
-    this.player.sinceHit = 0;
-    flight.sinceHit = 0.25; // a light shake and flash, not the rock-hit slam
-    this.audio.damage();
-    if (this.player.hp <= 0) this.die(flight);
+    flight.sinceHit = Math.max(flight.sinceHit, 0.25); // a light shake and flash, not the rock-hit slam
+    this.hurt(T.weapons.enemyDamage * D.enemyDamage, flight);
   }
 
+  /** Every source of player damage comes through here; a dying ship takes no more. */
+  hurt(amount: number, flight: Flight): void {
+    const P = this.player;
+    if (!P.alive || P.dying > 0) return;
+    P.hp -= amount;
+    P.sinceHit = 0;
+    this.audio.damage();
+    if (P.hp <= 0) this.die(flight);
+  }
+
+  /** Hull failure: controls die, the ship tumbles and burns for `DEATH_T` seconds, then the big burst. */
   private die(flight: Flight): void {
-    this.player.hp = 0;
-    this.player.alive = false;
-    this.fx.spawn(flight.pos, this.player.vel, 6);
-    this.audio.explosion(1);
-    this.ship.visible = false;
+    const P = this.player;
+    P.hp = 0;
+    P.dying = DEATH_T;
+    flight.dead = true;
+    this.fx.spawn(flight.pos, P.vel, 2);
+    this.audio.explosion(0.7);
+  }
+
+  private dieTick(dt: number, flight: Flight): void {
+    const P = this.player;
+    const was = P.dying;
+    P.dying -= dt;
+    // a small burst every quarter second somewhere on the hull
+    if (Math.floor(was * 4) !== Math.floor(P.dying * 4)) {
+      _p.set((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 8).multiplyScalar(flight.stats.size).applyQuaternion(flight.quat).add(flight.pos);
+      this.fx.spawn(_p, P.vel, 1.2 * flight.stats.size);
+      this.audio.explosion(0.35);
+    }
+    if (P.dying <= 0) {
+      P.dying = 0;
+      P.alive = false;
+      this.fx.spawn(flight.pos, P.vel, 6 * flight.stats.size);
+      this.audio.explosion(1);
+      this.ship.visible = false;
+    }
   }
 
   private hitRocks(s: Shot): void {
