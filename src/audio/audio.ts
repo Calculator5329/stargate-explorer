@@ -1,10 +1,33 @@
+export type Mood = "calm" | "combat" | "win" | "lost";
+
+/**
+ * Chord per mood as semitone offsets from the key's root. The pad plays these
+ * as four slow detuned voices; combat drops the fifth for a tense sus2 and adds
+ * a low pulse, win goes major, lost goes minor and low.
+ */
+const CHORDS: Record<Mood, number[]> = {
+  calm: [0, 7, 12, 19],
+  combat: [0, 2, 7, 14],
+  win: [0, 4, 7, 12],
+  lost: [-12, -5, 0, 3],
+};
+
 /**
  * Minimal synthesized sound (no assets, per the code-driven content pillar):
  * an engine drone that follows speed, cannon pops, impact clicks, filtered-noise
- * explosions and a boost whoosh. Everything hangs off one master gain; M mutes.
- * The context is created on the first pointer-lock click (autoplay policy).
+ * explosions, a boost whoosh, and a four-voice ambient pad whose chord follows
+ * the mission mood (the "music stub"). Everything hangs off one master gain; M
+ * mutes. The context is created on the first pointer-lock click (autoplay policy).
  */
 export class Audio {
+  private pad: OscillatorNode[] = [];
+  private padGain!: GainNode;
+  private padFilter!: BiquadFilterNode;
+  private pulseGain!: GainNode;
+  private pulse!: OscillatorNode;
+  private mood: Mood = "calm";
+  /** MIDI note of the key's root; systems pick one so each has its own colour */
+  private root = 45;
   private ctx: AudioContext | null = null;
   private master!: GainNode;
   private engine!: OscillatorNode;
@@ -66,6 +89,83 @@ export class Audio {
     this.boostGain.gain.value = 0;
     src.connect(bp).connect(this.boostGain).connect(this.master);
     src.start();
+
+    // pad: four triangle voices, slow attack, through a gently moving lowpass
+    this.padFilter = ctx.createBiquadFilter();
+    this.padFilter.type = "lowpass";
+    this.padFilter.frequency.value = 520;
+    this.padFilter.Q.value = 0.6;
+    this.padGain = ctx.createGain();
+    this.padGain.gain.value = 0;
+    this.padFilter.connect(this.padGain).connect(this.master);
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.07;
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.value = 180;
+    lfo.connect(lfoGain).connect(this.padFilter.frequency);
+    lfo.start();
+    for (let i = 0; i < 4; i++) {
+      const o = ctx.createOscillator();
+      o.type = "triangle";
+      o.detune.value = (i - 1.5) * 6;
+      const g = ctx.createGain();
+      g.gain.value = 0.25;
+      o.connect(g).connect(this.padFilter);
+      o.start();
+      this.pad.push(o);
+    }
+    // combat pulse: a low sine gated by a square LFO at ~100 bpm
+    this.pulse = ctx.createOscillator();
+    this.pulse.type = "sine";
+    const gate = ctx.createOscillator();
+    gate.type = "square";
+    gate.frequency.value = 1.7;
+    const gateGain = ctx.createGain();
+    gateGain.gain.value = 0.5;
+    const gateBias = ctx.createConstantSource();
+    gateBias.offset.value = 0.5;
+    this.pulseGain = ctx.createGain();
+    this.pulseGain.gain.value = 0;
+    const gated = ctx.createGain();
+    gated.gain.value = 0;
+    gate.connect(gateGain).connect(gated.gain);
+    gateBias.connect(gated.gain);
+    this.pulse.connect(gated).connect(this.pulseGain).connect(this.master);
+    gate.start();
+    gateBias.start();
+    this.pulse.start();
+    this.applyMood(true);
+    this.padGain.gain.setTargetAtTime(0.09, ctx.currentTime, 2.5);
+  }
+
+  /** Pick the key from a string (the system id), so every system hums in its own colour. */
+  setKey(seed: string): void {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
+    this.root = 41 + (Math.abs(h) % 8); // F2 .. C3
+    if (this.ctx) this.applyMood(true);
+  }
+
+  /** Mission mood; the pad glides to the new chord over a couple of seconds. */
+  setMood(m: Mood): void {
+    if (m === this.mood) return;
+    this.mood = m;
+    if (this.ctx) this.applyMood(false);
+  }
+
+  private applyMood(now: boolean): void {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime, glide = now ? 0.01 : 1.8;
+    const chord = CHORDS[this.mood];
+    for (let i = 0; i < this.pad.length; i++) {
+      const midi = this.root + 12 + (chord[i] ?? 0);
+      const hz = 440 * Math.pow(2, (midi - 69) / 12);
+      this.pad[i]!.frequency.setTargetAtTime(hz, t, glide);
+    }
+    this.pulse.frequency.setTargetAtTime(440 * Math.pow(2, (this.root - 69) / 12), t, 0.1);
+    this.pulseGain.gain.setTargetAtTime(this.mood === "combat" ? 0.11 : 0, t, this.mood === "combat" ? 1.2 : 0.8);
+    this.padFilter.frequency.setTargetAtTime(this.mood === "lost" ? 300 : this.mood === "win" ? 900 : 520, t, 1.5);
+    this.padGain.gain.setTargetAtTime(this.mood === "lost" ? 0.07 : this.mood === "win" ? 0.12 : 0.09, t, 2);
   }
 
   setMute(v: boolean): void {
@@ -154,5 +254,50 @@ export class Audio {
 
   ui(): void {
     this.blip(880, 0.08, 0.12, "sine");
+  }
+
+  /** A short rising tone pair for each note of the root triad, staggered: the ring pass. */
+  ring(): void {
+    const base = 440 * Math.pow(2, (this.root + 24 - 69) / 12);
+    this.tone(base, 0.1, 0.16);
+    setTimeout(() => this.tone(base * 1.5, 0.1, 0.22), 70);
+  }
+
+  /** Mission won: an ascending arpeggio of the win chord. */
+  win(): void {
+    this.setMood("win");
+    const chord = CHORDS.win;
+    chord.forEach((semi, i) => setTimeout(() => this.tone(440 * Math.pow(2, (this.root + 24 + semi - 69) / 12), 0.14, 0.5), i * 110));
+  }
+
+  /** Mission lost: two low descending tones and the pad goes dark. */
+  lose(): void {
+    this.setMood("lost");
+    const r = 440 * Math.pow(2, (this.root + 12 - 69) / 12);
+    this.tone(r, 0.16, 0.7, "sawtooth");
+    setTimeout(() => this.tone(r * 0.84, 0.16, 1.1, "sawtooth"), 420);
+  }
+
+  /** Gate dial: a chevron encodes (rising click), the seventh locks (heavier). */
+  chevron(index: number, last: boolean): void {
+    this.blip(500 + index * 60, 0.1, 0.1, "triangle");
+    this.burst(last ? 300 : 1600, 2, last ? 0.35 : 0.12, last ? 0.35 : 0.06, last ? "lowpass" : "bandpass");
+  }
+
+  /** A held tone with a soft attack (unlike `blip`, no pitch drop). */
+  private tone(freq: number, gain: number, dur: number, type: OscillatorType = "sine"): void {
+    if (!this.ctx) return;
+    const ctx = this.ctx;
+    const o = ctx.createOscillator();
+    o.type = type;
+    const t = ctx.currentTime;
+    o.frequency.value = freq;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(gain, t + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g).connect(this.master);
+    o.start(t);
+    o.stop(t + dur + 0.02);
   }
 }

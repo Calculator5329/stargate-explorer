@@ -79,7 +79,7 @@ export class Travel {
       while (this.lit < want) {
         this.chevEls[this.lit]!.classList.add("on");
         this.lit++;
-        this.audio.ui();
+        this.audio.chevron(this.lit, this.lit === CHEVRONS);
         this.lineEl.textContent = this.lit < CHEVRONS ? `CHEVRON ${WORDS[this.lit]} ENCODED` : "CHEVRON SEVEN LOCKED";
       }
       if (this.t > CHEVRONS * CHEVRON_T + 0.5) {

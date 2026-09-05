@@ -2,7 +2,9 @@
 
 Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
-## 2026-09-04 (late) — Settings, keybinds, gamepad, ice
+## 2026-09-04 (late) — Settings, keybinds, gamepad, ice, music
+
+- **Music stub** (`audio/audio.ts`): a four-voice triangle pad under a slow-moving lowpass, keyed per star system (the system id hashes to a root between F2 and C3), whose chord glides with the mission mood: calm (open fifths), combat (a sus2 plus a gated low pulse at ~100 bpm), win (major, brighter), lost (minor, low and dark). `Game` sets the mood from live enemies; `win()`/`fail()` set it and play a sting (rising arpeggio / two falling saws). Ring passes get their own chime instead of the lock beep; the gate dial clicks up a step per chevron and thuds on the seventh.
 
 - **Ice fields:** `Asteroids` takes a `style`. `ice` is long chisel-tipped shards in pale blue-green with a cold teal shadow side, more tumble, fewer giants. Every belt shape now carries its own bounding radius (`bounds`), so collision derives the instance scale from it instead of the hard 1.05 rock constant; shards collide against their real faces.
 - **KHEB:** sixth system. Dead grey moon (the `moon` preset finally has a home), a new `frost` sky, a thick ice belt. **THE SHARD RUN** is its mission: twelve tight gates, no mines, no escorts, unlocked by the ring race.

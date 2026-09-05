@@ -135,7 +135,7 @@ Ethan asked for momentum, lethal rock hits, a canon secondary weapon, then "all 
 - [x] (2026-09-04) Dogfight feel: gliders jousted. Ethan picked "get on the tail" + "fear the guns" from four options; landed as `saddle` and `flinch` states in `combat/enemies.ts`. Roles per glider (shooter + wingmen) held until he has flown this.
 - [ ] Ethan flies the dogfight brain and reports: does it feel like a fight, and is it now too hard to get a kill? Then decide on per-glider roles.
 - [ ] Ethan plays the four missions and the Prometheus and reports: difficulty preset that fits, gate count/time for the Gauntlet, whether the Ha'tak fight is legible (which part to shoot next).
-- [ ] Not done tonight: derelict wreckage as an obstacle type. *(2026-09-04: ice shards landed as a belt style with Kheb and the shard run; gamepad landed later the same night; gamepad landed later the same night; the deeper map (five systems, gate travel), the gunboat and the ring race with AI racers all landed, see M3/M4.)*
+- [ ] Not done tonight: derelict wreckage as an obstacle type. *(2026-09-04: ice shards landed as a belt style with Kheb and the shard run; gamepad landed later the same night; the deeper map (five systems, gate travel), the gunboat and the ring race with AI racers all landed, see M3/M4.)*
 - **Exit:** Ethan's feedback on the four missions is about the game, not the tooling.
 
 ### M3 — Fleet & factions
@@ -150,7 +150,7 @@ Ethan asked for momentum, lethal rock hits, a canon secondary weapon, then "all 
 - [x] <!-- workspace:id=work:e90114d4-73ac-502d-bfab-5043ad89afcc --> (2026-09-04, Prometheus unlocks after the Ha'tak strike; `Game.record`) Progression: at least ship unlock.
 
 ### M5 — Polish
-- [ ] <!-- workspace:id=work:4a4b65a8-1b9b-5003-aed0-604b95e6f42d --> Audio (engine loop, weapons, UI, music stubs).
+- [x] <!-- workspace:id=work:4a4b65a8-1b9b-5003-aed0-604b95e6f42d --> Audio (engine loop, weapons, UI, music stubs). *(engine, weapons, UI 2026-09-03/04; music stub 2026-09-04 late: a four-voice pad keyed per system whose chord follows the mood (calm / combat / win / lost) plus a combat pulse, win/lose stings, a ring-pass chime and chevron sounds on the dial. All synthesized, still no assets.)*
 - [x] <!-- workspace:id=work:1d92fc39-1255-51d0-936b-36bb8c72dc2b --> Menus, settings (sensitivity, invert, quality), keybinds. *(menu + sensitivity + difficulty 2026-09-04; invert Y, quality tier (reloads the sortie) and a Keys panel with click-to-rebind, swap on conflict, defaults, 2026-09-04 night: `core/binds.ts`, `scripts/settings-test.mjs`)*
 - [x] <!-- workspace:id=work:209c7577-9da9-598d-b34e-2a868f079b94 --> (2026-09-04, `core/save.ts`: settings + progress in one blob) Save/load (localStorage).
 - [x] <!-- workspace:id=work:239b2be7-4508-5066-a3f7-4910c341b86e --> Gamepad support. *(2026-09-04 night: standard mapping polled in `Input.tick`, left stick steers, right stick roll/pull-dive, RT fire, LT missile, A boost, B brake, X/Y scheme/assist, bumpers barrel; dead zone + curve in `T.flight.padDead/padCurve`; HUD hint swaps once a pad speaks. Verified with a fake pad only, no hardware in the loop.)*

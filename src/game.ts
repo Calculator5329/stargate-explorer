@@ -40,6 +40,7 @@ export class Game {
     this.flight = flight;
     this.combat.onKill = (pos, vel) => this.replay.markKill(pos, vel, this.flight, this.lastStick);
     this.mission = createMission(level, { combat: this.combat, rocks: world.asteroids, audio: this.audio, flight });
+    this.audio.setKey(level.system);
     scene.add(this.combat.group, this.mission.group, this.gate.group);
     canvas.addEventListener("click", () => this.audio.unlock());
     window.addEventListener("keydown", (e) => {
@@ -109,6 +110,7 @@ export class Game {
     this.mission.render(dt, alpha);
     this.gate.render(dt);
     this.audio.update(flight.speed / T.flight.boostSpeed, flight.boosting);
+    if (!this.mission.done) this.audio.setMood(this.enemies.aliveCount > 0 ? "combat" : "calm");
     hud.updateCombat(this.combat, this.mission, cam, this.combat.player.vel, this.replay.hasHighlight, this.gate.alive);
     const playing = this.replay.playing && this.replay.update(dt, cam, this.combat.ship, this.enemies.list, (p, v, s) => this.combat.burst(p, v, s, 0.6));
     hud.setReplay(playing);

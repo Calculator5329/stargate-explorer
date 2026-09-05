@@ -93,7 +93,7 @@ export abstract class Mission {
     this.phase = "complete";
     this.line = "";
     this.marker = null;
-    this.ctx.audio.ui();
+    this.ctx.audio.win();
   }
 
   protected fail(line: string, title = "MISSION FAILED"): void {
@@ -102,6 +102,7 @@ export abstract class Mission {
     this.marker = null;
     this.loseTitle = title;
     this.loseLine = line;
+    this.ctx.audio.lose();
   }
 
   /** True when no rock sphere (padded by the avoid distance) contains `p`. */

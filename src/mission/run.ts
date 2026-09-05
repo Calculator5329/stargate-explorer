@@ -169,7 +169,7 @@ export class RunMission extends Mission {
     for (const m of ring.parts) m.material = this.passed;
     ring.alive = false;
     this.next++;
-    this.ctx.audio.lock();
+    this.ctx.audio.ring();
     if (this.next >= this.rings.length) {
       this.win();
       return;
