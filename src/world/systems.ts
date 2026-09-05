@@ -81,7 +81,7 @@ export const SYSTEMS: SystemDef[] = [
     blurb: "A dead grey moon and a field of ice. The shards are long and the gaps are narrow.",
     sky: "frost",
     planet: "moon",
-    planetPos: [-1400, 1800, -4200],
+    planetPos: [-1600, 1500, 4300],
     sunDir: [0.3, 0.75, 0.55],
     belt: { count: 1100, seed: 9090, inner: 60, outer: 1350, thickness: 240, shapes: 6, style: "ice" },
   },
