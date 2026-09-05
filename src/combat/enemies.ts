@@ -4,6 +4,7 @@ import { Flight } from "@/sim/flight";
 import { D } from "@/core/difficulty";
 import { ENEMY_KINDS, type EnemyKind, type EnemyStats } from "@/combat/enemy-kinds";
 import { ShipRig } from "@/ships/rig";
+import type { ShipPalette } from "@/ships/defs";
 import type { Projectiles } from "@/combat/projectiles";
 
 export type EnemyState = "pursue" | "break" | "evade" | "saddle" | "flinch";
@@ -98,7 +99,8 @@ export class Enemies {
   /** set by combat: crash dust at a rock scrape */
   onCrash: ((pos: THREE.Vector3, normal: THREE.Vector3, speed: number) => void) | null = null;
 
-  constructor(readonly rocks: RockSpheres) {}
+  /** `palette` recolours every hull spawned here (the system's faction); undefined keeps each def's own. */
+  constructor(readonly rocks: RockSpheres, private readonly palette?: ShipPalette) {}
 
   get aliveCount(): number {
     let n = 0;
@@ -110,7 +112,7 @@ export class Enemies {
     const K = ENEMY_KINDS[kind];
     let e = this.list.find((x) => !x.alive && x.kind === kind);
     if (!e) {
-      const rig = new ShipRig(K.def);
+      const rig = new ShipRig(this.palette ? { ...K.def, palette: this.palette } : K.def);
       const mats: THREE.MeshToonMaterial[] = [];
       rig.root.traverse((o) => {
         if (o instanceof THREE.Mesh && o.material instanceof THREE.MeshToonMaterial && o.name !== "canopy") mats.push(o.material);

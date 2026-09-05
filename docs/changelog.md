@@ -4,6 +4,7 @@ Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
 ## 2026-09-04 (late) — Settings, keybinds, gamepad, ice, wrecks, music
 
+- **Factions:** a system can name a faction palette (`SystemDef.faction`, `ships/palettes.ts`) and every enemy hull spawned there is recoloured, plumes included. Netu flies oxblood-and-red (lucian); Kheb and the Graveyard fly cold steel with teal glow (serpent); everyone else keeps the bronze default.
 - **Chain test** (`scripts/chain-test.mjs`): every mission driven to its end card headless in one browser context, then the save's completions and unlocks checked. All eight pass; heavy and Prometheus unlock.
 - **Derelict fields:** third belt style, `wreck`. Astra authored four torn warship pieces (`world/derelict-geo.ts`: hull spine, broken wing, engine block, turret chunk) as merged low-poly primitives; they go through the same instanced rock pipeline (toon material, outline shell, crease lines, tumble). Concave shapes collide against their convex hull (`ConvexGeometry` planes) rather than their own facets, which would have left buried faces shrinking the collision volume. **THE GRAVEYARD** is the seventh system (deep-space sky, a far ringed giant, 420 wreck pieces) and **AMBUSH IN THE GRAVEYARD** its mission: three interceptor-heavy waves with a gunboat in the last, unlocked by the shard run. Flying the fighter straight into the largest wreck bounces it at the hull surface (headless check).
 

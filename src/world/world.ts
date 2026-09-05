@@ -22,9 +22,11 @@ export class World {
   readonly planet: Planet;
   readonly asteroids: Asteroids;
   readonly dust = new Dust();
+  readonly system: SystemDef;
 
   constructor(scene: THREE.Scene, o: WorldOptions) {
     const S = o.system;
+    this.system = S;
     this.sky = new Skybox(S.sky);
     this.sun = new Sun(scene, new THREE.Vector3(...S.sunDir).normalize(), o.shadowMap);
     const pp = PLANET_PRESETS[o.planet ?? S.planet] ?? PLANET_PRESETS.desert!;

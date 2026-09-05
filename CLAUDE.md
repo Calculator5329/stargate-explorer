@@ -33,7 +33,7 @@ src/
   core/    loop, input (mouse + keys + gamepad), binds (rebindable key table), scheme (arcade/classic), tunables, random
   sim/     flight model (kinematic arcade-sim), hazards (rock collision, arena edge)
   render/  renderer + post stack, chase camera, inspect views, perf overlay
-  world/   procedural skybox, planet, sun, asteroids, systems (SystemDef: sky+planet+sun+belt per star system; belt.style picks rock, ice or wreck; derelict-geo is the wreck geometry), World composition
+  world/   procedural skybox, planet, sun, asteroids, systems (SystemDef: sky+planet+sun+belt per star system; belt.style picks rock, ice or wreck; faction recolours enemy hulls; derelict-geo is the wreck geometry), World composition
   ships/   parametric builder, ship defs, palettes, rig (ship + plumes), GLTF loader
   fx/      engine plumes, speed dust, explosions
   replay/  kill replay: pose ring buffer, highlight cut, cinematic playback

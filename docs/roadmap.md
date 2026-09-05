@@ -140,7 +140,7 @@ Ethan asked for momentum, lethal rock hits, a canon secondary weapon, then "all 
 
 ### M3 — Fleet & factions
 - [x] <!-- workspace:id=work:fbd1c463-3000-5d78-830c-2a559fa5d2a3 --> 3 player hulls, 3 enemy hulls, distinct silhouettes (see GRAPHICS.md silhouette test). *(2026-09-04: enemies glider / interceptor / gunboat; players Facet / F-21 Broadsword / Prometheus; plus the neutral racer. `?hull=` inspects any; silhouettes judged by capture, not yet by Ethan)*
-- [ ] <!-- workspace:id=work:4f39c478-be65-577d-b085-12e3d36e930e --> Faction materials/palettes.
+- [x] <!-- workspace:id=work:4f39c478-be65-577d-b085-12e3d36e930e --> Faction materials/palettes. *(2026-09-04 late: `SystemDef.faction` names a PALETTES entry and every enemy hull spawned in that system takes it; goauld default, lucian (oxblood/red, Netu), serpent (steel/teal, Kheb and the Graveyard). `node scripts/kinds-test.mjs system=netu` for a look.)*
 - [x] <!-- workspace:id=work:b24057c9-9ff2-5002-a606-e79c2d569ced --> 3+ sky presets, 3+ planet presets. *(2026-09-04: skies abydos/deepSpace/chulak/ember/void, planets desert/ice/lava/jungle/gasGiant/moon; Astra authored the new ones)*
 - [x] <!-- workspace:id=work:b0ce8258-8118-50ac-b155-ac1f6e3adaa2 --> Enemy variety: interceptor, gunboat, one capital-scale target. *(2026-09-04: capital `combat/capital.ts`; interceptor + gunboat `combat/enemy-kinds.ts`, used by the missions)*
 

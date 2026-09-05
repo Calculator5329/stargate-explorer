@@ -1,5 +1,6 @@
 import type { SkyName } from "@/world/skybox";
 import type { BeltStyle } from "@/world/asteroids";
+import type { FactionName } from "@/ships/palettes";
 
 /**
  * A star system is a look and a belt: which sky, which planet preset, where the
@@ -17,6 +18,8 @@ export interface SystemDef {
   planetPos: [number, number, number];
   sunDir: [number, number, number];
   belt: { count: number; seed: number; inner: number; outer: number; thickness: number; shapes: number; style?: BeltStyle };
+  /** who flies against you here: recolours every enemy hull (PALETTES); omitted = each hull's own default */
+  faction?: FactionName;
 }
 
 export const SYSTEMS: SystemDef[] = [
@@ -63,6 +66,7 @@ export const SYSTEMS: SystemDef[] = [
   {
     id: "netu",
     name: "NETU",
+    faction: "lucian",
     blurb: "A lava moon under an ember sky. The heavies hold the lane out.",
     sky: "ember",
     planet: "lava",
@@ -73,6 +77,7 @@ export const SYSTEMS: SystemDef[] = [
   {
     id: "kheb",
     name: "KHEB",
+    faction: "serpent",
     blurb: "A dead grey moon and a field of ice. The shards are long and the gaps are narrow.",
     sky: "frost",
     planet: "moon",
@@ -83,6 +88,7 @@ export const SYSTEMS: SystemDef[] = [
   {
     id: "graveyard",
     name: "THE GRAVEYARD",
+    faction: "serpent",
     blurb: "Where the last fleet died. Hull plate and engine blocks tumbling under a ringed giant.",
     sky: "deepSpace",
     planet: "gasGiant",

@@ -9,6 +9,7 @@ import type { Mission } from "@/mission/mission";
 import { createMission } from "@/mission/index";
 import type { LevelDef } from "@/mission/levels";
 import { Audio } from "@/audio/audio";
+import { PALETTES } from "@/ships/palettes";
 import { T } from "@/core/tunables";
 import { writeSave, type Save } from "@/core/save";
 import { Replay } from "@/replay/replay";
@@ -34,7 +35,7 @@ export class Game {
   private cam: THREE.PerspectiveCamera | null = null;
 
   constructor(scene: THREE.Scene, world: World, ship: THREE.Object3D, canvas: HTMLCanvasElement, flight: Flight, private readonly save: Save, level: LevelDef) {
-    this.enemies = new Enemies(world.asteroids);
+    this.enemies = new Enemies(world.asteroids, world.system.faction ? PALETTES[world.system.faction] : undefined);
     this.combat = new Combat(this.enemies, world.asteroids, ship, this.audio);
     this.combat.setShip(flight);
     this.flight = flight;

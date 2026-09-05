@@ -35,7 +35,7 @@ Snapshot of what actually works. This is the project state snapshot, not the wor
 - **Enemy roster** (`combat/enemy-kinds.ts`): glider, interceptor, gunboat with separate stats tables and hulls; waves name their kinds. Headless verified (`scripts/kinds-test.mjs`); balance is a guess.
 - **Presets:** planets desert/ice/lava/jungle/gasGiant/moon, skies abydos/deepSpace/chulak/ember/void (`?planet=`, `?sky=`).
 - **Ring race** (`mission/race.ts`): AI racers on the gate chain, place-based card, best-time record. Headless verified; racer speed (165 ±8 %) against the player's cruise 150 + boost is a guess.
-- **Eight missions in seven systems**: belt-clear, gauntlet (Abydos) → ring-race (Tollana) → shard-run (Kheb, ice field, no enemies) → graveyard-ambush (The Graveyard, wreck field); gauntlet → escort (Chulak) → blockade (Netu, unlocks the heavy) → hatak (P3X-774, unlocks the Prometheus). Belt styles: rock, ice, wreck. Three player hulls: Facet, F-21 Broadsword, Prometheus.
+- **Eight missions in seven systems**: belt-clear, gauntlet (Abydos) → ring-race (Tollana) → shard-run (Kheb, ice field, no enemies) → graveyard-ambush (The Graveyard, wreck field); gauntlet → escort (Chulak) → blockade (Netu, unlocks the heavy) → hatak (P3X-774, unlocks the Prometheus). Belt styles: rock, ice, wreck. Enemy factions by system: default bronze, lucian (Netu), serpent (Kheb, Graveyard). Three player hulls: Facet, F-21 Broadsword, Prometheus.
 
 ## Partial
 - Combat balance is a first guess: no human has flown a wave. Enemy hp 40 / player round 12 (4 hits), enemy rounds 7 hp against 100. Glider AI has no formation, no wingman logic, no retreat.

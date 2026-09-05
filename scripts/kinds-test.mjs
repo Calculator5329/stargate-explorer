@@ -3,7 +3,9 @@ import { chromium } from "playwright-core";
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 page.on("pageerror", (e) => console.error("page error:", e.message));
-await page.goto("http://localhost:5187/?lock=free&quality=low&mission=belt-clear", { waitUntil: "load" });
+// optional extra query (e.g. system=netu) and output suffix: node scripts/kinds-test.mjs system=netu
+const extra = process.argv[2] ?? "", tag = extra ? `-${extra.replace(/[^a-z0-9]+/gi, "-")}` : "";
+await page.goto(`http://localhost:5187/?lock=free&quality=low&mission=belt-clear${extra ? "&" + extra : ""}`, { waitUntil: "load" });
 await page.waitForTimeout(5000);
 const r = await page.evaluate(async () => {
   const g = window.__game, f = window.__flight, E = g.combat.enemies;
@@ -43,5 +45,5 @@ await page.evaluate(() => {
   };
 });
 await page.waitForTimeout(1200);
-await page.screenshot({ path: "docs/shots/_kinds.png" });
+await page.screenshot({ path: `docs/shots/_kinds${tag}.png` });
 await browser.close();
