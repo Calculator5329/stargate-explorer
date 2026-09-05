@@ -146,3 +146,9 @@ Append-only log. One entry per decision that constrains future work. Format: dat
 
 **Consequences:** a new obstacle kind is a `StyleDef` (geometry factory + numbers) and a `belt.style` on the system; nothing else changes. Shapes must be roughly convex or opt into `hull: true`. Per-instance non-uniform scale is still not supported (the narrow phase assumes uniform), so elongation is baked into the base geometry.
 
+
+### 2026-09-05 — Convex armor plates and batched ship outlines
+
+**Why:** Ethan asked Astra to improve the game's 3D art. The selected Facet silhouette stays; thin beveled plates break up its blank wings and nacelles using the existing palette. Optional `ShipDef.armor` describes convex XZ footprints, height, thickness and mirroring. No assets or dependencies added.
+
+**Consequences:** `buildShip` welds each solid's shell independently, then merges shell geometries. This preserves separate normals at touching parts while drawing the ship's outlines in one call. Armor is visual only; flight and collision dimensions stay the same. Captures, rather than an FPS estimate, judge the art.

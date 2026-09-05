@@ -150,6 +150,7 @@ Ethan asked for momentum, lethal rock hits, a canon secondary weapon, then "all 
 - [x] <!-- workspace:id=work:e90114d4-73ac-502d-bfab-5043ad89afcc --> (2026-09-04, Prometheus unlocks after the Ha'tak strike; `Game.record`) Progression: at least ship unlock.
 
 ### M5 — Polish
+- [x] (2026-09-05) Astra 3D detail pass: beveled Facet wing panels, trailing-edge plates, nacelle service covers and cooling vents; batch ship outlines. Build passed; inspect/chase visual verification, target-hardware frame-rate benchmark remains unmeasured.
 - [x] <!-- workspace:id=work:4a4b65a8-1b9b-5003-aed0-604b95e6f42d --> Audio (engine loop, weapons, UI, music stubs). *(engine, weapons, UI 2026-09-03/04; music stub 2026-09-04 late: a four-voice pad keyed per system whose chord follows the mood (calm / combat / win / lost) plus a combat pulse, win/lose stings, a ring-pass chime and chevron sounds on the dial. All synthesized, still no assets.)*
 - [x] <!-- workspace:id=work:1d92fc39-1255-51d0-936b-36bb8c72dc2b --> Menus, settings (sensitivity, invert, quality), keybinds. *(menu + sensitivity + difficulty 2026-09-04; invert Y, quality tier (reloads the sortie) and a Keys panel with click-to-rebind, swap on conflict, defaults, 2026-09-04 night: `core/binds.ts`, `scripts/settings-test.mjs`)*
 - [x] <!-- workspace:id=work:209c7577-9da9-598d-b34e-2a868f079b94 --> (2026-09-04, `core/save.ts`: settings + progress in one blob) Save/load (localStorage).

@@ -76,8 +76,19 @@ const FACET: ShipDef = {
     { pos: [0.62, -0.16, 6.4], radius: 0.11, length: 2.2, intake: true, segments: 8 },
     { pos: [-0.62, -0.16, 6.4], radius: 0.11, length: 2.2, intake: true, segments: 8 },
   ],
+  // Layered delta panels follow the leading edge; gaps expose the original wing.
+  armor: [
+    { points: [[2.8, 0.2], [4.35, -2.1], [4.35, -5.75], [2.8, -5.75]], y: -0.16, thickness: 0.075, slot: "body", mirror: true },
+    { points: [[4.49, -2.38], [6.7, -5.52], [6.7, -5.82], [4.49, -5.82]], y: -0.16, thickness: 0.075, slot: "body", mirror: true },
+    { points: [[2.8, -6.02], [4.35, -6.02], [4.35, -6.82], [2.8, -6.82]], y: -0.18, thickness: 0.065, slot: "accent", mirror: true },
+    { points: [[4.49, -6.02], [6.78, -6.02], [6.78, -6.82], [4.49, -6.82]], y: -0.18, thickness: 0.065, slot: "body", mirror: true },
+    // Nacelle service covers sit above the boxy engine's crown.
+    { points: [[1.47, -1.3], [2.43, -1.3], [2.43, -4.9], [1.47, -4.9]], y: 1.075, thickness: 0.07, slot: "accent", mirror: true },
+    { points: [[-0.42, 1.25], [0.42, 1.25], [0.5, -2.3], [-0.5, -2.3]], y: 0.88, thickness: 0.10, slot: "body" },
+  ],
   hatches: [
-    { pos: [0, 0.9, -1.0], size: [0.7, 1.2], face: "top" },
+    ...[-2.0, -2.38, -2.76, -3.14].map((z) => ({ pos: [1.95, 1.16, z] as [number, number, number], size: [0.65, 0.12] as [number, number], face: "top" as const, mirror: true })),
+    { pos: [0, 0.99, -0.6], size: [0.38, 1.4], face: "top" },
     { pos: [0, -0.88, 1.0], size: [0.9, 2.0], face: "bottom" },
     { pos: [0.55, -0.84, -3.5], size: [0.5, 1.4], face: "bottom", mirror: true },
   ],

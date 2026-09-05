@@ -1,7 +1,8 @@
 import * as THREE from "three";
-import type { AirfoilDef, CanopyDef, DecalDef, EngineDef, FinDef, HatchDef, HullSection, PaletteSlot, ShipDef, Vec3 } from "@/ships/defs";
+import type { AirfoilDef, ArmorDef, CanopyDef, DecalDef, EngineDef, FinDef, HatchDef, HullSection, PaletteSlot, ShipDef, Vec3 } from "@/ships/defs";
 import { glowMaterial, toonMaterial } from "@/render/toon";
-import { outlineShell } from "@/render/outline";
+import { outlineGeometry, outlineMaterial } from "@/render/outline";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { noEdge } from "@/render/layers";
 
 /**
@@ -24,6 +25,10 @@ export function buildShip(def: ShipDef): THREE.Group {
   for (const e of def.engines) engine(soup, e);
   for (const e of def.pods ?? []) pod(soup, e);
   if (def.canopy) canopy(soup, def.canopy);
+  for (const plate of def.armor ?? []) {
+    armor(soup, plate, false);
+    if (plate.mirror) armor(soup, plate, true);
+  }
   for (const h of def.hatches) {
     hatch(soup, h, false);
     if (h.mirror) hatch(soup, h, true);
@@ -48,7 +53,16 @@ export function buildShip(def: ShipDef): THREE.Group {
     mesh.receiveShadow = true;
     g.add(mesh);
   }
-  for (const shell of soup.solids) g.add(outlineShell(shell));
+  // Weld each solid independently so touching panels retain their own normals,
+  // then batch the shells: one draw call regardless of mechanical part count.
+  const shells = soup.solids.filter((solid) => solid.length > 0).map(outlineGeometry);
+  if (shells.length > 0) {
+    const geometry = mergeGeometries(shells);
+    const shell = noEdge(new THREE.Mesh(geometry, outlineMaterial));
+    shell.name = "outline";
+    g.add(shell);
+    for (const part of shells) part.dispose();
+  }
 
   for (const e of def.engines) {
     const glow = noEdge(new THREE.Mesh(new THREE.CircleGeometry(e.radius * 0.5, 16), mats.glow));
@@ -361,6 +375,28 @@ function canopy(soup: Soup, c: CanopyDef): void {
     soup.begin();
     const band = (dz: number): HullSection => ({ z: s.z + dz, w: s.w * 1.06, h: s.h * 1.06, n: s.n, yOff: s.yOff ?? 0 });
     loft(soup, [ring(band(-0.07), 12), ring(band(0.07), 12)], () => "dark");
+  }
+}
+
+/** Closed chamfered plate; all faces share the existing palette batches. */
+function armor(soup: Soup, def: ArmorDef, mirror: boolean): void {
+  soup.begin();
+  const sign = mirror ? -1 : 1;
+  const bottom = def.points.map(([x, z]) => new THREE.Vector3(x * sign, def.y, z));
+  const center = mean(bottom);
+  const bevel = def.thickness * 0.45;
+  const top = bottom.map((p) => {
+    const inward = center.clone().sub(p).normalize().multiplyScalar(bevel);
+    return p.clone().add(inward).setY(def.y + def.thickness);
+  });
+  const interior = center.clone().setY(def.y + def.thickness / 2);
+  const topCenter = mean(top);
+  for (let i = 0; i < bottom.length; i++) {
+    const next = (i + 1) % bottom.length;
+    oriented(soup, top[i]!, top[next]!, topCenter, interior, false, () => def.slot, 0, i);
+    oriented(soup, bottom[next]!, bottom[i]!, center, interior, false, () => "dark", 0, i);
+    oriented(soup, bottom[i]!, bottom[next]!, top[next]!, interior, false, () => "accent", 0, i);
+    oriented(soup, bottom[i]!, top[next]!, top[i]!, interior, false, () => "accent", 0, i);
   }
 }
 

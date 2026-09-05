@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-09-05 — Fighter detail and outline batching
+
+- Facet now has modeled beveled wing panels, separate trailing-edge plates, nacelle covers and cooling vents, retaining Ethan's selected gray silhouette.
+- Ship outlines are merged after per-part normal generation: the detailed fighter's top inspect view fell from 84 to 35 draw calls in the local browser; this is not an FPS benchmark.
+- Browser geometry check passed for all eight registered hulls: finite vertex/normal attributes, exactly one outline mesh each, zero page errors.
+- `npm run build` passes with the existing large-chunk warning (721.38 kB JS, 199.42 kB gzip). Visual evidence: `shots/2026-09-05-final-{side,rear,top,chase}.png`. No flight, balance, mission or save changes.
+
+
 Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
 ## 2026-09-04 (late) — Settings, keybinds, gamepad, ice, wrecks, music
