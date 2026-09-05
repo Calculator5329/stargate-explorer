@@ -166,3 +166,24 @@ Append-only log. One entry per decision that constrains future work. Format: dat
 **Why:** the original virtual stick integrated mouse *speed* with a 0.2 s decay (`stickReturn` 5), so a still mouse flew straight and holding a turn meant dragging the mouse continuously, and any OS acceleration curve multiplied straight into the turn rate. Ethan (2026-09-05): "kind of weird flying with the mouse ... I can't tell if it's because I have mouse acceleration or if I have not high enough sensitivity". Both causes were real. The space-sim convention (Freelancer, Everspace, Star Conflict) is an aim cursor: the stick is the cursor's offset from centre, so the mouse position, not its speed, is the command, and the cursor doubles as the "where is my nose going" indicator he was missing when lining up on gliders. Pointer lock's `unadjustedMovement` removes the acceleration curve at the source.
 
 **Consequences:** `Input.steer` picks the mode per tick; both write the same `stick`, so `Flight` is untouched. The pad still writes the stick directly. `cursorReturn` (0) exists so the cursor can be made to drift home if Ethan finds a stuck cursor annoying. The `relative` mode stays selectable until he has flown both; delete it only on his word. All lock calls go through `lockPointer()` so the raw-motion request and its fallback live in one place.
+
+### 2026-09-05 — Original address glyphs and a shared procedural ring gate
+
+**Why:** Ethan asked for a gate-themed mission console, symbol-based dialing and
+more recognizable ring construction. The existing IP note excludes franchise
+marks; the new constellation set and A–Z display face are original stroke data,
+not copies of the show's 39 symbols or Ancient script. English stays visible
+under the display face. Ethan can explicitly override the glyph-art stance;
+publication and likeness decisions still belong to him.
+
+**Consequences:** `ui/glyphs.ts` is the common source for DOM SVG and a cached
+canvas texture strip. System ids seed six distinct coordinate glyphs plus a
+shared origin, so hub and travel agree without extending the systems table.
+`Gate` supplies both the return marker and the travel presentation: thick
+annulus, two-sided rotating glyph band, nine geometric chevrons with seven used,
+a sub-threshold event horizon, and a short vertex-deformed vortex during the
+existing seventh-lock pause. Small chevron inserts supply HDR glow. Travel
+retains its states and simulation-hold contract; its chevron audio calls also
+advance the DOM glyphs. No assets or dependencies were added. Local constants
+stay in the owned files for this lane. Build/adapter checks and the unfulfilled
+browser-capture requirement are recorded in `docs/design/gate-hub-redesign.md`.
