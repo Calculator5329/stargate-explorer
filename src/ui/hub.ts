@@ -4,66 +4,85 @@ import { LEVELS, type LevelDef } from "@/mission/levels";
 import { SHIPS } from "@/ships/registry";
 import { fmt } from "@/mission/mission";
 import { SYSTEMS } from "@/world/systems";
+import { addressMarkup, scriptSvg, systemAddress } from "@/ui/glyphs";
 
-/**
- * Mission select. Cards for every level (locked until its `requires` is
- * cleared, best time shown once cleared) and a ship row (locked until
- * unlocked by a mission). LAUNCH reloads with `?mission=&ship=`; the ship
- * choice also persists so a plain reload keeps it. Missions are grouped by
- * the system they happen in; LAUNCH hands the level to `onLaunch` (the gate).
- */
+/** Address console. Selection is separate from permission to launch a sortie. */
 export class Hub {
   private mission: string;
+  private system: string;
   private ship: string;
+  private shownSystem = "";
   private readonly el: HTMLElement;
 
   constructor(root: HTMLElement, private readonly save: Save, current: LevelDef, onBack: () => void, private readonly onLaunch: (level: LevelDef, ship: string) => void) {
     this.el = root;
     this.mission = current.id;
+    this.system = current.system;
     this.ship = save.progress.ship;
+    root.querySelector("h1")!.innerHTML = `${scriptSvg("Gate control")}<span>GATE CONTROL</span>`;
     root.querySelector(".back")!.addEventListener("click", () => (this.hide(), onBack()));
     root.querySelector(".go")!.addEventListener("click", () => this.launch());
     this.build();
   }
 
   show(): void {
+    this.shownSystem = "";
     this.build();
     this.el.classList.add("on");
   }
 
-  hide(): void {
-    this.el.classList.remove("on");
-  }
+  hide(): void { this.el.classList.remove("on"); }
 
   private cleared(id: string): boolean {
     return (this.save.progress.missions[id]?.completions ?? 0) > 0;
   }
 
-  private unlocked(l: LevelDef): boolean {
-    return !l.requires || this.cleared(l.requires);
-  }
+  private unlocked(l: LevelDef): boolean { return !l.requires || this.cleared(l.requires); }
 
   private build(): void {
+    const focus = (document.activeElement as HTMLElement | null)?.dataset.focus;
     const P = this.save.progress;
+    const systems = this.el.querySelector<HTMLElement>(".systems")!;
+    systems.textContent = "";
+    for (const [i, sys] of SYSTEMS.entries()) {
+      const levels = LEVELS.filter((l) => l.system === sys.id);
+      if (!levels.length) continue;
+      const anyOpen = levels.some((l) => this.unlocked(l));
+      const b = document.createElement("button");
+      b.className = `system${anyOpen ? "" : " locked"}${sys.id === this.system ? " sel" : ""}`;
+      b.dataset.focus = sys.id;
+      b.setAttribute("aria-pressed", String(sys.id === this.system));
+      b.innerHTML = `<span class="system-label"><b>${String(i + 1).padStart(2, "0")} / ${sys.name}</b><small>${anyOpen ? "AVAILABLE" : "LOCKED"}</small></span><span class="address">${addressMarkup(systemAddress(sys.id))}</span>`;
+      b.addEventListener("click", () => {
+        if (this.system !== sys.id) {
+          this.system = sys.id;
+          this.mission = (levels.find((l) => this.unlocked(l)) ?? levels[0]!).id;
+        }
+        this.build();
+      });
+      systems.appendChild(b);
+    }
+    const sys = SYSTEMS.find((s) => s.id === this.system)!;
+    this.el.querySelector<HTMLElement>(".destination")!.innerHTML = `${scriptSvg(sys.name)}<span>${sys.name}</span>`;
+    this.el.querySelector<HTMLElement>(".system-blurb")!.textContent = sys.blurb;
+    const address = this.el.querySelector<HTMLElement>(".selected-address")!;
+    address.className = `selected-address address ${this.shownSystem === this.system ? "encoded" : "sequence"}`;
+    address.innerHTML = addressMarkup(systemAddress(this.system));
+    this.shownSystem = this.system;
+
     const ms = this.el.querySelector<HTMLElement>(".missions")!;
     ms.textContent = "";
-    for (const sys of SYSTEMS) {
-      const levels = LEVELS.filter((l) => l.system === sys.id);
-      if (levels.length === 0) continue;
-      const h = document.createElement("h3");
-      const anyOpen = levels.some((l) => this.unlocked(l));
-      h.className = anyOpen ? "" : "locked";
-      h.innerHTML = `<b>${sys.name}</b><small>${anyOpen ? sys.blurb : "NO GATE ADDRESS YET"}</small>`;
-      ms.appendChild(h);
-      for (const l of levels) {
+    for (const l of LEVELS.filter((level) => level.system === this.system)) {
       const open = this.unlocked(l), rec = P.missions[l.id];
       const b = document.createElement("button");
       b.className = `m${open ? "" : " locked"}${l.id === this.mission ? " sel" : ""}`;
+      b.disabled = !open;
+      b.dataset.focus = l.id;
+      b.setAttribute("aria-pressed", String(l.id === this.mission));
       const status = !open ? `LOCKED · clear ${LEVELS.find((x) => x.id === l.requires)?.title ?? "?"}` : rec ? `CLEARED ×${rec.completions} · best ${fmt(rec.bestTime)}` : "NEW";
       b.innerHTML = `<b>${l.title}</b><small>${l.blurb}</small><i>${status}${l.unlocks && open && !rec ? ` · unlocks ${SHIPS[l.unlocks]?.def.name ?? l.unlocks}` : ""}</i>`;
-        if (open) b.addEventListener("click", () => ((this.mission = l.id), this.build()));
-        ms.appendChild(b);
-      }
+      b.addEventListener("click", () => { this.mission = l.id; this.build(); });
+      ms.appendChild(b);
     }
     const ss = this.el.querySelector<HTMLElement>(".ships")!;
     ss.textContent = "";
@@ -71,21 +90,29 @@ export class Hub {
       const open = P.unlocked.includes(s.id);
       const b = document.createElement("button");
       b.className = `s${open ? "" : " locked"}${s.id === this.ship ? " sel" : ""}`;
+      b.disabled = !open;
+      b.dataset.focus = s.id;
+      b.setAttribute("aria-pressed", String(s.id === this.ship));
       const st = s.stats;
       b.innerHTML = `<b>${s.def.name}</b><small>${open ? s.blurb : "LOCKED · bring down the Ha'tak"}</small><div class="stats"><span>speed ${pct(st.speed)}</span><span>agility ${pct(st.agility)}</span><span>hull ${pct(st.hull)}</span><span>guns ${pct(st.guns)}</span><span>missiles ${st.missiles}</span></div>`;
-      if (open) b.addEventListener("click", () => ((this.ship = s.id), this.build()));
+      b.addEventListener("click", () => { this.ship = s.id; this.build(); });
       ss.appendChild(b);
     }
+    const level = LEVELS.find((l) => l.id === this.mission)!;
+    const go = this.el.querySelector<HTMLButtonElement>(".go")!;
+    go.disabled = !this.unlocked(level) || !P.unlocked.includes(this.ship);
+    this.el.querySelector<HTMLElement>(".launch-summary")!.textContent = go.disabled ? "ADDRESS LOCKED · COMPLETE THE PRECEDING SORTIE" : `${level.title} / ${SHIPS[this.ship]?.def.name ?? this.ship}`;
+    if (focus) this.el.querySelector<HTMLElement>(`[data-focus="${focus}"]`)?.focus({ preventScroll: true });
   }
 
   private launch(): void {
+    const level = LEVELS.find((l) => l.id === this.mission);
+    if (!level || !this.unlocked(level) || !this.save.progress.unlocked.includes(this.ship)) return;
     this.save.progress.ship = this.ship;
     writeSave(this.save);
     this.hide();
-    this.onLaunch(LEVELS.find((l) => l.id === this.mission) ?? LEVELS[0]!, this.ship);
+    this.onLaunch(level, this.ship);
   }
 }
 
-function pct(x: number): string {
-  return `${Math.round(x * 100)}%`;
-}
+function pct(x: number): string { return `${Math.round(x * 100)}%`; }
