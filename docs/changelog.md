@@ -10,6 +10,7 @@ Ethan, 2026-09-05 (feedback chat, screenshot of the escort mission): prefers cla
 - **Assist strength** slider (0.2..1, `Scheme.assistStrength`): scales `latDamp` and the soft-horizon `autoLevel` while assist is on. X still toggles assist off entirely.
 - **Belts vary per system** (`AsteroidOptions.tints/bigChance/big/small/voids/voidR`, `SystemDef.arena`): each belt mixes tint families (plum, grey, ochre, charcoal, one per base shape), has its own size mix (P3X-774 gets sparse 30..110 m boulders, Tollana small gravel), and `voids` carve empty pockets so density varies. Arenas are per system now (1700..2400 m, Abydos 2000) with the belts' `outer` grown to match; rock counts rose only 5..15 %.
 - Save gains `steer`, `rawMouse`, `assistStrength` with defaults, so an existing save picks them up.
+- **Gate travel holds the sim** (`Travel.holding`, `main.ts`): Ethan, "it lets me start playing while it's dialing ... the game starts before it should". Through the dial, the tunnel and the arrival fade only the input ticks (the aim cursor can be placed); flight, hazards, rocks and the mission clock wait. Verified in the pane: position and intro timer frozen while `holding`, released when the fade ends.
 
 
 ## 2026-09-05 (03:00) — Destructible asteroids, denser structured belts, mini-map, lethal crashes

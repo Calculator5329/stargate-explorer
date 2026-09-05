@@ -105,6 +105,7 @@ const loop = new Loop({
   sim(dt) {
     if (inspect || menu.open || game?.replay.playing) return;
     input.tick(dt);
+    if (travel?.holding) return; // dialing, in the wormhole or fading in: nothing moves yet
     flight.tick(dt, input);
     hazards.tick(flight, dt);
     world.tick(dt);

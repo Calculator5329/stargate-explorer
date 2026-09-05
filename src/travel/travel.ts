@@ -44,8 +44,19 @@ export class Travel {
     scene.add(this.tunnel.mesh);
   }
 
+  /** a departure is in progress (dial or tunnel); a second depart() is ignored */
   get busy(): boolean {
     return this.stage === "dial" || this.stage === "tunnel";
+  }
+
+  /**
+   * The sim holds still while this is true: through the dial, the tunnel and the
+   * arrival fade. Ethan, 2026-09-05: "it lets me start playing while it's dialing
+   * ... the game starts before it should". Only the input ticks, so the aim cursor
+   * can be placed but nothing moves and the mission clock does not start.
+   */
+  get holding(): boolean {
+    return this.stage !== "idle";
   }
 
   /** Dial `system`, then load `query` (a full search string without the `?`). */

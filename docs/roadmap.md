@@ -157,6 +157,9 @@ Ethan: prefers classic; assist helps but may be too strong; arcade W/S up/down "
 - [ ] Ethan says what is wrong with arcade W/S (abrupt, slow, fights the mouse, slide) before `snapPitchRate`/`snapSlide` move.
 - [ ] Aim help so hits do not need a perfect line-up: options are a small gun gimbal cone (rounds bend a few degrees toward the boxed target), wider convergence with more spread, or a bigger lead ring. Ethan picks.
 - [ ] Ethan's look at the belts per system (grey/plum mix, boulder sizes, pockets, arena size); rock counts rose ~10 %, fps on his machine unmeasured.
+- [x] Gate travel: the sim ran through the dial and the arrival fade; now held until the fade ends. *(2026-09-05)*
+- [ ] Ethan likes cursor steer. Next maneuverability picks (his call, see the 2026-09-05 chat rundown): strafe thrusters, speed-coupled turn rate, padlock target view, target-plane assist, gun gimbal cone, cursor snap.
+- [ ] Stargate-themed hub and gate: glyph-address dial UI with an original constellation glyph set and an angular script for titles, a more accurate gate model (inner glyph ring that spins, nine chevrons, kawoosh), glyphs lighting during the dial. Dispatched to an Astra (codex) design lane 2026-09-05; review the diff and captures before landing.
 
 ### M3 — Fleet & factions
 - [x] <!-- workspace:id=work:fbd1c463-3000-5d78-830c-2a559fa5d2a3 --> 3 player hulls, 3 enemy hulls, distinct silhouettes (see GRAPHICS.md silhouette test). *(2026-09-04: enemies glider / interceptor / gunboat; players Facet / F-21 Broadsword / Prometheus; plus the neutral racer. `?hull=` inspects any; silhouettes judged by capture, not yet by Ethan)*
