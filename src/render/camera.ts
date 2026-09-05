@@ -53,8 +53,10 @@ export class ChaseCamera {
 
     _fwd.set(0, 0, 1).applyQuaternion(this.frame);
     _target.copy(shipPos).addScaledVector(_fwd, c.lookAhead);
-    _up.set(0, 1, 0).applyQuaternion(this.frame);
-    this.cam.up.lerp(_up, 1 - Math.exp(-c.upFollow * dt)).normalize();
+    // up comes straight from the lagged frame. Lerping the up vector separately passed through zero
+    // half-way round a barrel roll and lookAt flipped the picture (Ethan, 2026-09-05: "it flips the screen
+    // instead of following the whole roll"); the frame's slerp already carries the lag.
+    this.cam.up.copy(_up.set(0, 1, 0).applyQuaternion(this.frame));
     this.cam.lookAt(_target);
 
     const targetFov = c.fovBase + c.fovSpeed * Math.min(1, speed / T.flight.boostSpeed) + c.barrelFov * this.rollFrac; // boost = full swing, never past it

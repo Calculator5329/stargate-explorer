@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-09-05 (night) — Barrel-roll camera, replay shows the rounds and the kill
+
+Ethan, 2026-09-05 (feedback chat, third round): "barrel roll animation is broken it like flips the screen instead of following the whole roll"; "kill replays are really cool ... but i can't even see the bullets that i shot and i also don't see the enemy like kill i just see my plane doing some cool moves"; the Prometheus "doesn't look that great".
+
+- **Barrel-roll flip fixed** (`render/camera.ts`): the camera's up vector was lerped separately from the lagged frame, so half-way round a roll it passed through zero and `lookAt` flipped the picture. Up now comes straight from the frame. `T.camera.barrelFollow` 4.5 → 18: at 4.5 the frame lagged the 9.5 rad/s roll by more than 180° and the shortest-path slerp ran the roll backwards; 18 keeps the lag near 30° so the hull visibly rolls ahead of the view. `upFollow` is gone. `node scripts/barrel-test.mjs` samples the camera up through a roll and reports the largest frame-to-frame swing (343° total, no jump beyond one frame's worth of roll).
+- **Replay re-emits the player's rounds** (`replay/replay.ts` `markShot`, `Combat.onFire`, `Projectiles.spawn/clear`): every player round's position and velocity is recorded beside the poses (800-entry ring), cut into the clip with the frames, and played back into a visual-only tracer pool at the clip's rate. Nothing resolves hits against that pool.
+- **Replay frames the kill**: the clip keeps the scored kill's position; both shots look at a point between the ship and the kill (the drone shot leans at most ~17° off the ship so the ship never leaves frame at the pass; the lean fades once the kill is behind). Shot B is now over the shoulder toward the kill instead of an orbit around the ship. `node scripts/replay-test.mjs` drives a kill and checks tracers, ship and kill point in frame (`docs/shots/2026-09-05-replay-shotB.png`).
+- Prometheus hull pass 5 dispatched to an Astra (codex) design lane owning `ships/prometheus-def.ts` (and the builder if a primitive is needed) with pass-5 captures as the deliverable.
+
 ## 2026-09-05 (evening) — Cursor steering, raw mouse, assist strength, escort log fix, varied belts
 
 Ethan, 2026-09-05 (feedback chat, screenshot of the escort mission): prefers classic, assist "helps but I don't know if it needs to be quite as strong"; "kind of weird flying with the mouse ... I can't tell if it's because I have mouse acceleration or if I have not high enough sensitivity"; has to line the nose up exactly to hit; the HUD filled with repeated "Prometheus hull 100%"; asteroids should vary ("maybe gray, maybe different colors, maybe different sizes"), and the earlier "more dense" ask meant a bigger map with varied density, not one even fog.

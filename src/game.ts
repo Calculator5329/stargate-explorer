@@ -42,10 +42,11 @@ export class Game {
     this.combat.setShip(flight);
     this.flight = flight;
     this.combat.onKill = (pos, vel) => this.replay.markKill(pos, vel, this.flight, this.lastStick);
+    this.combat.onFire = (pos, vel) => this.replay.markShot(pos, vel);
     this.mission = createMission(level, { combat: this.combat, rocks: world.asteroids, audio: this.audio, flight });
     this.audio.setKey(level.system);
     this.map = new Minimap(document.querySelector<HTMLCanvasElement>("#hud .map")!, world.asteroids);
-    scene.add(this.combat.group, this.mission.group, this.gate.group);
+    scene.add(this.combat.group, this.mission.group, this.gate.group, this.replay.tracers.group);
     canvas.addEventListener("click", () => this.audio.unlock());
     window.addEventListener("keydown", (e) => {
       if (this.replay.playing) {

@@ -64,6 +64,8 @@ export class Combat {
   readonly fx = new Explosions();
   /** a glider the player destroyed (pos, vel); the replay hooks this */
   onKill: ((pos: THREE.Vector3, vel: THREE.Vector3) => void) | null = null;
+  /** a player round left the gun: world position and velocity (the replay records them) */
+  onFire: ((pos: THREE.Vector3, vel: THREE.Vector3) => void) | null = null;
   readonly missiles = new Missiles();
   /** nearest glider inside the lock cone, and how far along the lock is (0..1) */
   target: Tracked | null = null;
@@ -134,10 +136,12 @@ export class Combat {
         this.gun = 1 - this.gun;
         _p.set(g[0] * sz, g[1] * sz, g[2] * sz).applyQuaternion(flight.quat).add(flight.pos);
         _d.set((Math.random() - 0.5) * T.weapons.spread * 2, (Math.random() - 0.5) * T.weapons.spread * 2, 1).normalize().applyQuaternion(flight.quat);
-        if (this.shots.fire("player", _p, _d, P.vel)) {
+        const shot = this.shots.fire("player", _p, _d, P.vel);
+        if (shot) {
           P.fired++;
           this.muzzleT = 0.05;
           this.audio.cannon();
+          this.onFire?.(shot.pos, shot.vel);
         }
       }
     } else this.fireAcc = Math.min(this.fireAcc, 0.999);

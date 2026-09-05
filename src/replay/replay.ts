@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import type { Flight } from "@/sim/flight";
 import type { Enemy } from "@/combat/enemies";
+import { Projectiles } from "@/combat/projectiles";
+import { T } from "@/core/tunables";
 
 /** enemy slots recorded per frame (list index); more than this many gliders are simply not replayed */
 const SLOTS = 10;
@@ -13,6 +15,9 @@ const FRAMES = KEEP * 60;
 const PRE = 4.5;
 const POST = 1.6;
 const RATE = 0.55;
+/** player rounds remembered: t + pos + vel, enough for ~13 s at the cannon's rate */
+const SHOTS = 800;
+const SSTRIDE = 7;
 
 interface Burst {
   t: number;
@@ -25,6 +30,10 @@ interface Highlight {
   frames: Float32Array;
   count: number;
   bursts: Burst[];
+  /** player rounds in the window, chronological, SSTRIDE floats each */
+  shots: Float32Array;
+  /** where the scored kill happened; both camera shots keep it in frame */
+  kill: THREE.Vector3;
   score: number;
 }
 
@@ -36,6 +45,8 @@ const _b = new THREE.Vector3();
 const _fwd = new THREE.Vector3();
 const _side = new THREE.Vector3();
 const Y = new THREE.Vector3(0, 1, 0);
+const _look = new THREE.Vector3();
+const _v = new THREE.Vector3();
 
 /**
  * Kill replay. Every sim tick records the player's and each glider's pose into
@@ -52,6 +63,12 @@ export class Replay {
   private count = 0;
   private t = 0;
   private readonly bursts: Burst[] = [];
+  private readonly shotRing = new Float32Array(SHOTS * SSTRIDE);
+  private shotHead = 0;
+  private shotCount = 0;
+  private shotIdx = 0;
+  /** visual-only tracer pool the clip re-emits into; nothing resolves hits against it. `game.ts` adds the group to the scene. */
+  readonly tracers = new Projectiles(128);
   private pending: { at: number; score: number } | null = null;
   private highlight: Highlight | null = null;
   private clip: Highlight | null = null;
@@ -89,6 +106,16 @@ export class Replay {
     if (this.pending && this.t >= this.pending.at + POST) this.cut();
   }
 
+  /** A player round left the gun (combat's onFire). */
+  markShot(pos: THREE.Vector3, vel: THREE.Vector3): void {
+    const o = this.shotHead * SSTRIDE, r = this.shotRing;
+    r[o] = this.t;
+    r[o + 1] = pos.x; r[o + 2] = pos.y; r[o + 3] = pos.z;
+    r[o + 4] = vel.x; r[o + 5] = vel.y; r[o + 6] = vel.z;
+    this.shotHead = (this.shotHead + 1) % SHOTS;
+    if (this.shotCount < SHOTS) this.shotCount++;
+  }
+
   /** A glider went down: score the moment and schedule the cut. */
   markKill(pos: THREE.Vector3, vel: THREE.Vector3, flight: Flight, stick: { x: number; y: number }, scale = 5): void {
     this.bursts.push({ t: this.t, pos: pos.clone(), vel: vel.clone(), scale });
@@ -115,7 +142,20 @@ export class Replay {
       k++;
     }
     if (k < 30) return;
-    this.highlight = { frames, count: k, bursts: this.bursts.filter((b) => b.t >= from && b.t <= to), score: P.score };
+    const bursts = this.bursts.filter((b) => b.t >= from && b.t <= to);
+    // the scored kill is the burst nearest the mark
+    let kill = bursts[0];
+    for (const b of bursts) if (!kill || Math.abs(b.t - P.at) < Math.abs(kill.t - P.at)) kill = b;
+    const shots = new Float32Array(this.shotCount * SSTRIDE);
+    let m = 0;
+    for (let i = 0; i < this.shotCount; i++) {
+      const idx = ((this.shotHead - this.shotCount + i) % SHOTS + SHOTS) % SHOTS, o = idx * SSTRIDE;
+      const t = this.shotRing[o]!;
+      if (t < from || t > to) continue;
+      shots.set(this.shotRing.subarray(o, o + SSTRIDE), m * SSTRIDE);
+      m++;
+    }
+    this.highlight = { frames, count: k, bursts, shots: shots.subarray(0, m * SSTRIDE), kill: kill ? kill.pos.clone() : new THREE.Vector3(frames[k * STRIDE - STRIDE + 1], frames[k * STRIDE - STRIDE + 2], frames[k * STRIDE - STRIDE + 3]), score: P.score };
   }
 
   play(cam: THREE.PerspectiveCamera): boolean {
@@ -123,6 +163,7 @@ export class Replay {
     this.clip = this.highlight;
     this.clipT = this.clip.frames[0]!;
     this.burstIdx = 0;
+    this.shotIdx = 0;
     this.savedFov = cam.fov;
     return true;
   }
@@ -130,9 +171,16 @@ export class Replay {
   stop(cam: THREE.PerspectiveCamera, enemies: Enemy[]): void {
     if (!this.clip) return;
     this.clip = null;
+    this.tracers.clear();
+    this.tracers.update();
     for (const e of enemies) e.rig.root.visible = e.alive;
     cam.fov = this.savedFov;
     cam.updateProjectionMatrix();
+  }
+
+  /** 1 while the kill point lies at least `fade` m ahead of the ship, 0 once it is behind (uses _p and _fwd as set by update). */
+  private killAhead(kill: THREE.Vector3, fade: number): number {
+    return Math.min(1, Math.max(0, _v.subVectors(kill, _p).dot(_fwd) / fade));
   }
 
   /** Drive ship, gliders and camera from the clip; call after the normal render pass. Returns false when the clip ends. */
@@ -168,7 +216,18 @@ export class Replay {
       const b = c.bursts[this.burstIdx++]!;
       burst(b.pos, b.vel, b.scale);
     }
-    // camera: shot A, a drone parked off the player's opening line; shot B, a close orbit through the kill
+    // the player's rounds, re-emitted into the visual pool at the clip's rate
+    const S = c.shots;
+    const ttl = T.weapons.range / T.weapons.muzzleSpeed;
+    while (this.shotIdx * SSTRIDE < S.length && S[this.shotIdx * SSTRIDE]! <= this.clipT) {
+      const o = this.shotIdx++ * SSTRIDE;
+      this.tracers.spawn("player", _a.set(S[o + 1]!, S[o + 2]!, S[o + 3]!), _v.set(S[o + 4]!, S[o + 5]!, S[o + 6]!), ttl);
+    }
+    this.tracers.tick(dt * RATE);
+    this.tracers.update();
+    // camera: shot A, a drone parked off the player's opening line; shot B, over the shoulder toward the kill.
+    // Both look at a point between the ship and the kill so the victim and the rounds reaching it stay in frame
+    // (Ethan, 2026-09-05: "i can't even see the bullets that i shot and i also don't see the enemy like kill").
     const frac = (this.clipT - t0) / (t1 - t0);
     _p.copy(ship.position);
     _fwd.set(0, 0, 1).applyQuaternion(ship.quaternion);
@@ -180,15 +239,20 @@ export class Replay {
       _side.set(1, 0, 0).applyQuaternion(_q);
       cam.position.copy(_a).addScaledVector(_side, 26).addScaledVector(Y, 9);
       cam.fov = 50;
+      // lean toward the kill while it is ahead, by at most ~17° off the ship so the ship never leaves the frame at the pass
+      const lean = this.killAhead(c.kill, 40) * Math.min(0.3 * _v.subVectors(c.kill, _p).length(), 0.3 * cam.position.distanceTo(_p));
+      _look.copy(_p).addScaledVector(_v.normalize(), lean);
     } else {
-      const ang = (frac - 0.5) * 2 * Math.PI * 0.9 + 0.6;
+      // over the shoulder, drifting slowly from one side to the other, with the kill ahead
+      const ang = (frac - 0.5) * 2 * Math.PI * 0.35 - 0.6;
       _side.crossVectors(_fwd, Y).normalize();
       if (_side.lengthSq() < 0.1) _side.set(1, 0, 0);
-      cam.position.copy(_p).addScaledVector(_side, Math.cos(ang) * 30).addScaledVector(_fwd, Math.sin(ang) * 30 - 6).addScaledVector(Y, 9);
+      cam.position.copy(_p).addScaledVector(_side, Math.sin(ang) * 14).addScaledVector(_fwd, -22).addScaledVector(Y, 7);
       cam.fov = 58;
+      _look.copy(_p).lerp(c.kill, 0.5 * this.killAhead(c.kill, 40));
     }
     cam.up.copy(Y);
-    cam.lookAt(_p);
+    cam.lookAt(_look);
     cam.updateProjectionMatrix();
     return true;
   }

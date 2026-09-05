@@ -73,7 +73,6 @@ export const T = {
     swayPitch: 1.0,
     fovBase: 62,
     fovSpeed: 14,
-    upFollow: 6,
     /** extra pull-back on boost (m) */
     distanceBoost: 2.5,
     /** shake amplitude (m) right after a collision, and the constant boost rumble */
@@ -81,8 +80,9 @@ export const T = {
     boostShake: 0.05,
     /** how fast the camera frame catches the ship's attitude (1/s): lower = the ship visibly rotates against the view in a pull-up or roll */
     followRate: 7,
-    /** same, while a barrel roll is running: the ship spins most of the way round on screen */
-    barrelFollow: 4.5,
+    /** same, while a barrel roll is running. Must stay well above rollRate/π (≈3) or the frame lags past 180° and the
+     *  shortest-path slerp reverses; 18 leaves a ~30° lead so the hull visibly rolls ahead of the view */
+    barrelFollow: 18,
     /** extra FOV (deg) and pull-back (m) during a barrel roll */
     barrelFov: 8,
     barrelDistance: 2.5,

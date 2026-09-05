@@ -54,16 +54,27 @@ export class Projectiles {
   }
 
   /** Spawn a round at `pos` travelling along `dir` at the side's muzzle speed plus the shooter's velocity. */
-  fire(side: Side, pos: THREE.Vector3, dir: THREE.Vector3, shooterVel: THREE.Vector3, dmg = 1): boolean {
-    const s = this.shots.find((x) => !x.alive && x.side === side);
-    if (!s) return false;
+  fire(side: Side, pos: THREE.Vector3, dir: THREE.Vector3, shooterVel: THREE.Vector3, dmg = 1): Shot | null {
     const w = T.weapons;
+    const speed = side === "player" ? w.muzzleSpeed : w.enemyMuzzleSpeed;
+    return this.spawn(side, pos, _dir.copy(dir).multiplyScalar(speed).add(shooterVel), w.range / speed, dmg);
+  }
+
+  /** Place a round with an explicit world velocity and lifetime (the kill replay re-emits recorded rounds this way). */
+  spawn(side: Side, pos: THREE.Vector3, vel: THREE.Vector3, ttl: number, dmg = 1): Shot | null {
+    const s = this.shots.find((x) => !x.alive && x.side === side);
+    if (!s) return null;
     s.alive = true;
     s.dmg = dmg;
     s.pos.copy(pos);
-    s.vel.copy(dir).multiplyScalar(side === "player" ? w.muzzleSpeed : w.enemyMuzzleSpeed).add(shooterVel);
-    s.ttl = w.range / (side === "player" ? w.muzzleSpeed : w.enemyMuzzleSpeed);
-    return true;
+    s.vel.copy(vel);
+    s.ttl = ttl;
+    return s;
+  }
+
+  /** Drop every live round (replay teardown). */
+  clear(): void {
+    for (const s of this.shots) s.alive = false;
   }
 
   kill(s: Shot): void {

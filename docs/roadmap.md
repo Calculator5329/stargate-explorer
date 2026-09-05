@@ -159,6 +159,9 @@ Ethan: prefers classic; assist helps but may be too strong; arcade W/S up/down "
 - [ ] Ethan's look at the belts per system (grey/plum mix, boulder sizes, pockets, arena size); rock counts rose ~10 %, fps on his machine unmeasured.
 - [x] Gate travel: the sim ran through the dial and the arrival fade; now held until the fade ends. *(2026-09-05)*
 - [ ] Ethan likes cursor steer. Next maneuverability picks (his call, see the 2026-09-05 chat rundown): strafe thrusters, speed-coupled turn rate, padlock target view, target-plane assist, gun gimbal cone, cursor snap.
+- [x] Barrel roll flipped the screen instead of following the roll: camera up taken from the lagged frame, `barrelFollow` 4.5 → 18. *(2026-09-05, `scripts/barrel-test.mjs`; Ethan to fly it)*
+- [x] Kill replay showed neither the rounds nor the kill: player rounds recorded and re-emitted into a visual tracer pool, both shots framed on ship + kill. *(2026-09-05, `scripts/replay-test.mjs`, `docs/shots/2026-09-05-replay-shotB.png`)*
+- [ ] Prometheus hull pass 5 (Ethan: "doesn't look that great"): Astra (codex) design lane `prometheus-hull-pass-5-…-aabeef46` owns `ships/prometheus-def.ts` + pass-5 captures; review captures against `docs/shots/prom-pass4-*.png` before landing. Fallbacks if the parametric builder tops out: a hand-written Three.js mesh module, or a Blender glTF through `ships/loader.ts`.
 - [ ] Stargate-themed hub and gate: glyph-address dial UI with an original constellation glyph set and an angular script for titles, a more accurate gate model (inner glyph ring that spins, nine chevrons, kawoosh), glyphs lighting during the dial. Dispatched to an Astra (codex) design lane 2026-09-05; review the diff and captures before landing.
 
 ### M3 — Fleet & factions
