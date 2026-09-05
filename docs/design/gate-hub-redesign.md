@@ -86,9 +86,11 @@ The lane's sandbox could not start vite or Chromium, so the session built the la
 | `gate-hub-redesign-dial.png` | the destination dialing: address glyphs and their chevrons lit in order |
 | `gate-hub-redesign-gate-dialing.png` | the ring gate mid-dial, glyph band spinning, chevrons locking |
 | `gate-hub-redesign-gate-open.png` | the gate with the event horizon up |
-| `gate-hub-redesign-kawoosh.png`, `-tunnel.png`, `-arrive.png` | taken from main's dist during the same run; the lane's kawoosh and tunnel frames were not captured (the probe stalled on the `?arrive=1` reload) and remain unverified visually |
+| `gate-hub-redesign-kawoosh.png` | seventh chevron locked, event horizon up (retaken 2026-09-05 late on hardware GL from the landed main) |
+| `gate-hub-redesign-tunnel.png` | the wormhole tunnel with the mission end card still visible through it |
+| `gate-hub-redesign-arrive.png` | the hub after the `?arrive=1` reload, fade half done |
 
-Hub, dial and both gate frames were judged in review: flat dark console, legible glyph addresses, ring gate with a spinning glyph band and lit chevrons. The kawoosh and tunnel remain to be seen in play.
+All frames judged in review: flat dark console, legible glyph addresses, ring gate with a spinning glyph band, lit chevrons and a rippling event horizon. Under swiftshader a frame during the burst and tunnel takes longer than playwright's screenshot timeout while the game itself holds its software-GL baseline (6..12 fps); on the RTX 5070 Ti it is 60 fps throughout, so `scripts/travel-test.mjs` runs on hardware GL by default (`SOFT_GL=1` for the old path).
 
 The runnable capture driver below uses port 5199, asserts the real simulation is
 held during the paused dial, then kills actual enemy spawns as `chain-test.mjs`
