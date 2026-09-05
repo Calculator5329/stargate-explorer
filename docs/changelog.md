@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-09-05 — Mission-chain persistence assertions (A48)
+
+- The existing chain smoke refuses wrong mission fallback and missing, malformed or lost persisted progress. It checks exact per-run completion increments and mission-declared rewards after navigation and final reload, including selected subsets and repeated missions.
+- A bounded semantic save wait replaces the blind delay; an isolated browser context prevents prior progress masking a failed write. `STARGATE_TEST_URL` supports isolated preview verification.
+- Build, ten controlled harness fault cases, actual eight-mission chain and actual unknown-id refusal passed. The existing 721.38 kB bundle warning remains; no bundled game source changed. [Design, archived source and evidence](design-chain-verification-20260905.md).
+
 ## 2026-09-05 — Fighter detail and outline batching
 
 - Facet now has modeled beveled wing panels, separate trailing-edge plates, nacelle covers and cooling vents, retaining Ethan's selected gray silhouette.
