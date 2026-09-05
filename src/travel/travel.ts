@@ -40,7 +40,6 @@ export class Travel {
     const ring = root.querySelector<HTMLElement>(".ring")!;
     for (let k = 0; k < 9; k++) {
       const c = document.createElement("i");
-
       ring.appendChild(c);
       this.chevEls.push(c);
     }

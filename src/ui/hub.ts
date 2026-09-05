@@ -80,7 +80,7 @@ export class Hub {
       b.dataset.focus = l.id;
       b.setAttribute("aria-pressed", String(l.id === this.mission));
       const status = !open ? `LOCKED · clear ${LEVELS.find((x) => x.id === l.requires)?.title ?? "?"}` : rec ? `CLEARED ×${rec.completions} · best ${fmt(rec.bestTime)}` : "NEW";
-      b.innerHTML = `<b>${l.title}</b><small>${l.blurb}</small><i>${status}${l.unlocks && open && !rec ? ` · unlocks ${SHIPS[l.unlocks]?.def.name ?? l.unlocks}` : ""}</i>`;
+      b.innerHTML = `<b>${scriptSvg(l.title)}<span>${l.title}</span></b><small>${l.blurb}</small><i>${status}${l.unlocks && open && !rec ? ` · unlocks ${SHIPS[l.unlocks]?.def.name ?? l.unlocks}` : ""}</i>`;
       b.addEventListener("click", () => { this.mission = l.id; this.build(); });
       ms.appendChild(b);
     }
