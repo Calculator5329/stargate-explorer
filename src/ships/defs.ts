@@ -101,6 +101,15 @@ export interface HatchDef {
   mirror?: boolean;
 }
 
+/** Convex armor footprint in local XZ, extruded upward from y. */
+export interface ArmorDef {
+  points: [number, number][];
+  y: number;
+  thickness: number;
+  slot: PaletteSlot;
+  mirror?: boolean;
+}
+
 export interface DecalDef {
   kind: "chevron" | "number" | "stripe";
   text?: string;
@@ -126,6 +135,7 @@ export interface ShipDef {
   plumeScale?: number;
   /** engine-shaped bodies with no plume (booster pods, tanks) */
   pods?: EngineDef[];
+  armor?: ArmorDef[];
   hatches: HatchDef[];
   decals: DecalDef[];
   palette: ShipPalette;

@@ -3,6 +3,7 @@
 Snapshot of what actually works. This is the project state snapshot, not the workspace root `STATUS.md` handoff file (see CLAUDE.md). Update when things change; keep the "Known issues" list honest.
 
 ## Works
+- **2026-09-05 art pass:** Facet wing armor, trailing-edge plates and nacelle vents; batched outline geometry for all hulls. Build verified; inspect top view measured 35 calls / 6.7k triangles in the local in-app browser. FPS on target hardware remains unbenchmarked. Final dated captures in `docs/shots/2026-09-05-final-*.png`.
 - Fixed-step loop with interpolation, fps counter.
 - Pointer-lock mouse flight: virtual self-centering stick, A/D roll, double-tap A/D barrel roll, Shift boost, soft-horizon auto-level, bank-into-turn. Two schemes (`C` toggles, `?controls=`): **arcade** (default) holds a cruise speed, W pulls up / S dives hard, Space brakes; **classic** has a W/S throttle and Space drift. Velocity vector chases the nose with inertia. +X is port (see CLAUDE.md).
 - Hazards: sphere collision with every rock (bounce, speed bleed, camera shake, red flash); 1500 m arena with a soft turn-back current and HUD warning.
