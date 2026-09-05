@@ -12,7 +12,7 @@ npm run build    # tsc --noEmit && vite build  — must pass before any commit
 npm run preview  # serve dist/
 ```
 Verify command is `npm run build` plus a look at the running game: a flight-feel change is verified by flying it, an art change by a capture. Standing build warning: one ~580 kB chunk (three). A warning that is not that one is new and blocks the commit.
-Inspection views for asset work: `?view=side|top|front|rear` (static cam, ship rotates; `&spin=0` holds it, `&dist=0.5` moves in). `?view=side&silhouette=1` is the black-on-white readability test. `?quality=low|med|high`, `?sky=abydos|deepSpace|chulak|ember|void|frost`, `?planet=desert|ice|lava|jungle|gasGiant|moon`, `?system=abydos|chulak|p3x774|tollana|netu|kheb`, `?hull=<key in ships/hulls.ts>` (any hull, player or enemy, in an inspect view).
+Inspection views for asset work: `?view=side|top|front|rear` (static cam, ship rotates; `&spin=0` holds it, `&dist=0.5` moves in). `?view=side&silhouette=1` is the black-on-white readability test. `?quality=low|med|high`, `?sky=abydos|deepSpace|chulak|ember|void|frost`, `?planet=desert|ice|lava|jungle|gasGiant|moon`, `?system=abydos|chulak|p3x774|tollana|netu|kheb|graveyard`, `?hull=<key in ships/hulls.ts>` (any hull, player or enemy, in an inspect view).
 Backtick (`) toggles the lil-gui tuning panel.
 
 ## Hard conventions (do not break)
@@ -33,7 +33,7 @@ src/
   core/    loop, input (mouse + keys + gamepad), binds (rebindable key table), scheme (arcade/classic), tunables, random
   sim/     flight model (kinematic arcade-sim), hazards (rock collision, arena edge)
   render/  renderer + post stack, chase camera, inspect views, perf overlay
-  world/   procedural skybox, planet, sun, asteroids, systems (SystemDef: sky+planet+sun+belt per star system; belt.style picks rock or ice), World composition
+  world/   procedural skybox, planet, sun, asteroids, systems (SystemDef: sky+planet+sun+belt per star system; belt.style picks rock, ice or wreck; derelict-geo is the wreck geometry), World composition
   ships/   parametric builder, ship defs, palettes, rig (ship + plumes), GLTF loader
   fx/      engine plumes, speed dust, explosions
   replay/  kill replay: pose ring buffer, highlight cut, cinematic playback

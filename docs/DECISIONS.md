@@ -140,3 +140,9 @@ Append-only log. One entry per decision that constrains future work. Format: dat
 
 **Consequences:** new flight actions get a `Binds` entry, a label, and a default; nothing outside `Input` and the menu sees key codes. Mouse buttons, Esc, the end-card keys and the backtick stay fixed. A pad maps onto the same `Input` fields, so the flight model and combat never know which device is speaking.
 
+### 2026-09-04 — Obstacle variety is a belt style, not a new system
+
+**Why:** ice shards and derelict wreckage needed to collide, be avoided by enemies, block missiles and render with the outline pipeline exactly like rocks. Everything downstream reads `RockSpheres`/`RockField` (centres, radii, planes, `matrixAt`), so a second field class would have meant a second consumer path in hazards, enemies, combat and every mission's `clear()`. Instead `Asteroids` takes a `style` that swaps the base geometry, palette, scale bands and tumble, and each base shape carries its own bounding radius so the sphere and the narrow phase agree for any unit shape. Concave wrecks collide against their convex hull: the face-plane test is an intersection of half-spaces, and a merged primitive's buried faces would shrink that volume to almost nothing.
+
+**Consequences:** a new obstacle kind is a `StyleDef` (geometry factory + numbers) and a `belt.style` on the system; nothing else changes. Shapes must be roughly convex or opt into `hull: true`. Per-instance non-uniform scale is still not supported (the narrow phase assumes uniform), so elongation is baked into the base geometry.
+

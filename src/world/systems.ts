@@ -80,6 +80,16 @@ export const SYSTEMS: SystemDef[] = [
     sunDir: [0.3, 0.75, 0.55],
     belt: { count: 1100, seed: 9090, inner: 60, outer: 1350, thickness: 240, shapes: 6, style: "ice" },
   },
+  {
+    id: "graveyard",
+    name: "THE GRAVEYARD",
+    blurb: "Where the last fleet died. Hull plate and engine blocks tumbling under a ringed giant.",
+    sky: "deepSpace",
+    planet: "gasGiant",
+    planetPos: [3400, 2400, 5800],
+    sunDir: [-0.4, 0.5, -0.75],
+    belt: { count: 420, seed: 4040, inner: 80, outer: 1300, thickness: 360, shapes: 4, style: "wreck" },
+  },
 ];
 
 export function parseSystem(v: string | null | undefined): SystemDef {

@@ -162,6 +162,21 @@ export const LEVELS: LevelDef[] = [
     minesPerGate: 0,
   },
   {
+    id: "graveyard-ambush",
+    type: "clear",
+    title: "AMBUSH IN THE GRAVEYARD",
+    blurb: "Interceptors hunting through the wreck of the last fleet. Use the hulks; they cannot turn inside them.",
+    system: "graveyard",
+    intro: ["The Graveyard. Nothing here is whole.", "Interceptors, a lot of them, using the wrecks the way you should.", "Get behind a hull plate before they get behind you."],
+    requires: "shard-run",
+    waves: [
+      { count: 3, kinds: ["interceptor"], delay: 2, near: 500, far: 750 },
+      { count: 5, kinds: ["interceptor", "interceptor", "glider"], delay: 4, near: 500, far: 800 },
+      { count: 6, kinds: ["interceptor", "gunboat", "interceptor", "interceptor"], delay: 5, near: 550, far: 850 },
+    ],
+    finaleLine: "Last wave. A gunboat is in there with them. Wrecks first, then the guns.",
+  },
+  {
     id: "escort",
     type: "protect",
     system: "chulak",

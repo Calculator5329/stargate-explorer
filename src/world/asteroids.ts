@@ -3,9 +3,11 @@ import { mulberry32 } from "@/core/random";
 import { toonMaterial } from "@/render/toon";
 import { outlineGeometry, outlineMaterial } from "@/render/outline";
 import { noEdge } from "@/render/layers";
+import { ConvexGeometry } from "three/examples/jsm/geometries/ConvexGeometry.js";
+import { DERELICT_KINDS, derelictGeometry } from "@/world/derelict-geo";
 
 /** what the belt is made of: faceted rock, ice shards, or derelict wreckage */
-export type BeltStyle = "rock" | "ice";
+export type BeltStyle = "rock" | "ice" | "wreck";
 
 export interface AsteroidOptions {
   count: number;
@@ -33,13 +35,25 @@ interface StyleDef {
   big: [number, number];
   small: [number, number];
   tumble: number;
+  /** concave shapes collide against their convex hull instead of their own facets */
+  hull?: boolean;
 }
 
 // Ice: pale blue-green shards, a cold teal shadow side. Kept mid-tone so the albedo stays under the bloom threshold.
 const STYLES: Record<BeltStyle, StyleDef> = {
   rock: { tints: TINTS, glow: ROCK_GLOW, glowIntensity: 1.3, geometry: (_s, rnd) => rockGeometry(rnd), bigChance: 0.12, big: [22, 40], small: [3, 12], tumble: 1 },
   ice: { tints: [0x7fb8d2, 0x6ea9c6, 0x93c7dc, 0x5f9dbb], glow: 0x08222e, glowIntensity: 1.6, geometry: (_s, rnd) => shardGeometry(rnd), bigChance: 0.08, big: [26, 34], small: [3, 14], tumble: 1.4 },
+  // Wreckage: torn warship pieces (world/derelict-geo.ts, Astra). Gunmetal plates, a cold blue shadow side, slow tumble.
+  wreck: { tints: [0x5a616b, 0x4b525c, 0x656c76, 0x555a66], glow: 0x0a0d18, glowIntensity: 1.4, geometry: (s, rnd) => derelictGeometry(s % DERELICT_KINDS, rnd), bigChance: 0.1, big: [30, 30], small: [6, 18], tumble: 0.35, hull: true },
 };
+
+/** Collision planes for a concave shape: the faces of its convex hull. */
+function hullPlanes(g: THREE.BufferGeometry): Float32Array {
+  const pos = g.getAttribute("position");
+  const pts: THREE.Vector3[] = [];
+  for (let i = 0; i < pos.count; i++) pts.push(new THREE.Vector3().fromBufferAttribute(pos, i));
+  return facePlanes(new ConvexGeometry(pts));
+}
 const _obj = new THREE.Object3D();
 const _axis = new THREE.Vector3();
 const _q = new THREE.Quaternion();
@@ -179,7 +193,7 @@ export class Asteroids {
     this.bounds = new Float32Array(o.shapes);
     for (let s = 0; s < o.shapes; s++) {
       const rock = style.geometry(s, rnd);
-      this.planes.push(facePlanes(rock));
+      this.planes.push(style.hull ? hullPlanes(rock) : facePlanes(rock));
       const bound = boundRadius(rock) * 1.02;
       this.bounds[s] = bound;
       const mesh = new THREE.InstancedMesh(rock, toonMaterial(style.tints[s % style.tints.length]!, { emissive: style.glow, emissiveIntensity: style.glowIntensity }), per);
