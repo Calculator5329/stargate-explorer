@@ -2,6 +2,15 @@
 
 Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
+## 2026-09-04 (night) — The ring race, two more systems, a heavy fighter
+
+- **THE TOLLAN RING** (`mission/race.ts`, type `race`): the gauntlet's gate chain with four AI racers in it. They hold a grid beside you through the intro, then fly their own lane through each hoop with glider-style rock avoidance, a fixed skill spread (±8 %) and a rubber band (pressing when behind, easing two gates ahead). Any finish completes the mission; the card is your place ("2ND ACROSS THE LINE", who beat you) and the clock is the best-time record. Racer hull by Astra (`ships/racer-def.ts`: off-white pod-racer pair of outrigger engines, teal trim, race number 27). Headless: racers pass gates and the player's finish places correctly (`scripts/race-test.mjs`).
+- **BREAK THE BLOCKADE**: a gunboat-heavy clear mission (one, two, then three gunboats with interceptor screens) in Netu. Clearing it unlocks the heavy fighter.
+- **Systems** Tollana (ringed gas giant, void sky, thin belt) and Netu (lava moon, ember sky). Five systems now.
+- **F-21 Broadsword** (`ships/heavy-def.ts`, Astra): the third player hull. Broad chined body, tandem canopy, cropped drooping wings, four engines in stacked pairs, canted fins. Stats: 0.88 speed, 0.7 agility, 2.2 hull, 1.6 guns, ten missiles, 1.35 size.
+- Void sky: the milky-way band's edge is a smoothstep and the band is wider; it was a hard cyan stripe across the screen.
+- `Mission.render(dt, alpha)` carries the sim interpolation so racers move as smoothly as gliders.
+
 ## 2026-09-04 (evening) — Three star systems, gate travel home, an enemy roster
 
 Ethan is away until tomorrow and asked for the rest of the plan to keep moving; the 3D pieces here (two enemy hulls, five planet presets, two sky presets) were authored by GPT-6 Astra from written briefs and reviewed by capture. None of it has been flown by a human.

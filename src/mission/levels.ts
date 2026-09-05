@@ -175,6 +175,7 @@ export const LEVELS: LevelDef[] = [
       { count: 6, delay: 6, near: 1000, far: 1300, kinds: ["gunboat", "gunboat", "gunboat", "interceptor", "interceptor", "glider"] },
     ],
     finaleLine: "Three gunboats. Missiles first, then get behind them.",
+    unlocks: "heavy",
   },
   {
     id: "hatak",

@@ -135,11 +135,11 @@ Ethan asked for momentum, lethal rock hits, a canon secondary weapon, then "all 
 - [x] (2026-09-04) Dogfight feel: gliders jousted. Ethan picked "get on the tail" + "fear the guns" from four options; landed as `saddle` and `flinch` states in `combat/enemies.ts`. Roles per glider (shooter + wingmen) held until he has flown this.
 - [ ] Ethan flies the dogfight brain and reports: does it feel like a fight, and is it now too hard to get a kill? Then decide on per-glider roles.
 - [ ] Ethan plays the four missions and the Prometheus and reports: difficulty preset that fits, gate count/time for the Gauntlet, whether the Ha'tak fight is legible (which part to shoot next).
-- [ ] Not done tonight: a "race" mission distinct from the gauntlet (needs AI racers), obstacle types beyond rocks, mines and the hull, gamepad. *(2026-09-04 evening: the deeper map (three systems, gate travel) and the heavier enemy hull (gunboat) landed, see M3/M4.)*
+- [ ] Not done tonight: obstacle types beyond rocks, mines and the hull, gamepad. *(2026-09-04: the deeper map (five systems, gate travel), the gunboat and the ring race with AI racers all landed, see M3/M4.)*
 - **Exit:** Ethan's feedback on the four missions is about the game, not the tooling.
 
 ### M3 — Fleet & factions
-- [ ] <!-- workspace:id=work:fbd1c463-3000-5d78-830c-2a559fa5d2a3 --> 3 player hulls, 3 enemy hulls, distinct silhouettes (see GRAPHICS.md silhouette test). *(2026-09-04: enemy side done, glider / interceptor / gunboat (`?hull=` inspects them); player side is Facet + Prometheus, a third player hull still open)*
+- [x] <!-- workspace:id=work:fbd1c463-3000-5d78-830c-2a559fa5d2a3 --> 3 player hulls, 3 enemy hulls, distinct silhouettes (see GRAPHICS.md silhouette test). *(2026-09-04: enemies glider / interceptor / gunboat; players Facet / F-21 Broadsword / Prometheus; plus the neutral racer. `?hull=` inspects any; silhouettes judged by capture, not yet by Ethan)*
 - [ ] <!-- workspace:id=work:4f39c478-be65-577d-b085-12e3d36e930e --> Faction materials/palettes.
 - [x] <!-- workspace:id=work:b24057c9-9ff2-5002-a606-e79c2d569ced --> 3+ sky presets, 3+ planet presets. *(2026-09-04: skies abydos/deepSpace/chulak/ember/void, planets desert/ice/lava/jungle/gasGiant/moon; Astra authored the new ones)*
 - [x] <!-- workspace:id=work:b0ce8258-8118-50ac-b155-ac1f6e3adaa2 --> Enemy variety: interceptor, gunboat, one capital-scale target. *(2026-09-04: capital `combat/capital.ts`; interceptor + gunboat `combat/enemy-kinds.ts`, used by the missions)*

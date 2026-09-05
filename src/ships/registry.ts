@@ -1,6 +1,7 @@
 import type { ShipDef } from "@/ships/defs";
 import { PLAYER_HULL } from "@/ships/variants";
 import { PROMETHEUS } from "@/ships/prometheus-def";
+import { HEAVY } from "@/ships/heavy-def";
 
 /**
  * Flyable player hulls by id (`?ship=`), with the per-hull flight multipliers.
@@ -30,6 +31,7 @@ export interface PlayerShip {
 
 export const SHIPS: Record<string, PlayerShip> = {
   f11: { id: "f11", def: PLAYER_HULL, stats: { speed: 1, agility: 1, hull: 1, guns: 1, missiles: 6, size: 1 }, blurb: "Space-superiority fighter. Fast, nimble, six missiles." },
+  heavy: { id: "heavy", def: HEAVY, stats: { speed: 0.88, agility: 0.7, hull: 2.2, guns: 1.6, missiles: 10, size: 1.35 }, blurb: "Heavy strike fighter. Slower and wider, twice the hull, heavier guns, ten missiles." },
   prometheus: { id: "prometheus", def: PROMETHEUS, stats: { speed: 0.7, agility: 0.45, hull: 6, guns: 2.2, missiles: 16, size: 5 }, blurb: "Deep-space carrier. Slow, armoured, heavy rail guns and a full magazine." },
 };
 

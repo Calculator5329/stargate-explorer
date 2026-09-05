@@ -38,7 +38,7 @@ src/
   fx/      engine plumes, speed dust, explosions
   replay/  kill replay: pose ring buffer, highlight cut, cinematic playback
   combat/  projectiles (pooled tracers), enemies (AI, all kinds), enemy-kinds (kind → hull + T table), combat (weapons + hit resolution), missiles, targets (Tracked/Lockable), glider/interceptor/gunboat-def (enemy hulls), capital (Ha'tak)
-  mission/ levels (data), mission (base + Waves), runners clear/run/protect/strike, index (factory)
+  mission/ levels (data), mission (base + Waves), runners clear/run/protect/strike/race (race extends run: AI racers on the gate chain), index (factory)
   travel/  gate (return gate, Tracked), tunnel (wormhole shader quad), travel (dial → tunnel → reload with arrive=1 → fade)
   audio/   WebAudio synth (no assets)
   ui/      DOM HUD (flight + combat layers), menu (Esc pause + settings), hub (mission select), debug panel
