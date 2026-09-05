@@ -5,9 +5,11 @@ import { PLAYER_HULL } from "@/ships/variants";
 import { GLIDER } from "@/combat/glider-def";
 import { INTERCEPTOR } from "@/combat/interceptor-def";
 import { GUNBOAT } from "@/combat/gunboat-def";
+import { RACER } from "@/ships/racer-def";
+import { HEAVY } from "@/ships/heavy-def";
 
 /**
  * Every hull def by key, player and enemy alike, so `?view=side&hull=<key>`
  * can inspect any of them. Enemy hulls register here as they are added.
  */
-export const HULLS: Record<string, ShipDef> = { f11: PLAYER_HULL, original: F11_HALBERD, prometheus: PROMETHEUS, glider: GLIDER, interceptor: INTERCEPTOR, gunboat: GUNBOAT };
+export const HULLS: Record<string, ShipDef> = { f11: PLAYER_HULL, original: F11_HALBERD, prometheus: PROMETHEUS, glider: GLIDER, interceptor: INTERCEPTOR, gunboat: GUNBOAT, racer: RACER, heavy: HEAVY };

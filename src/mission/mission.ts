@@ -71,8 +71,8 @@ export abstract class Mission {
     this.run(dt);
   }
 
-  /** Per render frame, for visuals only. */
-  render(_dt: number): void {}
+  /** Per render frame, for visuals only; `alpha` is the sim interpolation for anything the mission moves per tick. */
+  render(_dt: number, _alpha = 1): void {}
 
   /** Card body on completion. */
   summary(): string {

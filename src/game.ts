@@ -106,7 +106,7 @@ export class Game {
   render(alpha: number, dt: number, cam: THREE.PerspectiveCamera, hud: Hud, flight: Flight): void {
     this.cam = cam;
     this.combat.render(alpha, dt, cam.position);
-    this.mission.render(dt);
+    this.mission.render(dt, alpha);
     this.gate.render(dt);
     this.audio.update(flight.speed / T.flight.boostSpeed, flight.boosting);
     hud.updateCombat(this.combat, this.mission, cam, this.combat.player.vel, this.replay.hasHighlight, this.gate.alive);

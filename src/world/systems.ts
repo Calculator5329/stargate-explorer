@@ -49,6 +49,26 @@ export const SYSTEMS: SystemDef[] = [
     sunDir: [0.2, 0.6, 0.75],
     belt: { count: 520, seed: 7741, inner: 80, outer: 1400, thickness: 600, shapes: 6 },
   },
+  {
+    id: "tollana",
+    name: "TOLLANA",
+    blurb: "A ringed giant and a thin belt of dust. The racers' circuit.",
+    sky: "void",
+    planet: "gasGiant",
+    planetPos: [-1800, -1600, 4600],
+    sunDir: [-0.7, 0.3, -0.6],
+    belt: { count: 460, seed: 5150, inner: 100, outer: 1450, thickness: 520, shapes: 6 },
+  },
+  {
+    id: "netu",
+    name: "NETU",
+    blurb: "A lava moon under an ember sky. The heavies hold the lane out.",
+    sky: "ember",
+    planet: "lava",
+    planetPos: [2200, -1200, 3600],
+    sunDir: [0.5, -0.2, -0.85],
+    belt: { count: 760, seed: 6660, inner: 60, outer: 1400, thickness: 380, shapes: 6 },
+  },
 ];
 
 export function parseSystem(v: string | null | undefined): SystemDef {

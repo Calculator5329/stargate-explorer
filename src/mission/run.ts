@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { Mission, fmt } from "@/mission/mission";
 import type { MissionCtx } from "@/mission/mission";
-import type { RunLevel } from "@/mission/levels";
+import type { RunLevel, RaceLevel } from "@/mission/levels";
 import { glowMaterial } from "@/render/toon";
 import { noEdge } from "@/render/layers";
 import type { Tracked } from "@/combat/targets";
@@ -44,7 +44,7 @@ export class RunMission extends Mission {
   private pulse = 0;
   private readonly mines: Mines;
 
-  constructor(override readonly def: RunLevel, ctx: MissionCtx) {
+  constructor(override readonly def: RunLevel | RaceLevel, ctx: MissionCtx) {
     super(def, ctx);
     this.left = def.timeLimit;
     this.winTitle = "WINDOW MADE";
@@ -179,7 +179,7 @@ export class RunMission extends Mission {
     this.marker = n;
   }
 
-  override render(dt: number): void {
+  override render(dt: number, _alpha = 1): void {
     this.pulse += dt;
     this.mines.render(dt);
     const n = this.rings[this.next];

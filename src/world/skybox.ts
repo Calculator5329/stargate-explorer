@@ -50,7 +50,7 @@ export const SKY_PRESETS = {
   deepSpace: preset({ base: 0x020308, c1: 0x1e2c8a, d1: [0.2, 0.7, 0.1], c2: 0x4a1a6e, d2: [-0.5, -0.3, 0.6], core: 0x8fb4ff, nebula: 0.7, grade: grade(0xe8ecff, 0xf4f6ff) }),
   chulak: preset({ base: 0x030603, c1: 0x2b8a44, d1: [0.6, 0.1, 0.5], c2: 0xb07a20, d2: [-0.3, 0.6, -0.6], core: 0xe8ffb0, nebula: 0.9, grade: grade(0xecf5e6, 0xfff8dc) }),
   ember: preset({ base: 0x080102, c1: 0xff580c, d1: [0.7, -0.2, 0.6], c2: 0xa80d20, d2: [-0.4, 0.3, 0.8], core: 0xffba38, nebula: 0.85, grade: grade(0xffe8e0, 0xfff2da) }),
-  void: preset({ base: 0x010409, c1: 0x00c9ef, d1: [0.3, 0.85, 0.35], c2: 0x006aa8, d2: [-0.5, -0.3, 0.6], core: 0x42f4ff, nebula: 0.35, bandWidth: 0.025, grade: grade(0xdcefff, 0xedfcff) }),
+  void: preset({ base: 0x010409, c1: 0x00c9ef, d1: [0.3, 0.85, 0.35], c2: 0x006aa8, d2: [-0.5, -0.3, 0.6], core: 0x42f4ff, nebula: 0.45, bandWidth: 0.11, grade: grade(0xdcefff, 0xedfcff) }),
 } satisfies Record<string, SkyPreset>;
 export type SkyName = keyof typeof SKY_PRESETS;
 
@@ -122,7 +122,8 @@ void main() {
          + starLayer(d, 300.0, 0.955, 0.45, 0.0, 0.12 * mw) * 0.5;
   vec3 haze = vec3(0.42, 0.48, 0.66) * mw * (0.045 + 0.04 * swirl);
   if (uBandWidth > 0.0) {
-    float band = 1.0 - step(uBandWidth, abs(dot(d, uDir1)));
+    // soft-edged band so a thin milky way reads as a river of cloud, not a hard stripe
+    float band = 1.0 - smoothstep(uBandWidth * 0.45, uBandWidth * 1.6, abs(dot(d, uDir1)));
     neb = mix(uCol2, uCol1, posterize(swirl, 3.0)) * band + uCore * hot * band;
     haze = vec3(0.0);
   }

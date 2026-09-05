@@ -36,8 +36,8 @@ export interface ClearLevel extends BaseLevel {
   finaleLine: string;
 }
 
-export interface RunLevel extends BaseLevel {
-  type: "run";
+/** A gate chain through the belt: shared by the gauntlet and the race. */
+interface CourseFields {
   rings: number;
   /** distance between gates (m) and how far sideways the chain may turn per gate (m) */
   spacing: number;
@@ -50,6 +50,20 @@ export interface RunLevel extends BaseLevel {
   harassKinds?: EnemyKind[];
   /** proximity mines laid just outside each gate's rim */
   minesPerGate: number;
+}
+
+export interface RunLevel extends BaseLevel, CourseFields {
+  type: "run";
+}
+
+export interface RaceLevel extends BaseLevel, CourseFields {
+  type: "race";
+  /** AI rivals on the grid, their base speed (m/s), per-racer skill spread (±fraction), accel and turn rate */
+  racers: number;
+  racerSpeed: number;
+  racerVar: number;
+  racerAccel: number;
+  racerTurn: number;
 }
 
 export interface ProtectLevel extends BaseLevel {
@@ -73,7 +87,7 @@ export interface StrikeLevel extends BaseLevel {
   mines: number;
 }
 
-export type LevelDef = ClearLevel | RunLevel | ProtectLevel | StrikeLevel;
+export type LevelDef = ClearLevel | RunLevel | ProtectLevel | StrikeLevel | RaceLevel;
 
 export const LEVELS: LevelDef[] = [
   {
@@ -109,6 +123,28 @@ export const LEVELS: LevelDef[] = [
     minesPerGate: 2,
   },
   {
+    id: "ring-race",
+    type: "race",
+    system: "tollana",
+    title: "THE TOLLAN RING",
+    blurb: "Eight gates around a gas giant against four racers. Any finish counts; the podium is the point.",
+    intro: ["Grid is set. Eight gates, four rivals, no guns.", "Boost is your only edge. Spend it where the rock is thin."],
+    requires: "gauntlet",
+    rings: 8,
+    spacing: 700,
+    wander: 420,
+    ringRadius: 38,
+    timeLimit: 900,
+    harassAt: 0,
+    harass: 0,
+    minesPerGate: 0,
+    racers: 4,
+    racerSpeed: 165,
+    racerVar: 0.08,
+    racerAccel: 60,
+    racerTurn: 2.0,
+  },
+  {
     id: "escort",
     type: "protect",
     system: "chulak",
@@ -124,6 +160,21 @@ export const LEVELS: LevelDef[] = [
     finaleLine: "Last wave. Two gunboats, and they are going for the engines.",
     escortHp: 600,
     escortSpeed: 26,
+  },
+  {
+    id: "blockade",
+    type: "clear",
+    system: "netu",
+    title: "BREAK THE BLOCKADE",
+    blurb: "Gunboats hold the lane out of Netu's belt with interceptors screening. Kill the heavies; the screen dies with them.",
+    intro: ["Blockade line ahead, gunboats anchoring it.", "Missiles for the heavies. Guns for the rest."],
+    requires: "escort",
+    waves: [
+      { count: 4, delay: 4, near: 900, far: 1100, kinds: ["gunboat", "interceptor", "interceptor", "glider"] },
+      { count: 5, delay: 6, near: 900, far: 1200, kinds: ["gunboat", "gunboat", "interceptor", "glider", "interceptor"] },
+      { count: 6, delay: 6, near: 1000, far: 1300, kinds: ["gunboat", "gunboat", "gunboat", "interceptor", "interceptor", "glider"] },
+    ],
+    finaleLine: "Three gunboats. Missiles first, then get behind them.",
   },
   {
     id: "hatak",
