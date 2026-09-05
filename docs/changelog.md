@@ -36,6 +36,12 @@ Ethan, 2026-09-05 (feedback chat, screenshot of the escort mission): prefers cla
 - **Gate travel holds the sim** (`Travel.holding`, `main.ts`): Ethan, "it lets me start playing while it's dialing ... the game starts before it should". Through the dial, the tunnel and the arrival fade only the input ticks (the aim cursor can be placed); flight, hazards, rocks and the mission clock wait. Verified in the pane: position and intro timer frozen while `holding`, released when the fade ends.
 
 
+## 2026-09-05 — Mission-chain persistence assertions (A48)
+
+- The existing chain smoke refuses wrong mission fallback and missing, malformed or lost persisted progress. It checks exact per-run completion increments and mission-declared rewards after navigation and final reload, including selected subsets and repeated missions.
+- A bounded semantic save wait replaces the blind delay; an isolated browser context prevents prior progress masking a failed write. `STARGATE_TEST_URL` supports isolated preview verification.
+- Build, ten controlled harness fault cases, actual eight-mission chain and actual unknown-id refusal passed. The existing 721.38 kB bundle warning remains; no bundled game source changed. [Design, archived source and evidence](design-chain-verification-20260905.md).
+
 ## 2026-09-05 (03:00) — Destructible asteroids, denser structured belts, mini-map, lethal crashes
 
 Ethan, 2026-09-05 00:xx: "a lot more asteroids and a more interesting map ... a mini-map ... blow apart asteroids ... if enemies go into asteroids, they're destroyed. So if you blow apart an asteroid and it hits an enemy, they're dead." All four landed, verified headless only.

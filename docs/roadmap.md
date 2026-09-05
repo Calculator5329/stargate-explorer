@@ -189,5 +189,8 @@ Ethan: prefers classic; assist helps but may be too strong; arcade W/S up/down "
 - [x] <!-- workspace:id=work:209c7577-9da9-598d-b34e-2a868f079b94 --> (2026-09-04, `core/save.ts`: settings + progress in one blob) Save/load (localStorage).
 - [x] <!-- workspace:id=work:239b2be7-4508-5066-a3f7-4910c341b86e --> Gamepad support. *(2026-09-04 night: standard mapping polled in `Input.tick`, left stick steers, right stick roll/pull-dive, RT fire, LT missile, A boost, B brake, X/Y scheme/assist, bumpers barrel; dead zone + curve in `T.flight.padDead/padCurve`; HUD hint swaps once a pad speaks. Verified with a fake pad only, no hardware in the loop.)*
 
+## Verification
+- [x] (2026-09-05, A48) Make mission-chain smoke require the requested mission, persisted completion increments and declared rewards across navigation/reload; full eight-mission browser run, unknown-id refusal, ten controlled fault cases and build passed. [Evidence](design-chain-verification-20260905.md).
+
 ## Non-goals (for now)
 Multiplayer, mobile/touch, VR, mod support, story/dialogue system.
