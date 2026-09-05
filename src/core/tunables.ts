@@ -15,8 +15,13 @@ export const T = {
     pitchRate: 1.5,
     yawRate: 0.9,
     rollRate: 2.6,
-    /** stick units per pixel of mouse travel */
+    /** relative steer: stick units per pixel of mouse travel */
     stickGain: 0.0025,
+    /** cursor steer: cursor radius on screen (px), dead zone (fraction of it), response exponent (1 = linear), drift back to centre (1/s, 0 = stays put) */
+    cursorRadius: 260,
+    cursorDead: 0.05,
+    cursorCurve: 1.35,
+    cursorReturn: 0,
     /** self-centering rate of the virtual stick (1/s) */
     stickReturn: 5.0,
     /** target bank (as right-vector.y) per unit of yaw stick */

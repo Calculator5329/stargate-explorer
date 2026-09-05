@@ -1,6 +1,7 @@
 import type { Save, Settings } from "@/core/save";
 import { writeSave } from "@/core/save";
-import type { SchemeName } from "@/core/scheme";
+import { parseSteer, type SchemeName } from "@/core/scheme";
+import { lockPointer } from "@/core/input";
 import { parseDifficulty } from "@/core/difficulty";
 import { parseQuality } from "@/render/renderer";
 import { ACTIONS, BIND_LABELS, DEFAULT_BINDS, keyName, type Action } from "@/core/binds";
@@ -46,6 +47,10 @@ export class Menu {
     const s = save.settings;
     const scheme = q<HTMLSelectElement>(root, "[name=scheme]");
     const assist = q<HTMLInputElement>(root, "[name=assist]");
+    const assistK = q<HTMLInputElement>(root, "[name=assistK]");
+    const assistV = q(root, ".assist-v");
+    const steer = q<HTMLSelectElement>(root, "[name=steer]");
+    const raw = q<HTMLInputElement>(root, "[name=raw]");
     const sens = q<HTMLInputElement>(root, "[name=sens]");
     const sensV = q(root, ".sens-v");
     const diff = q<HTMLSelectElement>(root, "[name=difficulty]");
@@ -56,6 +61,10 @@ export class Menu {
     invert.checked = s.invertY;
     qual.value = s.quality;
     assist.checked = s.assist;
+    assistK.value = String(s.assistStrength);
+    assistV.textContent = s.assistStrength.toFixed(2);
+    steer.value = s.steer;
+    raw.checked = s.rawMouse;
     sens.value = String(s.sens);
     sensV.textContent = s.sens.toFixed(2);
     diff.value = s.difficulty;
@@ -63,6 +72,10 @@ export class Menu {
     const commit = () => {
       s.scheme = scheme.value as SchemeName;
       s.assist = assist.checked;
+      s.assistStrength = Number(assistK.value) || 1;
+      assistV.textContent = s.assistStrength.toFixed(2);
+      s.steer = parseSteer(steer.value);
+      s.rawMouse = raw.checked;
       s.sens = Number(sens.value) || 1;
       sensV.textContent = s.sens.toFixed(2);
       s.difficulty = parseDifficulty(diff.value);
@@ -71,7 +84,7 @@ export class Menu {
       writeSave(save);
       hooks.apply(s);
     };
-    for (const c of [scheme, assist, sens, diff, mute, invert]) c.addEventListener("input", commit);
+    for (const c of [scheme, assist, assistK, steer, raw, sens, diff, mute, invert]) c.addEventListener("input", commit);
     // the renderer is built once per page, so a tier change is a reload
     qual.addEventListener("input", () => {
       s.quality = parseQuality(qual.value);
@@ -81,7 +94,7 @@ export class Menu {
       location.href = u.toString();
     });
     this.buildBinds(root, save, hooks);
-    q(root, ".fly").addEventListener("click", () => canvas.requestPointerLock());
+    q(root, ".fly").addEventListener("click", () => lockPointer(canvas));
     q(root, ".restart").addEventListener("click", () => hooks.restart());
     const hub = q(root, ".hub");
     if (hooks.hub) hub.addEventListener("click", () => hooks.hub?.());
@@ -90,7 +103,7 @@ export class Menu {
     document.addEventListener("pointerlockchange", () => this.set(document.pointerLockElement !== canvas));
     // the overlay swallows keys meant for the game; only Esc/Enter matter here
     root.addEventListener("keydown", (e) => {
-      if (e.code === "Enter" && !(e.target instanceof HTMLSelectElement)) canvas.requestPointerLock();
+      if (e.code === "Enter" && !(e.target instanceof HTMLSelectElement)) lockPointer(canvas);
     });
     hooks.apply(s);
     this.set(true, true);

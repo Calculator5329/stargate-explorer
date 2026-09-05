@@ -29,6 +29,15 @@ export interface AsteroidOptions {
   bandShare?: number;
   /** spare fragment slots per shape (default 40) */
   frags?: number;
+  /** per-belt look: one tint per base shape (cycled), so a belt can mix grey and plum rock; overrides the style's */
+  tints?: number[];
+  /** per-belt size mix: chance of a big piece and the [min, spread] scale ranges; overrides the style's */
+  bigChance?: number;
+  big?: [number, number];
+  small?: [number, number];
+  /** `voids` empty pockets of radius about `voidR` where no rock is placed: density varies instead of reading as one even fog */
+  voids?: number;
+  voidR?: number;
 }
 
 // Ethan's 2026-09-04 reference: plum bodies whose sun-facing facets go rust-orange. The warm key
@@ -230,7 +239,8 @@ export class Asteroids {
 
   constructor(o: AsteroidOptions) {
     const rnd = mulberry32(o.seed);
-    const style = STYLES[o.style ?? "rock"];
+    const base = STYLES[o.style ?? "rock"];
+    const style: StyleDef = { ...base, tints: o.tints ?? base.tints, bigChance: o.bigChance ?? base.bigChance, big: o.big ?? base.big, small: o.small ?? base.small };
     this.style = o.style ?? "rock";
     this.frags = o.frags ?? 40;
     const live = Math.ceil(o.count / o.shapes);
@@ -260,6 +270,38 @@ export class Asteroids {
       const r = o.inner + (o.outer - o.inner) * (0.3 + 0.6 * rnd()), th = rnd() * Math.PI * 2;
       cl.push(r * Math.cos(th), (rnd() * 2 - 1) * o.thickness * 0.5, r * Math.sin(th));
     }
+    // voids: pockets of empty space; a candidate that lands in one is re-rolled (a few tries, then kept)
+    const nVoids = o.voids ?? 0, voidR = o.voidR ?? 220;
+    const vd: number[] = [];
+    for (let v = 0; v < nVoids; v++) {
+      const r = o.inner + (o.outer - o.inner) * (0.25 + 0.65 * rnd()), th = rnd() * Math.PI * 2;
+      vd.push(r * Math.cos(th), (rnd() * 2 - 1) * o.thickness * 0.4, r * Math.sin(th), voidR * (0.7 + 0.6 * rnd()));
+    }
+    const inVoid = (): boolean => {
+      for (let v = 0; v < vd.length; v += 4) {
+        const dx = _obj.position.x - vd[v]!, dy = _obj.position.y - vd[v + 1]!, dz = _obj.position.z - vd[v + 2]!, r = vd[v + 3]!;
+        if (dx * dx + dy * dy + dz * dz < r * r) return true;
+      }
+      return false;
+    };
+    const place = (): void => {
+      const u = rnd();
+      if (u < clusterShare) {
+        const k = Math.floor(rnd() * nClusters) * 3;
+        _obj.position.set(cl[k]! + gauss(rnd) * clusterR * 0.5, cl[k + 1]! + gauss(rnd) * clusterR * 0.3, cl[k + 2]! + gauss(rnd) * clusterR * 0.5);
+      } else if (u < clusterShare + bandShare) {
+        const r = o.band! + (rnd() + rnd() - 1) * bandW, th = rnd() * Math.PI * 2;
+        _obj.position.set(r * Math.cos(th), (rnd() * 2 - 1) * o.thickness * 0.35, r * Math.sin(th));
+      } else {
+        const r = o.inner + (o.outer - o.inner) * Math.sqrt(rnd());
+        const th = rnd() * Math.PI * 2;
+        _obj.position.set(r * Math.cos(th), (rnd() * 2 - 1) * o.thickness * (0.3 + 0.7 * rnd()), r * Math.sin(th));
+      }
+      // keep everything inside the annulus, and off the start
+      const rr = Math.hypot(_obj.position.x, _obj.position.z);
+      if (rr < o.inner) _obj.position.multiplyScalar(o.inner / Math.max(1, rr));
+      else if (rr > o.outer) (_obj.position.x *= o.outer / rr), (_obj.position.z *= o.outer / rr);
+    };
     for (let s = 0; s < o.shapes; s++) {
       const rock = style.geometry(s, rnd);
       this.planes.push(style.hull ? hullPlanes(rock) : facePlanes(rock));
@@ -277,22 +319,10 @@ export class Asteroids {
           this.write(gi);
           continue;
         }
-        const u = rnd();
-        if (u < clusterShare) {
-          const k = Math.floor(rnd() * nClusters) * 3;
-          _obj.position.set(cl[k]! + gauss(rnd) * clusterR * 0.5, cl[k + 1]! + gauss(rnd) * clusterR * 0.3, cl[k + 2]! + gauss(rnd) * clusterR * 0.5);
-        } else if (u < clusterShare + bandShare) {
-          const r = o.band! + (rnd() + rnd() - 1) * bandW, th = rnd() * Math.PI * 2;
-          _obj.position.set(r * Math.cos(th), (rnd() * 2 - 1) * o.thickness * 0.35, r * Math.sin(th));
-        } else {
-          const r = o.inner + (o.outer - o.inner) * Math.sqrt(rnd());
-          const th = rnd() * Math.PI * 2;
-          _obj.position.set(r * Math.cos(th), (rnd() * 2 - 1) * o.thickness * (0.3 + 0.7 * rnd()), r * Math.sin(th));
+        for (let tries = 0; tries < 6; tries++) {
+          place();
+          if (!inVoid()) break;
         }
-        // keep everything inside the annulus, and off the start
-        const rr = Math.hypot(_obj.position.x, _obj.position.z);
-        if (rr < o.inner) _obj.position.multiplyScalar(o.inner / Math.max(1, rr));
-        else if (rr > o.outer) (_obj.position.x *= o.outer / rr), (_obj.position.z *= o.outer / rr);
         _obj.quaternion.setFromEuler(new THREE.Euler(rnd() * 6.28, rnd() * 6.28, rnd() * 6.28));
         const big = rnd() < style.bigChance;
         const scale = big ? style.big[0] + rnd() * style.big[1] : style.small[0] + rnd() * rnd() * style.small[1];

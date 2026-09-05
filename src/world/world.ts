@@ -5,6 +5,7 @@ import { PLANET_PRESETS, Planet } from "@/world/planet";
 import { Sun } from "@/world/sun";
 import { Asteroids } from "@/world/asteroids";
 import { Dust } from "@/fx/dust";
+import { T } from "@/core/tunables";
 
 export interface WorldOptions {
   system: SystemDef;
@@ -33,6 +34,8 @@ export class World {
     this.planet = new Planet({ radius: 1800, segments: o.planetSegments, seed: pp.seed, sunDir: this.sun.dir, palette: pp.palette, ...(pp.ring ? { ring: pp.ring } : {}) });
     this.planet.group.position.set(...S.planetPos);
     this.asteroids = new Asteroids({ ...S.belt });
+    // the arena is a per-system size; T stays the live-tunable copy every consumer (hazards, minimap, enemy AI) reads
+    T.arena.radius = S.arena ?? 1500;
     this.root.add(this.sky.mesh, this.sun.glare, this.planet.group, this.asteroids.group, this.dust.lines);
     scene.add(this.root);
   }

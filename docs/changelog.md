@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-09-05 (evening) — Cursor steering, raw mouse, assist strength, escort log fix, varied belts
+
+Ethan, 2026-09-05 (feedback chat, screenshot of the escort mission): prefers classic, assist "helps but I don't know if it needs to be quite as strong"; "kind of weird flying with the mouse ... I can't tell if it's because I have mouse acceleration or if I have not high enough sensitivity"; has to line the nose up exactly to hit; the HUD filled with repeated "Prometheus hull 100%"; asteroids should vary ("maybe gray, maybe different colors, maybe different sizes"), and the earlier "more dense" ask meant a bigger map with varied density, not one even fog.
+
+- **Escort log spam fixed** (`mission/protect.ts`): the hull suffix was appended to `line` every sim tick, so a 60 s sortie had the line 3,600 entries long. It is now composed once onto the wave machine's line and recomposed only when that line changes.
+- **Cursor steer mode** (`core/scheme.ts` `SteerMode`, `Input.steer`, HUD `.cursor`): the mouse moves an aim cursor on screen; the stick is the cursor's offset (dead zone, power curve, `T.flight.cursor*`). A still mouse holds a turn and the cursor shows where the nose is going. It is the default; the old mouse-speed stick stays as `relative` (menu "Mouse steer", `?steer=`). Sensitivity scales cursor pixels per mouse pixel in cursor mode.
+- **Raw mouse input**: pointer lock now asks for `unadjustedMovement`, which bypasses the OS acceleration curve (Chromium; falls back to a plain lock elsewhere). Menu checkbox "Raw mouse", on by default. Every lock call goes through `lockPointer()`.
+- **Assist strength** slider (0.2..1, `Scheme.assistStrength`): scales `latDamp` and the soft-horizon `autoLevel` while assist is on. X still toggles assist off entirely.
+- **Belts vary per system** (`AsteroidOptions.tints/bigChance/big/small/voids/voidR`, `SystemDef.arena`): each belt mixes tint families (plum, grey, ochre, charcoal, one per base shape), has its own size mix (P3X-774 gets sparse 30..110 m boulders, Tollana small gravel), and `voids` carve empty pockets so density varies. Arenas are per system now (1700..2400 m, Abydos 2000) with the belts' `outer` grown to match; rock counts rose only 5..15 %.
+- Save gains `steer`, `rawMouse`, `assistStrength` with defaults, so an existing save picks them up.
+
+
 ## 2026-09-05 (03:00) — Destructible asteroids, denser structured belts, mini-map, lethal crashes
 
 Ethan, 2026-09-05 00:xx: "a lot more asteroids and a more interesting map ... a mini-map ... blow apart asteroids ... if enemies go into asteroids, they're destroyed. So if you blow apart an asteroid and it hits an enemy, they're dead." All four landed, verified headless only.

@@ -18,9 +18,23 @@ export interface SystemDef {
   planetPos: [number, number, number];
   sunDir: [number, number, number];
   belt: AsteroidOptions;
+  /** play-field radius (m); the soft current past it turns you back. Default 1500. Systems differ so the maps do not all feel the same size. */
+  arena?: number;
   /** who flies against you here: recolours every enemy hull (PALETTES); omitted = each hull's own default */
   faction?: FactionName;
 }
+
+// Rock tints, one per base shape (six shapes cycle through them). Ethan 2026-09-05: "maybe gray, maybe
+// different colors, maybe different sizes": each belt mixes a couple of families instead of one plum.
+const PLUM = [0x8a4a32, 0x7a4030, 0x925438, 0x6e3c3a];
+const GREY = [0x6f6a66, 0x5b5754, 0x7c7671, 0x4f4b4a];
+const OCHRE = [0x9a7a3e, 0x8a6a36, 0xa48848];
+const CHAR = [0x3e3a3c, 0x4a4244, 0x35313a];
+const mix = (...fams: number[][]): number[] => {
+  const out: number[] = [];
+  for (let i = 0; i < 6; i++) out.push(fams[i % fams.length]![Math.floor(i / fams.length) % fams[i % fams.length]!.length]!);
+  return out;
+};
 
 export const SYSTEMS: SystemDef[] = [
   {
@@ -31,7 +45,8 @@ export const SYSTEMS: SystemDef[] = [
     planet: "desert",
     planetPos: [-2600, -900, 3800],
     sunDir: [0.6, 0.35, -0.7],
-    belt: { count: 1900, seed: 1337, inner: 60, outer: 1400, thickness: 420, shapes: 6, clusters: 5, clusterR: 280, clusterShare: 0.5 },
+    arena: 2000,
+    belt: { count: 2200, seed: 1337, inner: 60, outer: 1900, thickness: 460, shapes: 6, clusters: 6, clusterR: 300, clusterShare: 0.5, voids: 4, voidR: 260, tints: mix(PLUM, PLUM, GREY), bigChance: 0.14, big: [22, 60], small: [2, 14] },
   },
   {
     id: "chulak",
@@ -41,7 +56,8 @@ export const SYSTEMS: SystemDef[] = [
     planet: "jungle",
     planetPos: [2400, 500, -3600],
     sunDir: [-0.55, 0.4, 0.55],
-    belt: { count: 2100, seed: 2024, inner: 60, outer: 1450, thickness: 260, shapes: 6, band: 720, bandW: 130, bandShare: 0.45, clusters: 3, clusterR: 240, clusterShare: 0.2 },
+    arena: 1900,
+    belt: { count: 2300, seed: 2024, inner: 60, outer: 1800, thickness: 280, shapes: 6, band: 900, bandW: 150, bandShare: 0.45, clusters: 4, clusterR: 240, clusterShare: 0.2, voids: 3, voidR: 240, tints: mix(GREY, PLUM, OCHRE), bigChance: 0.1, big: [20, 36], small: [3, 12] },
   },
   {
     id: "p3x774",
@@ -51,7 +67,8 @@ export const SYSTEMS: SystemDef[] = [
     planet: "ice",
     planetPos: [400, -2400, -4200],
     sunDir: [0.2, 0.6, 0.75],
-    belt: { count: 1200, seed: 7741, inner: 80, outer: 1400, thickness: 600, shapes: 6, clusters: 7, clusterR: 220, clusterShare: 0.6 },
+    arena: 2400,
+    belt: { count: 1300, seed: 7741, inner: 80, outer: 2300, thickness: 700, shapes: 6, clusters: 8, clusterR: 260, clusterShare: 0.65, tints: mix(GREY, CHAR), bigChance: 0.22, big: [30, 80], small: [4, 16] },
   },
   {
     id: "tollana",
@@ -61,7 +78,8 @@ export const SYSTEMS: SystemDef[] = [
     planet: "gasGiant",
     planetPos: [-1800, -1600, 4600],
     sunDir: [-0.7, 0.3, -0.6],
-    belt: { count: 1000, seed: 5150, inner: 100, outer: 1450, thickness: 520, shapes: 6, band: 900, bandW: 160, bandShare: 0.5 },
+    arena: 2200,
+    belt: { count: 1100, seed: 5150, inner: 100, outer: 2100, thickness: 560, shapes: 6, band: 1300, bandW: 180, bandShare: 0.55, voids: 3, voidR: 300, tints: mix(OCHRE, GREY), bigChance: 0.08, big: [18, 30], small: [2, 10] },
   },
   {
     id: "netu",
@@ -72,7 +90,8 @@ export const SYSTEMS: SystemDef[] = [
     planet: "lava",
     planetPos: [2200, -1200, 3600],
     sunDir: [0.5, -0.2, -0.85],
-    belt: { count: 1600, seed: 6660, inner: 60, outer: 1400, thickness: 380, shapes: 6, clusters: 4, clusterR: 320, clusterShare: 0.5 },
+    arena: 1800,
+    belt: { count: 1700, seed: 6660, inner: 60, outer: 1700, thickness: 400, shapes: 6, clusters: 5, clusterR: 320, clusterShare: 0.5, voids: 2, voidR: 280, tints: mix(CHAR, PLUM), bigChance: 0.16, big: [24, 50], small: [3, 14] },
   },
   {
     id: "kheb",
@@ -94,7 +113,8 @@ export const SYSTEMS: SystemDef[] = [
     planet: "gasGiant",
     planetPos: [3400, 2400, 5800],
     sunDir: [-0.4, 0.5, -0.75],
-    belt: { count: 900, seed: 4040, inner: 80, outer: 1300, thickness: 360, shapes: 4, style: "wreck", clusters: 5, clusterR: 230, clusterShare: 0.7 },
+    arena: 1700,
+    belt: { count: 950, seed: 4040, inner: 80, outer: 1600, thickness: 380, shapes: 4, style: "wreck", clusters: 6, clusterR: 240, clusterShare: 0.7, voids: 2, voidR: 260 },
   },
 ];
 

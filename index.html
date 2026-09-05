@@ -39,6 +39,11 @@
       #hud .tgt small { position: absolute; left: 0; top: 100%; margin-top: 4px; font-size: 11px; color: #ffd9a8; white-space: nowrap; }
       #hud .lead { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border: 1.5px solid #ffb36b; border-radius: 50%; display: none; }
       #hud .lead.on { display: block; }
+      #hud .cursor { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; display: none; will-change: transform; }
+      #hud .cursor::before, #hud .cursor::after { content: ""; position: absolute; left: 50%; top: 50%; background: rgba(255,217,168,.9); }
+      #hud .cursor::before { width: 14px; height: 1.5px; margin: -0.75px 0 0 -7px; }
+      #hud .cursor::after { width: 1.5px; height: 14px; margin: -7px 0 0 -0.75px; }
+      #hud .cursor.on { display: block; }
       #hud .arrow { position: absolute; left: 50%; top: 50%; width: 0; height: 0; margin: -8px 0 0 -8px; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 16px solid #ffb36b; display: none; transform-origin: 50% 50%; }
       #hud .arrow.on { display: block; }
       #hud .card { position: absolute; left: 0; right: 0; top: 34%; text-align: center; display: none; }
@@ -121,6 +126,7 @@
       <div class="hint"></div>
       <div class="scheme"></div>
       <div class="reticle"></div>
+      <div class="cursor"></div>
       <div class="tgt"><small></small></div>
       <div class="lead"></div>
       <div class="arrow"></div>
@@ -140,8 +146,11 @@
         <h1 class="title">STARGATE EXPLORER</h1>
         <p class="sub"></p>
         <label><span>Controls</span><select name="scheme"><option value="arcade">arcade · W/S pull up, Space brake</option><option value="classic">classic · W/S throttle, Space drift</option></select></label>
-        <label><span>Flight assist (X)</span><input type="checkbox" name="assist" /></label>
+        <label><span>Mouse steer</span><select name="steer"><option value="cursor">cursor · nose follows an aim cursor</option><option value="relative">relative · mouse speed turns</option></select></label>
         <label><span>Mouse sensitivity</span><input type="range" name="sens" min="0.4" max="2.5" step="0.05" /><i class="sens-v"></i></label>
+        <label><span>Raw mouse (no OS acceleration)</span><input type="checkbox" name="raw" /></label>
+        <label><span>Flight assist (X)</span><input type="checkbox" name="assist" /></label>
+        <label><span>Assist strength</span><input type="range" name="assistK" min="0.2" max="1" step="0.05" /><i class="assist-v"></i></label>
         <label><span>Difficulty</span><select name="difficulty"><option value="easy">easy</option><option value="normal">normal</option><option value="hard">hard</option></select></label>
         <label><span>Invert Y (push to dive)</span><input type="checkbox" name="invert" /></label>
         <label><span>Quality (restarts the sortie)</span><select name="quality"><option value="low">low · no bloom, no shadows</option><option value="med">medium</option><option value="high">high · 2x pixels</option></select></label>

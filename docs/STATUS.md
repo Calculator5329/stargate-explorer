@@ -5,6 +5,7 @@ Snapshot of what actually works. This is the project state snapshot, not the wor
 ## Works
 - **2026-09-05 asteroid batch (headless-verified):** every rock destructible with fragments (`Asteroids.damage`, `T.rocks`), belts ~2x denser with cluster knots and ring bands per system, enemies die on any real rock impact and a player-made fragment kill is credited, HUD mini-map bottom right (`ui/minimap.ts`). `node scripts/rock-test.mjs` is the gate. Not yet flown by a human: balance of rock hp, fragment speed, mini-map range (`T.rocks.mapRange`) are guesses.
 - **2026-09-05 art pass:** Facet wing armor, trailing-edge plates and nacelle vents; batched outline geometry for all hulls. Build verified; inspect top view measured 35 calls / 6.7k triangles in the local in-app browser. FPS on target hardware remains unbenchmarked. Final dated captures in `docs/shots/2026-09-05-final-*.png`.
+- **2026-09-05 feedback batch (headless-verified, not flown):** cursor steer mode (default) with an on-screen aim cursor, `relative` kept; raw mouse via `unadjustedMovement`; assist strength slider; per-system arena sizes (1700..2400 m) and belts that mix grey/plum/ochre/charcoal tints, vary size mix and carve empty pockets (`voids`). Escort HUD line no longer grows every tick.
 - Fixed-step loop with interpolation, fps counter.
 - Pointer-lock mouse flight: virtual self-centering stick, A/D roll, double-tap A/D barrel roll, Shift boost, soft-horizon auto-level, bank-into-turn. Two schemes (`C` toggles, `?controls=`): **arcade** (default) holds a cruise speed, W pulls up / S dives hard, Space brakes; **classic** has a W/S throttle and Space drift. Velocity vector chases the nose with inertia. +X is port (see CLAUDE.md).
 - Hazards: sphere collision with every rock (bounce, speed bleed, camera shake, red flash); 1500 m arena with a soft turn-back current and HUD warning.
@@ -49,6 +50,8 @@ Snapshot of what actually works. This is the project state snapshot, not the wor
 Per-glider roles (held for Ethan's dogfight verdict), a real-pad check of the gamepad mapping.
 
 ## Known issues
+- **Cursor steer is untested by a human** (2026-09-05): `T.flight.cursorRadius` 260 px, `cursorDead` 0.05, `cursorCurve` 1.35 are guesses; sensitivity now means cursor px per mouse px in this mode, so his saved 1.00 may feel slower or faster than before. `cursorReturn` is 0 (the cursor stays where it is put).
+- Arcade W/S pull-up and dive: Ethan says "not great" without detail; `snapPitchRate` 2.4 is an instant add on top of the mouse. Untouched pending what "not great" means (too abrupt, too slow, fights the mouse, or the slide).
 - **Nothing beyond "Clear the field" has been flown by a human** (2026-09-04 overnight). Gauntlet timing (90 s, 360 m spacing), escort hull (600), turret range/cadence (1 km, 1.6 s) and the difficulty multipliers are guesses. The Ha'tak fight's "shoot this next" legibility is untested.
 - Prometheus: the escort version in *Cover the Prometheus* has no rock avoidance beyond a slide.
 - Ha'tak: a single bounding sphere for player collision (0.72 × radius), no collision for gliders or rounds against the hull itself; missiles only hurt the hull once the nodes are down (by design, but not signposted beyond the mission line).

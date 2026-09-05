@@ -100,7 +100,8 @@ export class Flight {
     // right wing down). Off near vertical (no horizon), while rolling by hand, and mid-barrel.
     const nearVertical = Math.abs(_fwd.y) > 0.95;
     const targetBank = clamp(-input.stick.x * f.bankIntoTurn, -1, 1);
-    const levelRoll = nearVertical || input.roll !== 0 || this.barrelLeft !== 0 ? 0 : (_right.y - targetBank) * f.autoLevel;
+    const assistK = input.scheme.assistStrength;
+    const levelRoll = nearVertical || input.roll !== 0 || this.barrelLeft !== 0 ? 0 : (_right.y - targetBank) * f.autoLevel * assistK;
 
     // Rotations below are about local axes; signs follow from +X being port:
     //   +X rotation drops the nose, +Y rotation yaws the nose to port, +Z rotation rolls right.
@@ -131,7 +132,7 @@ export class Flight {
         const decel = vf > targetSpeed && !this.braking && !this.drifting ? f.coastDecel : rate;
         vf = moveToward(vf, targetSpeed, (vf > targetSpeed ? decel : rate) * dt);
         // a hard pull leaves the velocity behind for a moment, so the ship visibly slides through the turn
-        _lat.multiplyScalar(Math.exp(-f.latDamp * (snap !== 0 ? f.snapSlide : 1) * dt));
+        _lat.multiplyScalar(Math.exp(-f.latDamp * assistK * (snap !== 0 ? f.snapSlide : 1) * dt));
       } else {
         // drift mode: the nose is free, velocity only changes by thrust
         if (input.boost && this.boostEnergy > 0) vf += f.thrust * 2 * dt;

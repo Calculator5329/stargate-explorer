@@ -1,4 +1,4 @@
-import type { SchemeName } from "@/core/scheme";
+import type { SchemeName, SteerMode } from "@/core/scheme";
 import type { DifficultyName } from "@/core/difficulty";
 import type { Quality } from "@/render/renderer";
 import { DEFAULT_BINDS, mergeBinds, type Binds } from "@/core/binds";
@@ -12,7 +12,13 @@ import { DEFAULT_BINDS, mergeBinds, type Binds } from "@/core/binds";
 export interface Settings {
   scheme: SchemeName;
   assist: boolean;
-  /** mouse sensitivity multiplier on T.flight.stickGain */
+  /** how hard flight assist works while on, 0.2..1 (Scheme.assistStrength) */
+  assistStrength: number;
+  /** how the mouse steers: aim cursor or mouse-speed stick */
+  steer: SteerMode;
+  /** request unaccelerated mouse motion from pointer lock */
+  rawMouse: boolean;
+  /** mouse sensitivity multiplier (Input.sens) */
   sens: number;
   difficulty: DifficultyName;
   mute: boolean;
@@ -43,7 +49,7 @@ export interface Save {
 const KEY = "stargate-explorer.save.v1";
 
 export const DEFAULT_SAVE: Save = {
-  settings: { scheme: "arcade", assist: true, sens: 1, difficulty: "normal", mute: false, invertY: false, quality: "med", binds: { ...DEFAULT_BINDS } },
+  settings: { scheme: "arcade", assist: true, assistStrength: 1, steer: "cursor", rawMouse: true, sens: 1, difficulty: "normal", mute: false, invertY: false, quality: "med", binds: { ...DEFAULT_BINDS } },
   progress: { ship: "f11", unlocked: ["f11"], missions: {} },
 };
 

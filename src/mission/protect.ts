@@ -17,6 +17,9 @@ export class ProtectMission extends ClearMission<ProtectLevel> {
   private readonly escort: Lockable & { hp: number; rig: ShipRig; sinceHit: number };
   private readonly mats: THREE.MeshToonMaterial[] = [];
   private readonly maxHp: number;
+  /** the parent's objective line and what we last showed, so the hull suffix is composed once, not appended every tick (2026-09-05 bug: the HUD filled with "Prometheus hull 100%") */
+  private baseLine = "";
+  private shownLine = "";
 
   constructor(override readonly def: ProtectLevel, ctx: MissionCtx) {
     super(def, ctx);
@@ -74,7 +77,8 @@ export class ProtectMission extends ClearMission<ProtectLevel> {
     super.run(dt);
     if (this.done) return;
     this.marker = this.ctx.combat.enemies.aliveCount > 0 ? null : e;
-    this.line = `${this.line}  ·  Prometheus hull ${Math.round((100 * e.hp) / this.maxHp)}%`;
+    if (this.line !== this.shownLine) this.baseLine = this.line; // the wave machine wrote a new line
+    this.line = this.shownLine = `${this.baseLine}  ·  Prometheus hull ${Math.round((100 * e.hp) / this.maxHp)}%`;
   }
 
   override render(dt: number): void {

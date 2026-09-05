@@ -147,6 +147,17 @@ Ethan asked for momentum, lethal rock hits, a canon secondary weapon, then "all 
 - [ ] <!-- workspace:id=work:54d0c9c4-db0c-57a4-931b-2fe9ed017fbf --> Ethan flies it: rock hp, fragment speed and life, crash threshold, mini-map range and size are untuned guesses in `T.rocks`.
 - [x] <!-- workspace:id=work:e51bbaa3-205f-54c6-a2c3-e891face26af --> Rock-break sound of its own (a crunch, not the ship explosion), and a "rocks broken" line on the end card. *(2026-09-05, `Audio.crunch`, `Mission.rocksLine`, checked by rock-test scenario 4)*
 
+### M2.7 — Feedback round 5 (2026-09-05, Ethan on the asteroid batch and the escort mission)
+Ethan: prefers classic; assist helps but may be too strong; arcade W/S up/down "not great"; mouse flight "kind of weird" (acceleration? sensitivity?); has to line the nose up exactly to hit; HUD filled with "Prometheus hull 100%" on the escort; asteroids should vary in colour and size, the map should grow and density should vary.
+- [x] Escort HUD line appended the hull suffix every tick; composed once now. *(2026-09-05)*
+- [x] Cursor steer mode (default) with an aim cursor, `relative` kept as an option; raw mouse motion via pointer-lock `unadjustedMovement`. *(2026-09-05, untested by a human)*
+- [x] Assist strength slider scaling `latDamp` and `autoLevel`. *(2026-09-05)*
+- [x] Belts vary per system: mixed tint families, size mix, empty pockets; arenas 1700..2400 m per system. *(2026-09-05, headless only; captures wanted)*
+- [ ] Ethan flies cursor vs relative steer and reports; then tune `cursorRadius`/`cursorCurve` or drop the loser.
+- [ ] Ethan says what is wrong with arcade W/S (abrupt, slow, fights the mouse, slide) before `snapPitchRate`/`snapSlide` move.
+- [ ] Aim help so hits do not need a perfect line-up: options are a small gun gimbal cone (rounds bend a few degrees toward the boxed target), wider convergence with more spread, or a bigger lead ring. Ethan picks.
+- [ ] Ethan's look at the belts per system (grey/plum mix, boulder sizes, pockets, arena size); rock counts rose ~10 %, fps on his machine unmeasured.
+
 ### M3 — Fleet & factions
 - [x] <!-- workspace:id=work:fbd1c463-3000-5d78-830c-2a559fa5d2a3 --> 3 player hulls, 3 enemy hulls, distinct silhouettes (see GRAPHICS.md silhouette test). *(2026-09-04: enemies glider / interceptor / gunboat; players Facet / F-21 Broadsword / Prometheus; plus the neutral racer. `?hull=` inspects any; silhouettes judged by capture, not yet by Ethan)*
 - [x] <!-- workspace:id=work:4f39c478-be65-577d-b085-12e3d36e930e --> Faction materials/palettes. *(2026-09-04 late: `SystemDef.faction` names a PALETTES entry and every enemy hull spawned in that system takes it; goauld default, lucian (oxblood/red, Netu), serpent (steel/teal, Kheb and the Graveyard). `node scripts/kinds-test.mjs system=netu` for a look.)*

@@ -1,7 +1,8 @@
 import { Quaternion, Vector3 } from "three";
 import { Loop } from "@/core/loop";
-import { Input } from "@/core/input";
-import { Scheme, parseScheme } from "@/core/scheme";
+import { T } from "@/core/tunables";
+import { Input, lockPointer, setRawMouse } from "@/core/input";
+import { Scheme, parseScheme, parseSteer } from "@/core/scheme";
 import { loadSave } from "@/core/save";
 import { setDifficulty } from "@/core/difficulty";
 import { Menu } from "@/ui/menu";
@@ -76,15 +77,26 @@ if (game) {
   if (params.get("hub") === "1") hub.show();
 }
 const menu = new Menu(document.getElementById("menu")!, canvas, save, {
-  apply: (s) => ((scheme.arcade = s.scheme === "arcade"), (scheme.assist = s.assist), (input.sens = s.sens), (input.invertY = s.invertY), (input.binds = s.binds), setDifficulty(s.difficulty), game?.audio.setMute(s.mute)),
+  apply: (s) => {
+    scheme.arcade = s.scheme === "arcade";
+    scheme.assist = s.assist;
+    scheme.assistStrength = s.assistStrength;
+    input.sens = s.sens;
+    input.invertY = s.invertY;
+    input.binds = s.binds;
+    input.steer = params.has("steer") ? parseSteer(params.get("steer")) : s.steer;
+    setRawMouse(s.rawMouse);
+    setDifficulty(s.difficulty);
+    game?.audio.setMute(s.mute);
+  },
   restart: () => location.reload(),
   hub: () => hub.show(),
   replay: () => {
-    if (game?.playReplay()) void canvas.requestPointerLock();
+    if (game?.playReplay()) lockPointer(canvas);
   },
   hasReplay: () => game?.replay.hasHighlight ?? false,
 }, game !== null && !input.freeLock, level.title);
-Object.assign(window, { __game: game, __flight: flight, __rocks: world.asteroids, __travel: travel, __hub: hub });
+Object.assign(window, { __game: game, __flight: flight, __input: input, __rocks: world.asteroids, __travel: travel, __hub: hub, __T: T });
 // headless tests (scripts/_*.mjs) drive the game through these
 createDebugPanel();
 

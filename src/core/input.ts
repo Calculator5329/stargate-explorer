@@ -1,12 +1,37 @@
 import { T, clamp } from "@/core/tunables";
-import type { Scheme } from "@/core/scheme";
+import type { Scheme, SteerMode } from "@/core/scheme";
 import { DEFAULT_BINDS, type Binds } from "@/core/binds";
+
+/** Ask for raw (unaccelerated) mouse motion when locking; a setting, so the menu can turn it off. */
+let rawMouse = true;
+export function setRawMouse(v: boolean): void {
+  rawMouse = v;
+}
+
+/**
+ * Pointer lock with `unadjustedMovement` (bypasses the OS pointer acceleration curve, which
+ * otherwise multiplies straight into the turn rate). Chromium rejects the promise where raw
+ * motion is unsupported; then, and on browsers that return nothing, fall back to a plain lock.
+ */
+export function lockPointer(el: HTMLElement): void {
+  const p: unknown = rawMouse ? el.requestPointerLock({ unadjustedMovement: true }) : el.requestPointerLock();
+  if (p instanceof Promise) p.catch(() => void el.requestPointerLock());
+}
+
+/** dead zone then a power curve, sign kept: pad sticks and the steer cursor share it */
+function shape(v: number, dead: number, curve: number): number {
+  const a = Math.abs(v);
+  if (a < dead) return 0;
+  return Math.sign(v) * Math.pow((a - dead) / (1 - dead), curve);
+}
 
 /**
  * Pointer-lock mouse + keyboard, plus the first connected gamepad. Mouse motion
- * accumulates between sim ticks and is folded into a self-centering virtual stick
- * in `tick()`, so the flight model only ever sees a [-1, 1] stick regardless of
- * frame rate. A pad's left stick writes that same stick directly.
+ * accumulates between sim ticks and becomes a [-1, 1] stick in `tick()`, so the
+ * flight model never sees pixels or frame rate. Two steer modes (`steer`, see
+ * core/scheme.ts): `cursor` moves an on-screen aim cursor and the stick is its
+ * offset (a still mouse holds a turn); `relative` pumps a self-centering stick
+ * with mouse speed. A pad's left stick writes that same stick directly.
  *
  *   stick.x   +1 = nose right      stick.y  +1 = nose up
  *   roll      +1 = roll right (D)  -1 = roll left (A)
@@ -37,8 +62,12 @@ export class Input {
   alt = false;
   private altPending = false;
   locked = false;
-  /** mouse sensitivity multiplier on T.flight.stickGain (settings) */
+  /** mouse sensitivity multiplier: on T.flight.stickGain (relative) or on cursor pixels per mouse pixel (cursor) */
   sens = 1;
+  /** how the mouse steers (settings, `?steer=`) */
+  steer: SteerMode = "cursor";
+  /** cursor steer: aim cursor offset from screen centre in mouse pixels, clamped to T.flight.cursorRadius; +y is down */
+  readonly cursor = { x: 0, y: 0 };
   /** a gamepad has produced input since load (HUD swaps its hint) */
   padActive = false;
 
@@ -58,7 +87,7 @@ export class Input {
     if (!enabled) return;
     this.locked = freeLock;
     el.addEventListener("click", () => {
-      if (!this.locked) el.requestPointerLock();
+      if (!this.locked) lockPointer(el);
     });
     document.addEventListener("pointerlockchange", () => {
       if (freeLock) return;
@@ -104,11 +133,24 @@ export class Input {
     this.altPending = false;
     const f = T.flight;
     this.scheme.sinceSwitch += dt;
-    const decay = Math.exp(-f.stickReturn * dt);
-    const gain = f.stickGain * this.sens;
     const ySign = this.invertY ? 1 : -1;
-    this.stick.x = clamp((this.stick.x + this.mdx * gain) * decay, -1, 1);
-    this.stick.y = clamp((this.stick.y + ySign * this.mdy * gain) * decay, -1, 1);
+    if (this.steer === "cursor") {
+      const c = this.cursor, R = f.cursorRadius;
+      c.x = clamp(c.x + this.mdx * this.sens, -R, R);
+      c.y = clamp(c.y + this.mdy * this.sens, -R, R);
+      if (f.cursorReturn > 0) {
+        const k = Math.exp(-f.cursorReturn * dt);
+        c.x *= k;
+        c.y *= k;
+      }
+      this.stick.x = shape(c.x / R, f.cursorDead, f.cursorCurve);
+      this.stick.y = ySign * shape(c.y / R, f.cursorDead, f.cursorCurve);
+    } else {
+      const decay = Math.exp(-f.stickReturn * dt);
+      const gain = f.stickGain * this.sens;
+      this.stick.x = clamp((this.stick.x + this.mdx * gain) * decay, -1, 1);
+      this.stick.y = clamp((this.stick.y + ySign * this.mdy * gain) * decay, -1, 1);
+    }
     this.mdx = this.mdy = 0;
 
     const k = this.keys, b = this.binds;
@@ -130,13 +172,8 @@ export class Input {
       if (!pad || (pad.mapping !== "standard" && p.mapping === "standard")) pad = p;
     }
     if (!pad) return;
-    const f = T.flight, dead = f.padDead;
-    const curve = (v: number): number => {
-      const a = Math.abs(v);
-      if (a < dead) return 0;
-      const n = (a - dead) / (1 - dead);
-      return Math.sign(v) * Math.pow(n, f.padCurve);
-    };
+    const f = T.flight;
+    const curve = (v: number): number => shape(v, f.padDead, f.padCurve);
     const ax = curve(pad.axes[0] ?? 0), ay = curve(pad.axes[1] ?? 0);
     const rx = curve(pad.axes[2] ?? 0), ry = curve(pad.axes[3] ?? 0);
     const btn = (i: number): boolean => pad.buttons[i]?.pressed ?? false;

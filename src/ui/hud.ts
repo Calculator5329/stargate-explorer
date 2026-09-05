@@ -34,6 +34,7 @@ export class Hud {
   private readonly tgtEl: HTMLElement;
   private readonly tgtLabel: HTMLElement;
   private readonly leadEl: HTMLElement;
+  private readonly cursorEl: HTMLElement;
   private readonly arrowEl: HTMLElement;
   private readonly cardEl: HTMLElement;
   private readonly cardH: HTMLElement;
@@ -65,6 +66,7 @@ export class Hud {
     this.tgtEl = must(root.querySelector<HTMLElement>(".tgt"));
     this.tgtLabel = must(root.querySelector<HTMLElement>(".tgt small"));
     this.leadEl = must(root.querySelector<HTMLElement>(".lead"));
+    this.cursorEl = must(root.querySelector<HTMLElement>(".cursor"));
     this.arrowEl = must(root.querySelector<HTMLElement>(".arrow"));
     this.cardEl = must(root.querySelector<HTMLElement>(".card"));
     this.cardH = must(root.querySelector<HTMLElement>(".card h1"));
@@ -108,6 +110,13 @@ export class Hud {
     this.boostEl.style.width = `${(flight.boostEnergy * 100).toFixed(1)}%`;
     this.boostEl.classList.toggle("low", flight.boostEnergy < T.flight.boostMinEngage && !flight.boosting);
     this.hintEl.classList.toggle("hidden", input.locked);
+    // cursor steer: the aim cursor sits where the nose is heading (invert Y flips the mouse, not the picture)
+    const cursorOn = input.steer === "cursor" && input.locked && !input.padActive;
+    this.cursorEl.classList.toggle("on", cursorOn);
+    if (cursorOn) {
+      const c = input.cursor, k = T.flight.cursorRadius > 0 ? Math.min(1, window.innerHeight * 0.42 / T.flight.cursorRadius) : 1;
+      this.cursorEl.style.transform = `translate(${(c.x * k).toFixed(1)}px, ${((input.invertY ? -c.y : c.y) * k).toFixed(1)}px)`;
+    }
   }
 
   /** Combat layer: HP, mission line, target box + lead, off-screen arrow, end cards. */
