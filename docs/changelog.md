@@ -9,6 +9,7 @@ Ethan, 2026-09-05 00:xx: "a lot more asteroids and a more interesting map ... a 
 - Belts roughly doubled (900..2300 rocks per system) with a layout: `clusters` (dense knots) and `band` (a ring at a radius) take a share of the rocks, the rest scatter. Chulak and Kheb have a ring band, Tollana's race circuit is a band, Abydos/Netu/P3X-774/Graveyard have knots.
 - HUD mini-map (`ui/minimap.ts`, bottom right, 180 px): heading-up top-down view, 900 m range, rocks as dots sized by radius and faded by height difference, fragments amber, enemies red, marker/gate gold, arena edge ring.
 - `Asteroids` now stores per-instance position/quaternion/scale arrays and composes matrices (no per-tick decompose); dead slots park at y=1e6 with radius 0 so every sphere consumer skips them.
+- Rock breaks have their own sound (`Audio.crunch`: a low crack, a gravel rattle, sized by radius) instead of the ship explosion, and every end card lists `rocks broken N` when any were (`Mission.rocksLine`, also on the run and race cards).
 - `scripts/rock-test.mjs`: breaks a rock under fire, flings a glider into a boulder, plants one in a fragment's path; all three pass. `chain-test.mjs` still passes all eight missions. Sim at ~1.1..1.7 ms in the headless captures. Captures: `shots/2026-09-05-minimap-chulak-band.png`, `shots/2026-09-05-kheb-dense.png`.
 
 ## 2026-09-05 — Fighter detail and outline batching

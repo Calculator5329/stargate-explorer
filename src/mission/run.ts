@@ -187,7 +187,7 @@ export class RunMission extends Mission {
   }
 
   override summary(): string {
-    return `time ${fmt(this.clock)}\nmargin ${fmt(Math.max(0, this.left))}\ngates ${this.rings.length}/${this.rings.length}\nkills ${this.ctx.combat.player.kills}`;
+    return `time ${fmt(this.clock)}\nmargin ${fmt(Math.max(0, this.left))}\ngates ${this.rings.length}/${this.rings.length}\nkills ${this.ctx.combat.player.kills}${this.rocksLine()}`;
   }
 
   protected override deathLine(): string {

@@ -59,6 +59,8 @@ export interface RockSpheres {
   vel?: Float32Array;
   /** 1 where the rock is a fragment of one the player broke */
   playerMade?: Uint8Array;
+  /** rocks the player has broken this run */
+  broken?: number;
 }
 
 const UP = new THREE.Vector3(0, 1, 0);

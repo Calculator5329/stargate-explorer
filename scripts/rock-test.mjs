@@ -95,6 +95,10 @@ const r3 = await page.evaluate(async () => {
 console.log("fragment", JSON.stringify(r3));
 check(!r3.alive, "glider killed by a flying fragment");
 check(r3.kills === 1, "fragment kill credited to the player");
+// --- 4. the end card carries the rock count
+const r4 = await page.evaluate(() => { const g = window.__game; return { line: g.mission.summary(), broken: window.__rocks.broken }; });
+console.log("card", JSON.stringify(r4));
+check(r4.line.includes(`rocks broken ${r4.broken}`) && r4.broken >= 2, "end card lists rocks broken");
 const perf = await page.evaluate(() => document.querySelector("#hud .perf")?.textContent);
 console.log("perf:", perf?.replace(/\n/g, " | "));
 await browser.close();

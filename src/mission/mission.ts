@@ -78,7 +78,13 @@ export abstract class Mission {
   summary(): string {
     const P = this.ctx.combat.player;
     const acc = P.fired ? Math.round((100 * P.hits) / P.fired) : 0;
-    return `time ${fmt(this.clock)}\nkills ${P.kills}\naccuracy ${acc}%\nhull ${Math.round((100 * P.hp) / this.ctx.combat.maxHp)}%`;
+    return `time ${fmt(this.clock)}\nkills ${P.kills}\naccuracy ${acc}%\nhull ${Math.round((100 * P.hp) / this.ctx.combat.maxHp)}%${this.rocksLine()}`;
+  }
+
+  /** "rocks broken N" for the end card, empty when none were. */
+  protected rocksLine(): string {
+    const n = this.ctx.rocks.broken ?? 0;
+    return n > 0 ? `\nrocks broken ${n}` : "";
   }
 
   protected deathLine(): string {

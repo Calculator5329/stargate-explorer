@@ -225,7 +225,7 @@ export class Combat {
           if (dx * dx + dy * dy + dz * dz < r * r) {
             m.alive = false;
             const R = this.rocks.radii[i]!;
-            if (this.rocks.damage(i, M.damage, m.vel)) this.burst(m.pos, ZEROV, 2.5 + R * 0.12, Math.min(1, 0.5 + R * 0.015));
+            if (this.rocks.damage(i, M.damage, m.vel)) this.rockBurst(m.pos, R);
             else this.fx.spawn(m.pos, ZEROV, 2.5);
             break;
           }
@@ -323,10 +323,16 @@ export class Combat {
       if (dx * dx + dy * dy + dz * dz > r * r) continue;
       this.shots.kill(s);
       // only the player's rounds chip rocks; a broken rock bursts and its pieces fly on with the shot
-      if (s.side === "player" && R.damage(i, this.gunDamage, s.vel)) this.burst(s.pos, ZEROV, 1.5 + r * 0.12, Math.min(0.9, 0.35 + r * 0.015));
+      if (s.side === "player" && R.damage(i, this.gunDamage, s.vel)) this.rockBurst(s.pos, r);
       else this.fx.spark(s.pos);
       return;
     }
+  }
+
+  /** A rock of `radius` breaking at `pos`: debris burst plus the crunch, both scaled by size. */
+  private rockBurst(pos: THREE.Vector3, radius: number): void {
+    this.fx.spawn(pos, ZEROV, 1.5 + radius * 0.12);
+    this.audio.crunch(radius / 10);
   }
 
   /** Public so missions can blow up their own things with the same look and sound. */

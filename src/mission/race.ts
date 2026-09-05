@@ -206,7 +206,7 @@ export class RaceMission extends RunMission {
   override summary(): string {
     const order = [...this.racers].sort((a, b) => (a.place || 99) - (b.place || 99));
     const ahead = order.filter((r) => r.place > 0 && r.place < this.playerPlace).map((r) => r.name);
-    return `place ${ordinal(this.playerPlace)} of ${this.racers.length + 1}\ntime ${fmt(this.clock)}\n${ahead.length ? `beaten by ${ahead.join(", ")}` : "clean sweep"}\ngates ${this.rings.length}/${this.rings.length}`;
+    return `place ${ordinal(this.playerPlace)} of ${this.racers.length + 1}\ntime ${fmt(this.clock)}\n${ahead.length ? `beaten by ${ahead.join(", ")}` : "clean sweep"}\ngates ${this.rings.length}/${this.rings.length}${this.rocksLine()}`;
   }
 
   protected override deathLine(): string {

@@ -242,6 +242,15 @@ export class Audio {
     this.burst(900, 1.5, 0.3, 0.25);
   }
 
+  /** A rock breaking: a dull low crack, a gravel rattle, no fireball. `size` ~ radius / 10. */
+  crunch(size: number): void {
+    const s = Math.min(2.5, Math.max(0.3, size));
+    this.burst(90 + 40 / s, 0.9, 0.45 + 0.15 * s, 0.22 + 0.12 * s, "lowpass");
+    this.burst(1600, 4, 0.16, 0.12 + 0.06 * s, "bandpass");
+    // the rattle: three quick clicks trailing off
+    for (let k = 1; k <= 3; k++) setTimeout(() => this.burst(2400 - k * 400, 8, 0.09 / k, 0.05, "bandpass"), 40 * k + Math.random() * 30);
+  }
+
   lock(): void {
     this.blip(1320, 0.12, 0.09, "square");
     setTimeout(() => this.blip(1320, 0.12, 0.09, "square"), 90);

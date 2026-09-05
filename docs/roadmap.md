@@ -145,7 +145,7 @@ Ethan asked for momentum, lethal rock hits, a canon secondary weapon, then "all 
 - [x] Belts ~2x denser with per-system layout (cluster knots, ring bands). *(2026-09-05, `AsteroidOptions.clusters/band`, `world/systems.ts`)*
 - [x] HUD mini-map, heading-up, rocks/enemies/marker/arena edge. *(2026-09-05, `ui/minimap.ts`)*
 - [ ] Ethan flies it: rock hp, fragment speed and life, crash threshold, mini-map range and size are untuned guesses in `T.rocks`.
-- [ ] Rock-break sound of its own (a crunch, not the ship explosion), and a "rocks broken" line on the end card (`Asteroids.broken` already counts).
+- [x] Rock-break sound of its own (a crunch, not the ship explosion), and a "rocks broken" line on the end card. *(2026-09-05, `Audio.crunch`, `Mission.rocksLine`, checked by rock-test scenario 4)*
 
 ### M3 — Fleet & factions
 - [x] <!-- workspace:id=work:fbd1c463-3000-5d78-830c-2a559fa5d2a3 --> 3 player hulls, 3 enemy hulls, distinct silhouettes (see GRAPHICS.md silhouette test). *(2026-09-04: enemies glider / interceptor / gunboat; players Facet / F-21 Broadsword / Prometheus; plus the neutral racer. `?hull=` inspects any; silhouettes judged by capture, not yet by Ethan)*
