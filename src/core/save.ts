@@ -14,6 +14,8 @@ export interface Settings {
   assist: boolean;
   /** how hard flight assist works while on, 0.2..1 (Scheme.assistStrength) */
   assistStrength: number;
+  /** speed-coupled turn rate (Scheme.speedTurn) */
+  speedTurn: boolean;
   /** how the mouse steers: aim cursor or mouse-speed stick */
   steer: SteerMode;
   /** request unaccelerated mouse motion from pointer lock */
@@ -49,7 +51,7 @@ export interface Save {
 const KEY = "stargate-explorer.save.v1";
 
 export const DEFAULT_SAVE: Save = {
-  settings: { scheme: "arcade", assist: true, assistStrength: 1, steer: "cursor", rawMouse: true, sens: 1, difficulty: "normal", mute: false, invertY: false, quality: "med", binds: { ...DEFAULT_BINDS } },
+  settings: { scheme: "arcade", assist: true, assistStrength: 1, speedTurn: false, steer: "cursor", rawMouse: true, sens: 1, difficulty: "normal", mute: false, invertY: false, quality: "med", binds: { ...DEFAULT_BINDS } },
   progress: { ship: "f11", unlocked: ["f11"], missions: {} },
 };
 

@@ -52,6 +52,8 @@ export class Input {
   invertY = false;
   pitchKey = 0;
   roll = 0;
+  /** strafe thrusters, -1 (starboard) .. 1 (port, +X) */
+  strafe = 0;
   /** −1 / +1 on the tick a double-tap lands, else 0 */
   barrel = 0;
   space = false;
@@ -156,6 +158,7 @@ export class Input {
     const k = this.keys, b = this.binds;
     this.pitchKey = (k.has(b.pullUp) ? 1 : 0) - (k.has(b.dive) ? 1 : 0);
     this.roll = (k.has(b.rollRight) ? 1 : 0) - (k.has(b.rollLeft) ? 1 : 0);
+    this.strafe = (k.has(b.strafeLeft) ? 1 : 0) - (k.has(b.strafeRight) ? 1 : 0);
     this.space = k.has(b.brake);
     this.boost = k.has(b.boost) || (b.boost === "ShiftLeft" && k.has("ShiftRight"));
     this.barrel = this.pendingBarrel;

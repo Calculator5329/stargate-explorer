@@ -9,12 +9,16 @@ const SLOTS = 10;
 /** floats per frame: t + player (3 pos, 4 quat) + SLOTS × (alive, 3 pos, 4 quat) */
 const STRIDE = 8 + SLOTS * 8;
 /** seconds of history kept (at the 60 Hz sim step) */
-const KEEP = 10;
+const KEEP = 12;
 const FRAMES = KEEP * 60;
 /** clip window around the kill, in seconds of sim time, and the playback rate */
-const PRE = 4.5;
-const POST = 1.6;
-const RATE = 0.55;
+/** seconds kept before and after the kill (Ethan, 2026-09-05: "more time before + a little after the kill") */
+const PRE = 7;
+const POST = 3;
+/** playback rate, and the slower rate inside ±SLOW_WIN s of the kill */
+const RATE = 0.7;
+const SLOW_RATE = 0.3;
+const SLOW_WIN = 0.45;
 /** player rounds remembered: t + pos + vel, enough for ~13 s at the cannon's rate */
 const SHOTS = 800;
 const SSTRIDE = 7;
@@ -32,8 +36,11 @@ interface Highlight {
   bursts: Burst[];
   /** player rounds in the window, chronological, SSTRIDE floats each */
   shots: Float32Array;
-  /** where the scored kill happened; both camera shots keep it in frame */
+  /** where and when the scored kill happened; the second camera is parked beside it */
   kill: THREE.Vector3;
+  killT: number;
+  /** the ship's starboard axis at the kill: the parked camera sits off to that side, clear of the path */
+  killSide: THREE.Vector3;
   score: number;
 }
 
@@ -155,7 +162,13 @@ export class Replay {
       shots.set(this.shotRing.subarray(o, o + SSTRIDE), m * SSTRIDE);
       m++;
     }
-    this.highlight = { frames, count: k, bursts, shots: shots.subarray(0, m * SSTRIDE), kill: kill ? kill.pos.clone() : new THREE.Vector3(frames[k * STRIDE - STRIDE + 1], frames[k * STRIDE - STRIDE + 2], frames[k * STRIDE - STRIDE + 3]), score: P.score };
+    const killT = kill ? kill.t : P.at;
+    // ship pose at the kill: the frame nearest killT
+    let kf = 0;
+    for (let i = 0; i < k; i++) if (Math.abs(frames[i * STRIDE]! - killT) < Math.abs(frames[kf * STRIDE]! - killT)) kf = i;
+    const ko = kf * STRIDE;
+    const killSide = new THREE.Vector3(-1, 0, 0).applyQuaternion(_q.set(frames[ko + 4]!, frames[ko + 5]!, frames[ko + 6]!, frames[ko + 7]!));
+    this.highlight = { frames, count: k, bursts, shots: shots.subarray(0, m * SSTRIDE), kill: kill ? kill.pos.clone() : new THREE.Vector3(frames[k * STRIDE - STRIDE + 1], frames[k * STRIDE - STRIDE + 2], frames[k * STRIDE - STRIDE + 3]), killT, killSide, score: P.score };
   }
 
   play(cam: THREE.PerspectiveCamera): boolean {
@@ -179,17 +192,16 @@ export class Replay {
   }
 
   /** 1 while the kill point lies at least `fade` m ahead of the ship, 0 once it is behind (uses _p and _fwd as set by update). */
-  private killAhead(kill: THREE.Vector3, fade: number): number {
-    return Math.min(1, Math.max(0, _v.subVectors(kill, _p).dot(_fwd) / fade));
-  }
 
   /** Drive ship, gliders and camera from the clip; call after the normal render pass. Returns false when the clip ends. */
   update(dt: number, cam: THREE.PerspectiveCamera, ship: THREE.Object3D, enemies: Enemy[], burst: (pos: THREE.Vector3, vel: THREE.Vector3, scale: number) => void): boolean {
     const c = this.clip;
     if (!c) return false;
     const F = c.frames, n = c.count;
-    const t0 = F[0]!, t1 = F[(n - 1) * STRIDE]!;
-    this.clipT += dt * RATE;
+    const t1 = F[(n - 1) * STRIDE]!;
+    // slow motion around the kill, normal speed elsewhere
+    const rate = Math.abs(this.clipT - c.killT) < SLOW_WIN ? SLOW_RATE : RATE;
+    this.clipT += dt * rate;
     if (this.clipT > t1) {
       this.stop(cam, enemies);
       return false;
@@ -223,33 +235,29 @@ export class Replay {
       const o = this.shotIdx++ * SSTRIDE;
       this.tracers.spawn("player", _a.set(S[o + 1]!, S[o + 2]!, S[o + 3]!), _v.set(S[o + 4]!, S[o + 5]!, S[o + 6]!), ttl);
     }
-    this.tracers.tick(dt * RATE);
+    this.tracers.tick(dt * rate);
     this.tracers.update();
-    // camera: shot A, a drone parked off the player's opening line; shot B, over the shoulder toward the kill.
-    // Both look at a point between the ship and the kill so the victim and the rounds reaching it stay in frame
-    // (Ethan, 2026-09-05: "i can't even see the bullets that i shot and i also don't see the enemy like kill").
-    const frac = (this.clipT - t0) / (t1 - t0);
+    // Camera: two cameras parked in the world, each tracking the ship. Nothing is attached to the ship, so its
+    // speed reads as the pan rate and the parallax of the pass (Ethan, 2026-09-05: "it looked like I was a
+    // stationary ship moving a tiny bit to the right and left"). Shot A sits beside the path a third of the way
+    // in: the ship comes at it, whips past, runs on. Shot B sits beside the kill point: the ship comes at it,
+    // the kill goes off close, the ship passes and recedes into the debris.
     _p.copy(ship.position);
-    _fwd.set(0, 0, 1).applyQuaternion(ship.quaternion);
-    if (frac < 0.5) {
-      // the drone sits beside the point the ship reaches a third of the way in: it comes at you, passes close, runs on toward the kill
-      const oa2 = Math.floor(n * 0.33) * STRIDE;
+    if (this.clipT < c.killT - 3.2) {
+      const oa2 = Math.floor(n * 0.3) * STRIDE;
       _a.set(F[oa2 + 1]!, F[oa2 + 2]!, F[oa2 + 3]!);
       _q.set(F[oa2 + 4]!, F[oa2 + 5]!, F[oa2 + 6]!, F[oa2 + 7]!);
-      _side.set(1, 0, 0).applyQuaternion(_q);
-      cam.position.copy(_a).addScaledVector(_side, 26).addScaledVector(Y, 9);
-      cam.fov = 50;
-      // lean toward the kill while it is ahead, by at most ~17° off the ship so the ship never leaves the frame at the pass
-      const lean = this.killAhead(c.kill, 40) * Math.min(0.3 * _v.subVectors(c.kill, _p).length(), 0.3 * cam.position.distanceTo(_p));
-      _look.copy(_p).addScaledVector(_v.normalize(), lean);
+      _side.set(-1, 0, 0).applyQuaternion(_q);
+      _fwd.set(0, 0, 1).applyQuaternion(_q);
+      cam.position.copy(_a).addScaledVector(_side, 24).addScaledVector(Y, 7).addScaledVector(_fwd, 8);
+      cam.fov = 55;
+      _look.copy(_p);
     } else {
-      // over the shoulder, drifting slowly from one side to the other, with the kill ahead
-      const ang = (frac - 0.5) * 2 * Math.PI * 0.35 - 0.6;
-      _side.crossVectors(_fwd, Y).normalize();
-      if (_side.lengthSq() < 0.1) _side.set(1, 0, 0);
-      cam.position.copy(_p).addScaledVector(_side, Math.sin(ang) * 14).addScaledVector(_fwd, -22).addScaledVector(Y, 7);
-      cam.fov = 58;
-      _look.copy(_p).lerp(c.kill, 0.5 * this.killAhead(c.kill, 40));
+      cam.position.copy(c.kill).addScaledVector(c.killSide, 32).addScaledVector(Y, 11);
+      cam.fov = 60;
+      // frame the ship with the kill point pulled a third of the way in until it goes off, then follow the ship out
+      const after = Math.min(1, Math.max(0, (this.clipT - c.killT) / 0.8));
+      _look.copy(_p).lerp(c.kill, 0.35 * (1 - after));
     }
     cam.up.copy(Y);
     cam.lookAt(_look);

@@ -49,6 +49,7 @@ export class Menu {
     const assist = q<HTMLInputElement>(root, "[name=assist]");
     const assistK = q<HTMLInputElement>(root, "[name=assistK]");
     const assistV = q(root, ".assist-v");
+    const speedTurn = q<HTMLInputElement>(root, "[name=speedTurn]");
     const steer = q<HTMLSelectElement>(root, "[name=steer]");
     const raw = q<HTMLInputElement>(root, "[name=raw]");
     const sens = q<HTMLInputElement>(root, "[name=sens]");
@@ -63,6 +64,7 @@ export class Menu {
     assist.checked = s.assist;
     assistK.value = String(s.assistStrength);
     assistV.textContent = s.assistStrength.toFixed(2);
+    speedTurn.checked = s.speedTurn;
     steer.value = s.steer;
     raw.checked = s.rawMouse;
     sens.value = String(s.sens);
@@ -74,6 +76,7 @@ export class Menu {
       s.assist = assist.checked;
       s.assistStrength = Number(assistK.value) || 1;
       assistV.textContent = s.assistStrength.toFixed(2);
+      s.speedTurn = speedTurn.checked;
       s.steer = parseSteer(steer.value);
       s.rawMouse = raw.checked;
       s.sens = Number(sens.value) || 1;

@@ -81,6 +81,7 @@ const menu = new Menu(document.getElementById("menu")!, canvas, save, {
     scheme.arcade = s.scheme === "arcade";
     scheme.assist = s.assist;
     scheme.assistStrength = s.assistStrength;
+    scheme.speedTurn = s.speedTurn;
     input.sens = s.sens;
     input.invertY = s.invertY;
     input.binds = s.binds;

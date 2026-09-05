@@ -46,8 +46,11 @@ export class Flight {
   boosting = false;
   /** 0..1, drains while boosting; boost cannot re-engage below `boostMinEngage` (Ethan: "not overpowered") */
   boostEnergy = 1;
+  /** Space used to mean "drift" in classic; drift now lives on flight assist off (X). Kept for the HUD. */
   drifting = false;
   braking = false;
+  /** strafe thruster velocity along the starboard axis (m/s) */
+  strafeV = 0;
   /** remaining barrel-roll angle (signed, rad); 0 when not rolling */
   barrelLeft = 0;
   /** seconds since the last collision, for camera shake / HUD flash */
@@ -81,12 +84,14 @@ export class Flight {
     const canBoost = this.boostEnergy > 0 && (this.boosting || this.boostEnergy >= f.boostMinEngage);
     this.boosting = input.boost && canBoost;
     this.boostEnergy = clamp(this.boostEnergy + (this.boosting ? -f.boostDrain : f.boostRecharge) * dt, 0, 1);
-    this.drifting = !arcade && input.space;
-    this.braking = arcade && input.space && !this.boosting;
+    // Space brakes in both schemes (Ethan, 2026-09-05: "make space actually work to brake"); releasing it
+    // returns to the throttle (classic) or cruise (arcade) speed
+    this.drifting = false;
+    this.braking = input.space && !this.boosting;
     const S = this.stats;
-    let targetSpeed = lerp(f.minSpeed, f.maxSpeed, this.throttle);
-    let rate = this.drifting ? f.driftDecel : f.accel;
-    if (arcade) (targetSpeed = this.braking ? f.brakeSpeed : f.cruiseSpeed), (rate = this.braking ? f.brakeDecel : f.accel);
+    let targetSpeed = arcade ? f.cruiseSpeed : lerp(f.minSpeed, f.maxSpeed, this.throttle);
+    let rate = f.accel;
+    if (this.braking) (targetSpeed = f.brakeSpeed), (rate = f.brakeDecel);
     if (this.boosting) (targetSpeed = f.boostSpeed), (rate = f.boostAccel);
     targetSpeed *= S.speed;
     rate *= S.speed;
@@ -99,14 +104,16 @@ export class Flight {
     // Soft horizon: steer right.y toward the bank the turn asks for (right stick =
     // right wing down). Off near vertical (no horizon), while rolling by hand, and mid-barrel.
     const nearVertical = Math.abs(_fwd.y) > 0.95;
-    const targetBank = clamp(-input.stick.x * f.bankIntoTurn, -1, 1);
+    const targetBank = clamp(-input.stick.x * f.bankIntoTurn + input.strafe * f.strafeBank, -1, 1);
     const assistK = input.scheme.assistStrength;
     const levelRoll = nearVertical || input.roll !== 0 || this.barrelLeft !== 0 ? 0 : (_right.y - targetBank) * f.autoLevel * assistK;
 
     // Rotations below are about local axes; signs follow from +X being port:
     //   +X rotation drops the nose, +Y rotation yaws the nose to port, +Z rotation rolls right.
-    const pitch = -(input.stick.y * f.pitchRate * S.agility + snap) * dt;
-    const yaw = -input.stick.x * f.yawRate * S.agility * dt;
+    // speed-coupled turn rate (menu toggle): nimble at low speed, stiff at boost
+    const turnK = input.scheme.speedTurn ? lerp(f.turnSlowGain, f.turnFastGain, clamp((this.speed - f.minSpeed) / (f.boostSpeed - f.minSpeed), 0, 1)) : 1;
+    const pitch = -(input.stick.y * f.pitchRate * S.agility * turnK + snap) * dt;
+    const yaw = -input.stick.x * f.yawRate * S.agility * turnK * dt;
     let roll = (input.roll * f.rollRate * S.agility + levelRoll) * dt;
     if (this.barrelLeft !== 0) {
       const step = clamp(this.barrelLeft, -f.barrelRate * dt, f.barrelRate * dt);
@@ -140,6 +147,14 @@ export class Flight {
         else if (!arcade) vf += input.pitchKey * f.thrust * dt;
         vf = clamp(vf, -f.maxSpeed * 0.5, this.topSpeed);
         _lat.multiplyScalar(Math.exp(-f.latDampOff * dt));
+      }
+      // strafe thrusters: the sideways velocity component is driven straight to the thruster speed
+      // (+strafe = port = -RIGHT), and eased back to zero when released
+      _right.copy(RIGHT).applyQuaternion(this.quat);
+      const strafeTo = -input.strafe * f.strafeSpeed * S.agility;
+      if (this.strafeV !== 0 || strafeTo !== 0) {
+        this.strafeV = moveToward(this.strafeV, strafeTo, f.strafeAccel * dt);
+        _lat.addScaledVector(_right, this.strafeV - _lat.dot(_right));
       }
       this.vel.copy(_fwd).multiplyScalar(vf).add(_lat);
       const total = this.vel.length();

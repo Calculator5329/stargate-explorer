@@ -3,7 +3,7 @@
  * try this mode out and then potentially go back").
  *
  *   arcade   constant cruise speed; W = hard pull-up, S = hard dive; Shift boost; Space brake
- *   classic  W/S throttle; Space drift
+ *   classic  W/S throttle; Space brake (drift lives on flight assist off, X)
  *
  * Mouse steering, A/D roll and the double-tap barrel roll are the same in both.
  * `?controls=classic|arcade` picks the start scheme, C toggles live.
@@ -44,6 +44,8 @@ export class Scheme {
   assist: boolean;
   /** how hard assist works while on (0.2..1): scales `latDamp` and the soft-horizon `autoLevel` (Ethan, 2026-09-05: helps, "not quite as strong") */
   assistStrength = 1;
+  /** speed-coupled turn rate: agile when slow, stiff when fast (menu toggle; Ethan, 2026-09-05: "two could be a switcher option") */
+  speedTurn = false;
   toggleAssist(): void {
     this.assist = !this.assist;
     this.sinceSwitch = 0;

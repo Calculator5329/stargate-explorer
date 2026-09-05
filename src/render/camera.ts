@@ -1,4 +1,4 @@
-import { Quaternion, Vector3, type PerspectiveCamera } from "three";
+import { Matrix4, Quaternion, Vector3, type PerspectiveCamera } from "three";
 import { T } from "@/core/tunables";
 
 const _desired = new Vector3();
@@ -7,6 +7,9 @@ const _up = new Vector3();
 const _off = new Vector3();
 const _fwd = new Vector3();
 const _acc = new Vector3();
+const _m = new Matrix4();
+const _qt = new Quaternion();
+const ZERO = new Vector3();
 
 /**
  * Spring-damped chase camera. Sits behind/above the ship, sways opposite the
@@ -34,8 +37,16 @@ export class ChaseCamera {
     this.boostFrac += ((boost ? 1 : 0) - this.boostFrac) * (1 - Math.exp(-3 * dt));
     this.rollFrac += ((rolling ? 1 : 0) - this.rollFrac) * (1 - Math.exp(-(rolling ? 10 : 3) * dt));
     if (!this.initialised) this.frame.copy(shipQuat);
-    // the frame chases the ship's attitude; during a barrel roll it chases slower, so the hull spins on screen
-    this.frame.slerp(shipQuat, 1 - Math.exp(-(rolling ? c.barrelFollow : c.followRate) * dt));
+    if (rolling) {
+      // barrel roll: the camera keeps its own up and only follows the nose, so the hull spins in front of a steady
+      // horizon (Ethan, 2026-09-05: "I should see my ship spin instead of the whole camera spinning"). A full roll
+      // ends where it started, so the frame is already aligned when normal following resumes: no snap.
+      _fwd.set(0, 0, 1).applyQuaternion(shipQuat);
+      _up.set(0, 1, 0).applyQuaternion(this.frame);
+      _m.lookAt(_fwd, ZERO, _up); // +Z of the result points along fwd
+      _qt.setFromRotationMatrix(_m);
+      this.frame.slerp(_qt, 1 - Math.exp(-c.barrelFollow * dt));
+    } else this.frame.slerp(shipQuat, 1 - Math.exp(-c.followRate * dt));
 
     _off.set(stick.x * c.swayYaw, (c.height - stick.y * c.swayPitch) * size, (-c.distance - c.distanceBoost * this.boostFrac - c.barrelDistance * this.rollFrac) * size); // +X is port
     _desired.copy(_off).applyQuaternion(this.frame);

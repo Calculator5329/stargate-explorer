@@ -80,6 +80,8 @@ export class Combat {
   maxHp = T.player.hp;
   gunDamage = T.weapons.damage;
   private missileCd = 0;
+  /** seconds into rebuilding the next torpedo (T.missile.reload) */
+  private reloadT = 0;
   readonly player: PlayerState = { hp: T.player.hp, alive: true, kills: 0, fired: 0, hits: 0, vel: new THREE.Vector3(), pos: new THREE.Vector3(), sinceHit: 99, dying: 0, fwd: new THREE.Vector3(0, 0, 1) };
   private fireAcc = 0;
   private gun = 0;
@@ -171,6 +173,10 @@ export class Combat {
   private lockAndLaunch(dt: number, flight: Flight, input: Input): void {
     const M = T.missile;
     this.missileCd -= dt;
+    if (this.ammo < this.maxAmmo) {
+      this.reloadT += dt;
+      if (this.reloadT >= M.reload) (this.reloadT = 0), this.ammo++;
+    } else this.reloadT = 0;
     _fwdv.set(0, 0, 1).applyQuaternion(flight.quat);
     let best: Tracked | null = null, bd = Infinity;
     const cosCone = Math.cos(M.lockCone);
@@ -241,6 +247,7 @@ export class Combat {
   /** Called by the mission at each wave: back to a full rack. */
   restock(): void {
     this.ammo = this.maxAmmo;
+    this.reloadT = 0;
   }
 
   private hitEnemies(s: Shot): void {

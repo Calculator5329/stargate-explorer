@@ -27,6 +27,8 @@ export class StrikeMission extends Mission {
   private readonly core: Lockable;
   private readonly cds: number[] = [];
   private stage: "guns" | "nodes" | "hull" = "guns";
+  /** seconds left on the "hull shielded" HUD cue after a round hits the shielded pyramid */
+  private shieldT = 0;
   private readonly mines: Mines;
 
   constructor(override readonly def: StrikeLevel, ctx: MissionCtx) {
@@ -46,10 +48,11 @@ export class StrikeMission extends Mission {
       get alive() { return t.alive; },
       set alive(_v: boolean) { /* owned by the capital */ },
       damage(amount) {
-        // shield nodes are hardened until the ring guns are gone
-        if (kind === "node" && self.stage === "guns") return false;
+        // guns and torpedoes both bite on every ring gun and shield node from the start; only the pyramid itself
+        // is shielded (Ethan, 2026-09-05: "if I hit with my normal guns it does nothing")
         if (!self.cap.damagePart(t, amount)) return false;
         self.ctx.combat.burst(t.pos, ZERO, kind === "gun" ? 4 : 6, 0.9);
+        if (kind === "node") self.spawnCone(self.def.reinforce, 700, 900, 1.0, self.def.reinforceKinds);
         self.advance();
         return true;
       },
@@ -59,7 +62,11 @@ export class StrikeMission extends Mission {
     this.core = {
       pos: this.cap.group.position, vel: ZERO, radius: this.cap.radius * 0.72, alive: true,
       damage(amount) {
-        if (self.stage !== "hull" || !self.cap.alive) return false;
+        if (!self.cap.alive) return false;
+        if (self.stage !== "hull") {
+          self.shieldT = 1.2;
+          return false;
+        }
         self.cap.hp -= amount;
         if (self.cap.hp > 0) return false;
         this.alive = false;
@@ -84,7 +91,7 @@ export class StrikeMission extends Mission {
   protected begin(): void {
     this.phase = "run";
     this.spawnCone(this.def.escorts, 600, 800, 0.8, this.def.escortKinds);
-    this.line = `Ring guns: ${this.aliveGuns()} of ${this.turrets.length}.`;
+    this.line = `Ring guns: ${this.aliveGuns()} of ${this.turrets.length} · shield nodes: ${this.nodes.length}. Guns and torpedoes both bite.`;
     this.marker = this.nearest(this.turrets);
     this.ctx.audio.ui();
   }
@@ -105,24 +112,23 @@ export class StrikeMission extends Mission {
 
   /** Called when a part dies: move the stage on and the HUD line with it. */
   private advance(): void {
-    if (this.stage === "guns") {
-      const n = this.aliveGuns();
-      if (n > 0) this.line = `Ring guns: ${n} of ${this.turrets.length}.`;
-      else {
-        this.stage = "nodes";
-        this.line = "Ring guns silent. Shield nodes exposed: 3.";
-        this.ctx.audio.ui();
-      }
-    } else if (this.stage === "nodes") {
-      const n = this.nodes.filter((x) => x.alive).length;
-      this.spawnCone(this.def.reinforce, 700, 900, 1.0, this.def.reinforceKinds);
-      if (n > 0) this.line = `Shield nodes: ${n}. Gliders launching.`;
-      else {
-        this.stage = "hull";
-        this.line = "Shields down. Burn the pyramid.";
-        this.ctx.audio.ui();
-      }
+    if (this.stage === "hull") return;
+    const g = this.aliveGuns(), n = this.aliveNodes();
+    if (n === 0) {
+      this.stage = "hull";
+      this.line = "Shields down. Burn the pyramid.";
+      this.ctx.audio.ui();
+      return;
     }
+    if (n < this.nodes.length && this.stage === "guns" && g > 0) this.line = `Ring guns: ${g} of ${this.turrets.length} · shield nodes: ${n} of ${this.nodes.length}.`;
+    else if (g === 0) {
+      if (this.stage === "guns") (this.stage = "nodes"), this.ctx.audio.ui();
+      this.line = `Ring guns silent. Shield nodes: ${n} of ${this.nodes.length}. Gliders launching.`;
+    } else this.line = `Ring guns: ${g} of ${this.turrets.length} · shield nodes: ${n} of ${this.nodes.length}.`;
+  }
+
+  private aliveNodes(): number {
+    return this.nodes.filter((x) => x.alive).length;
   }
 
   protected run(dt: number): void {
@@ -158,6 +164,11 @@ export class StrikeMission extends Mission {
       f.bounce(_n);
     }
     if (this.stage === "hull") this.line = `Hull ${Math.max(0, Math.round((100 * this.cap.hp) / 600))}%`;
+    else if (this.shieldT > 0) {
+      this.shieldT -= dt;
+      this.line = `Pyramid shielded. Kill the ${this.aliveNodes()} shield node${this.aliveNodes() === 1 ? "" : "s"} first.`;
+      if (this.shieldT <= 0) this.advance();
+    }
     this.marker = this.stage === "guns" ? this.nearest(this.turrets) : this.stage === "nodes" ? this.nearest(this.nodes) : this.core;
   }
 

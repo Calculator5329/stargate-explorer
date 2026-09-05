@@ -38,6 +38,13 @@ export const T = {
     thrust: 60,
     /** speed bleed while drifting (m/s²) */
     driftDecel: 30,
+    /** strafe thrusters (Q/E): sideways speed (m/s), how fast it builds (m/s²), bank into the strafe (right.y per unit) */
+    strafeSpeed: 70,
+    strafeAccel: 160,
+    strafeBank: 0.35,
+    /** speed-coupled turn rate (menu toggle): pitch/yaw multiplier at min speed and at boost speed */
+    turnSlowGain: 1.35,
+    turnFastGain: 0.6,
     /** A/D double-tap window (ms) */
     doubleTapMs: 260,
     /** gamepad: stick dead zone and response curve exponent (1 = linear) */
@@ -80,9 +87,8 @@ export const T = {
     boostShake: 0.05,
     /** how fast the camera frame catches the ship's attitude (1/s): lower = the ship visibly rotates against the view in a pull-up or roll */
     followRate: 7,
-    /** same, while a barrel roll is running. Must stay well above rollRate/π (≈3) or the frame lags past 180° and the
-     *  shortest-path slerp reverses; 18 leaves a ~30° lead so the hull visibly rolls ahead of the view */
-    barrelFollow: 18,
+    /** how fast the camera follows the nose (not the roll) while a barrel roll is running (1/s) */
+    barrelFollow: 9,
     /** extra FOV (deg) and pull-back (m) during a barrel roll */
     barrelFov: 8,
     barrelDistance: 2.5,
@@ -120,6 +126,8 @@ export const T = {
     lockRange: 1300,
     /** seconds between launches */
     cooldown: 0.8,
+    /** seconds to rebuild one torpedo while the rack is not full (Ethan, 2026-09-05: "out of torpedos (maybe a slow slow reload)") */
+    reload: 14,
   },
   enemy: {
     hp: 40,

@@ -145,11 +145,12 @@
       <div class="panel">
         <h1 class="title">STARGATE EXPLORER</h1>
         <p class="sub"></p>
-        <label><span>Controls</span><select name="scheme"><option value="arcade">arcade · W/S pull up, Space brake</option><option value="classic">classic · W/S throttle, Space drift</option></select></label>
+        <label><span>Controls</span><select name="scheme"><option value="arcade">arcade · W/S pull up, Space brake</option><option value="classic">classic · W/S throttle, Space brake</option></select></label>
         <label><span>Mouse steer</span><select name="steer"><option value="cursor">cursor · nose follows an aim cursor</option><option value="relative">relative · mouse speed turns</option></select></label>
         <label><span>Mouse sensitivity</span><input type="range" name="sens" min="0.4" max="2.5" step="0.05" /><i class="sens-v"></i></label>
         <label><span>Raw mouse (no OS acceleration)</span><input type="checkbox" name="raw" /></label>
         <label><span>Flight assist (X)</span><input type="checkbox" name="assist" /></label>
+        <label><span>Speed-coupled turn rate (agile slow, stiff fast)</span><input type="checkbox" name="speedTurn" /></label>
         <label><span>Assist strength</span><input type="range" name="assistK" min="0.2" max="1" step="0.05" /><i class="assist-v"></i></label>
         <label><span>Difficulty</span><select name="difficulty"><option value="easy">easy</option><option value="normal">normal</option><option value="hard">hard</option></select></label>
         <label><span>Invert Y (push to dive)</span><input type="checkbox" name="invert" /></label>

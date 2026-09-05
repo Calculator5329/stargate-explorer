@@ -158,8 +158,14 @@ Ethan: prefers classic; assist helps but may be too strong; arcade W/S up/down "
 - [ ] Aim help so hits do not need a perfect line-up: options are a small gun gimbal cone (rounds bend a few degrees toward the boxed target), wider convergence with more spread, or a bigger lead ring. Ethan picks.
 - [ ] Ethan's look at the belts per system (grey/plum mix, boulder sizes, pockets, arena size); rock counts rose ~10 %, fps on his machine unmeasured.
 - [x] Gate travel: the sim ran through the dial and the arrival fade; now held until the fade ends. *(2026-09-05)*
-- [ ] Ethan likes cursor steer. Next maneuverability picks (his call, see the 2026-09-05 chat rundown): strafe thrusters, speed-coupled turn rate, padlock target view, target-plane assist, gun gimbal cone, cursor snap.
-- [x] Barrel roll flipped the screen instead of following the roll: camera up taken from the lagged frame, `barrelFollow` 4.5 → 18. *(2026-09-05, `scripts/barrel-test.mjs`; Ethan to fly it)*
+- [x] Ethan likes cursor steer. Maneuverability picks: strafe thrusters (Q/E) shipped, speed-coupled turn rate shipped as a menu toggle (off by default). *(2026-09-05, Ethan: "let's do one and then two could be a switcher option"; padlock view, target-plane assist, gun gimbal cone and cursor snap stay open below)*
+- [ ] Remaining maneuverability ideas, Ethan's call after flying strafe + speed-turn: padlock target view, target-plane assist, gun gimbal cone, cursor snap.
+- [x] Space brakes in classic too (drift only via assist off). *(2026-09-05, Ethan: "make space actually work to brake")*
+- [x] Barrel roll: camera holds its up, the hull spins on screen. *(2026-09-05, `scripts/barrel-test.mjs` 0° swing; Ethan to fly it)*
+- [x] Replay: 7 s before / 3 s after, both cameras parked in the world so speed reads. *(2026-09-05, `scripts/replay-test.mjs`; Ethan to watch one)*
+- [x] Ha'tak: guns damage ring guns and shield nodes from the start, shielded-pyramid cue, torpedo reload 14 s. *(2026-09-05, `scripts/chain-test.mjs`)*
+- [ ] Ethan flies the Ha'tak again: is the part legibility enough now (marker + line), or do the ring guns and nodes need their own HUD boxes?
+- [x] Barrel roll flipped the screen instead of following the roll: camera up taken from the lagged frame, `barrelFollow` 4.5 → 18. *(2026-09-05, `scripts/barrel-test.mjs`; superseded the same night by the roll-hold camera below)*
 - [x] Kill replay showed neither the rounds nor the kill: player rounds recorded and re-emitted into a visual tracer pool, both shots framed on ship + kill. *(2026-09-05, `scripts/replay-test.mjs`, `docs/shots/2026-09-05-replay-shotB.png`)*
 - [ ] Prometheus hull pass 5 (Ethan: "doesn't look that great"): Astra (codex) design lane `prometheus-hull-pass-5-…-aabeef46` owns `ships/prometheus-def.ts` + pass-5 captures; review captures against `docs/shots/prom-pass4-*.png` before landing. Fallbacks if the parametric builder tops out: a hand-written Three.js mesh module, or a Blender glTF through `ships/loader.ts`.
 - [ ] Stargate-themed hub and gate: glyph-address dial UI with an original constellation glyph set and an angular script for titles, a more accurate gate model (inner glyph ring that spins, nine chevrons, kawoosh), glyphs lighting during the dial. Dispatched to an Astra (codex) design lane 2026-09-05; review the diff and captures before landing.
