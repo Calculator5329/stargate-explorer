@@ -19,12 +19,12 @@ void main() {
   float depth = 0.35 / r - uT * 2.2;                 // rings fly outward = we fly in
   float band = floor(fract(depth) * 3.0);            // 3 hard steps per ring
   float spoke = step(0.55, fract(a * 9.0 / 6.2831853 + r * 1.5 - uT * 0.7));
-  vec3 deep = vec3(0.05, 0.12, 0.45);
-  vec3 mid = vec3(0.16, 0.42, 0.95);
+  vec3 deep = vec3(0.035, 0.10, 0.19);
+  vec3 mid = vec3(0.16, 0.42, 0.72);
   vec3 hot = vec3(1.4, 1.7, 2.2);
   vec3 c = band < 1.0 ? deep : (band < 2.0 ? mid : hot);
   c = mix(c, hot, spoke * 0.35);
-  float core = smoothstep(0.32, 0.08, r);
+  float core = (1.0 - smoothstep(0.08, 0.32, r));
   c = mix(c, hot * 1.3, floor(core * 3.0) / 3.0);
   gl_FragColor = vec4(c, uFade);
 }`;
