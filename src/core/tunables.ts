@@ -35,6 +35,9 @@ export const T = {
     driftDecel: 30,
     /** A/D double-tap window (ms) */
     doubleTapMs: 260,
+    /** gamepad: stick dead zone and response curve exponent (1 = linear) */
+    padDead: 0.14,
+    padCurve: 1.5,
     /** barrel roll rate (rad/s) and sideways hop (m/s at mid-roll) */
     barrelRate: 9.5,
     barrelHop: 28,

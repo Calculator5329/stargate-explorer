@@ -2,6 +2,11 @@
 
 Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
+## 2026-09-04 (late) — Settings, keybinds, gamepad
+
+- **Menu:** invert Y (push to dive), a quality tier selector (low/med/high, restarts the sortie because the renderer is built once per page; `?quality=` on the URL still wins for that page), and a Keys panel. Click a key, press the new one; a key another action holds swaps into the old slot; DEFAULTS restores WASD. Bindings live in the save (`core/binds.ts`, `Settings.binds`) and the HUD hint is generated from them, so a rebound key shows up in the legend.
+- **Gamepad:** standard mapping polled in `Input.tick`. Left stick steers (dead zone and curve in `T.flight.padDead/padCurve`), right stick rolls and pulls/dives, RT fires, LT launches the missile, A boosts, B brakes, X/Y switch scheme/assist, bumpers barrel roll. The HUD hint switches to the pad legend once a pad produces input. Verified against a fake pad in `scripts/settings-test.mjs`; nobody has flown it with hardware yet.
+
 ## 2026-09-04 (night) — The ring race, two more systems, a heavy fighter
 
 - **THE TOLLAN RING** (`mission/race.ts`, type `race`): the gauntlet's gate chain with four AI racers in it. They hold a grid beside you through the intro, then fly their own lane through each hoop with glider-style rock avoidance, a fixed skill spread (±8 %) and a rubber band (pressing when behind, easing two gates ahead). Any finish completes the mission; the card is your place ("2ND ACROSS THE LINE", who beat you) and the clock is the best-time record. Racer hull by Astra (`ships/racer-def.ts`: off-white pod-racer pair of outrigger engines, teal trim, race number 27). Headless: racers pass gates and the player's finish places correctly (`scripts/race-test.mjs`).

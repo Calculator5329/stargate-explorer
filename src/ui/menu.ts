@@ -2,6 +2,8 @@ import type { Save, Settings } from "@/core/save";
 import { writeSave } from "@/core/save";
 import type { SchemeName } from "@/core/scheme";
 import { parseDifficulty } from "@/core/difficulty";
+import { parseQuality } from "@/render/renderer";
+import { ACTIONS, BIND_LABELS, DEFAULT_BINDS, keyName, type Action } from "@/core/binds";
 
 export interface MenuHooks {
   /** push the edited settings into the live systems (scheme, input, difficulty, audio) */
@@ -48,7 +50,11 @@ export class Menu {
     const sensV = q(root, ".sens-v");
     const diff = q<HTMLSelectElement>(root, "[name=difficulty]");
     const mute = q<HTMLInputElement>(root, "[name=mute]");
+    const invert = q<HTMLInputElement>(root, "[name=invert]");
+    const qual = q<HTMLSelectElement>(root, "[name=quality]");
     scheme.value = s.scheme;
+    invert.checked = s.invertY;
+    qual.value = s.quality;
     assist.checked = s.assist;
     sens.value = String(s.sens);
     sensV.textContent = s.sens.toFixed(2);
@@ -61,10 +67,20 @@ export class Menu {
       sensV.textContent = s.sens.toFixed(2);
       s.difficulty = parseDifficulty(diff.value);
       s.mute = mute.checked;
+      s.invertY = invert.checked;
       writeSave(save);
       hooks.apply(s);
     };
-    for (const c of [scheme, assist, sens, diff, mute]) c.addEventListener("input", commit);
+    for (const c of [scheme, assist, sens, diff, mute, invert]) c.addEventListener("input", commit);
+    // the renderer is built once per page, so a tier change is a reload
+    qual.addEventListener("input", () => {
+      s.quality = parseQuality(qual.value);
+      writeSave(save);
+      const u = new URL(location.href);
+      u.searchParams.delete("quality");
+      location.href = u.toString();
+    });
+    this.buildBinds(root, save, hooks);
     q(root, ".fly").addEventListener("click", () => canvas.requestPointerLock());
     q(root, ".restart").addEventListener("click", () => hooks.restart());
     const hub = q(root, ".hub");
@@ -78,6 +94,60 @@ export class Menu {
     });
     hooks.apply(s);
     this.set(true, true);
+  }
+
+  /** One row per action; click a key, press the new one, Esc cancels. A taken key swaps. */
+  private buildBinds(root: HTMLElement, save: Save, hooks: MenuHooks): void {
+    const grid = q(root, ".binds .grid");
+    const s = save.settings;
+    const buttons = new Map<Action, HTMLButtonElement>();
+    let listening: Action | null = null;
+    const refresh = () => {
+      for (const [a, b] of buttons) {
+        b.textContent = listening === a ? "PRESS A KEY" : keyName(s.binds[a]);
+        b.classList.toggle("listening", listening === a);
+      }
+    };
+    for (const a of ACTIONS) {
+      const label = document.createElement("span");
+      label.textContent = BIND_LABELS[a];
+      const b = document.createElement("button");
+      b.className = "bind";
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        listening = listening === a ? null : a;
+        refresh();
+      });
+      grid.append(label, b);
+      buttons.set(a, b);
+    }
+    q(root, ".binds .reset").addEventListener("click", () => {
+      Object.assign(s.binds, DEFAULT_BINDS);
+      listening = null;
+      writeSave(save);
+      hooks.apply(s);
+      refresh();
+    });
+    // capture phase so Input never sees the key being bound
+    document.addEventListener(
+      "keydown",
+      (e) => {
+        if (!listening) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.code !== "Escape" && e.code !== "Backquote") {
+          const taken = ACTIONS.find((o) => o !== listening && s.binds[o] === e.code);
+          if (taken) s.binds[taken] = s.binds[listening];
+          s.binds[listening] = e.code;
+          writeSave(save);
+          hooks.apply(s);
+        }
+        listening = null;
+        refresh();
+      },
+      true,
+    );
+    refresh();
   }
 
   /** Close from outside (the gate is dialing). */

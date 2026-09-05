@@ -21,7 +21,8 @@ Snapshot of what actually works. This is the project state snapshot, not the wor
 - **Sound:** synthesised engine drone, cannon, hit, damage, explosion, boost whoosh, lock tone, launch; created on the first click; M mutes.
 - **Momentum:** velocity is a real vector (lateral slide through turns, coast-down after boost); X turns flight assist off for near-Newtonian drift. Rock hits do damage by normal speed (fatal head-on at cruise), for gliders too.
 - **Missiles:** RMB, cone lock over 0.9 s, homing, proximity fuse, 6 per sortie (16 on the Prometheus), restocked each wave.
-- **Menu / settings:** Esc pauses and opens the menu (scheme, assist, sensitivity, difficulty, mute, restart, missions); all persisted in localStorage.
+- **Menu / settings:** Esc pauses and opens the menu (scheme, assist, sensitivity, invert Y, quality tier, difficulty, mute, restart, missions) plus a Keys panel: click a key, press the new one, a taken key swaps, DEFAULTS resets. All persisted in localStorage. Quality changes reload the page (the renderer is built once) so the sortie restarts.
+- **Gamepad:** first connected standard-mapping pad, polled each sim tick. Left stick steers, right stick rolls and pulls/dives, RT fire, LT missile, A boost, B brake, X scheme, Y assist, bumpers barrel roll. HUD hint swaps to the pad legend once the pad speaks. **Partial:** verified only with a fake `navigator.getGamepads` in playwright, never a real pad.
 - **Missions:** Clear the Field, The Gauntlet (12 gates, 90 s), Cover the Prometheus (escort), Bring Down the Ha'tak (turrets → nodes → hull). Hub with lock chain, best times, ship choice. Ha'tak clear unlocks the Prometheus. All four verified headless end to end (playwright: teleport through gates, `extras[i].damage()` on the Ha'tak parts, read `mission.phase`).
 - **Kill replay** (`replay/replay.ts`): 10 s pose ring buffer, best-kill clip, two-shot slow-motion playback from the end card (`V`) or the pause menu. Verified headless (`docs/shots/2026-09-04-replay-shotA/B.png`).
 - **Dogfight brain** (`combat/enemies.ts` saddle + flinch, 2026-09-04): measured headless, not flown by a human; kill difficulty may have moved.
@@ -42,7 +43,7 @@ Snapshot of what actually works. This is the project state snapshot, not the wor
 - `ships/loader.ts` exists but is unused and untested against a real GLTF (B migration hook; a glTF hull would need `outlineShell()` and toon materials applied per mesh).
 
 ## Not started
-Obstacle types beyond rocks/mines/the hull (derelicts, ice shards), a system for the moon preset, gamepad, keybinds, invert, quality setting in the menu, per-glider roles (held for Ethan's dogfight verdict).
+Obstacle types beyond rocks/mines/the hull (derelicts, ice shards), a system for the moon preset, per-glider roles (held for Ethan's dogfight verdict), a real-pad check of the gamepad mapping.
 
 ## Known issues
 - **Nothing beyond "Clear the field" has been flown by a human** (2026-09-04 overnight). Gauntlet timing (90 s, 360 m spacing), escort hull (600), turret range/cadence (1 km, 1.6 s) and the difficulty multipliers are guesses. The Ha'tak fight's "shoot this next" legibility is untested.

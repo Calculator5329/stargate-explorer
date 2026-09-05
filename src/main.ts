@@ -25,8 +25,9 @@ import { createDebugPanel } from "@/ui/debug";
 import { Game } from "@/game";
 import { parseLevel } from "@/mission/levels";
 import { Travel, systemOf } from "@/travel/travel";
-const params = new URLSearchParams(location.search), quality = parseQuality(params.get("quality"));
+const params = new URLSearchParams(location.search);
 const save = loadSave(), S = save.settings;
+const quality = params.has("quality") ? parseQuality(params.get("quality")) : S.quality;
 setDifficulty(S.difficulty);
 const view = parseView(params.get("view"));
 const level = parseLevel(params.get("mission"));
@@ -75,7 +76,7 @@ if (game) {
   if (params.get("hub") === "1") hub.show();
 }
 const menu = new Menu(document.getElementById("menu")!, canvas, save, {
-  apply: (s) => ((scheme.arcade = s.scheme === "arcade"), (scheme.assist = s.assist), (input.sens = s.sens), setDifficulty(s.difficulty), game?.audio.setMute(s.mute)),
+  apply: (s) => ((scheme.arcade = s.scheme === "arcade"), (scheme.assist = s.assist), (input.sens = s.sens), (input.invertY = s.invertY), (input.binds = s.binds), setDifficulty(s.difficulty), game?.audio.setMute(s.mute)),
   restart: () => location.reload(),
   hub: () => hub.show(),
   replay: () => {

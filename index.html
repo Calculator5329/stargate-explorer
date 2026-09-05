@@ -62,6 +62,13 @@
       #menu input[type=checkbox] { width: 16px; height: 16px; accent-color: #ffb36b; margin: 0 82px 0 0; }
       #menu .sens-v { font-size: 11px; opacity: .7; width: 34px; text-align: right; }
       #menu .row { display: flex; gap: 10px; margin-top: 22px; }
+      #menu .binds { margin: 12px 0 0; font-size: 12px; letter-spacing: .06em; }
+      #menu .binds summary { cursor: pointer; opacity: .85; padding: 4px 0; }
+      #menu .binds .grid { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; margin: 8px 0; }
+      #menu .binds .grid span { opacity: .8; }
+      #menu .binds .bind { flex: none; min-width: 84px; padding: 4px 10px; font-size: 12px; letter-spacing: .12em; }
+      #menu .binds .bind.listening { background: #ffd9a8; color: #0c1020; }
+      #menu .binds .reset { flex: none; width: 100%; padding: 6px 0; font-size: 11px; opacity: .8; }
       #menu button { flex: 1; padding: 10px 0; font: inherit; font-size: 13px; letter-spacing: .22em; color: #ffd9a8; background: transparent; border: 1px solid #ffd9a8; cursor: pointer; }
       #menu button.fly { background: #ffd9a8; color: #0c1020; }
       #menu button:hover { filter: brightness(1.15); }
@@ -134,7 +141,10 @@
         <label><span>Flight assist (X)</span><input type="checkbox" name="assist" /></label>
         <label><span>Mouse sensitivity</span><input type="range" name="sens" min="0.4" max="2.5" step="0.05" /><i class="sens-v"></i></label>
         <label><span>Difficulty</span><select name="difficulty"><option value="easy">easy</option><option value="normal">normal</option><option value="hard">hard</option></select></label>
+        <label><span>Invert Y (push to dive)</span><input type="checkbox" name="invert" /></label>
+        <label><span>Quality (restarts the sortie)</span><select name="quality"><option value="low">low · no bloom, no shadows</option><option value="med">medium</option><option value="high">high · 2x pixels</option></select></label>
         <label><span>Mute (M)</span><input type="checkbox" name="mute" /></label>
+        <details class="binds"><summary>Keys</summary><div class="grid"></div><button class="reset">DEFAULTS</button></details>
         <div class="row"><button class="fly">FLY</button><button class="restart">RESTART</button><button class="replay">REPLAY THE KILL</button><button class="hub">MISSIONS</button></div>
         <p class="keys">mouse steers · A/D roll, double-tap barrel roll · Shift boost · LMB cannons · RMB missile once locked · C scheme · X assist · Esc pause · ` tuning</p>
       </div>

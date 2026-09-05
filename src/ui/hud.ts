@@ -6,11 +6,18 @@ import { Vector3 as V3 } from "three";
 import type { Combat } from "@/combat/combat";
 import type { Mission } from "@/mission/mission";
 import type { Tracked } from "@/combat/targets";
+import { keyName, type Binds } from "@/core/binds";
+import type { SchemeName } from "@/core/scheme";
 
-const HINTS = {
-  arcade: "click to fly · mouse steers · W pull up / S dive · A/D roll (double-tap: barrel roll) · Shift boost · Space brake · LMB fire · C classic · X flight assist · ` tuning",
-  classic: "click to fly · mouse steers · W/S throttle · A/D roll (double-tap: barrel roll) · Space drift · Shift boost · LMB fire · C arcade · X flight assist · ` tuning",
-};
+const PAD_HINT = "gamepad · left stick steers · right stick roll, pull up/dive · RT fire · LT missile · A boost · B brake · X scheme · Y assist · bumpers barrel roll";
+
+function hint(name: SchemeName, b: Binds): string {
+  const k = keyName;
+  const roll = `${k(b.rollLeft)}/${k(b.rollRight)} roll (double-tap: barrel roll)`;
+  return name === "arcade"
+    ? `click to fly · mouse steers · ${k(b.pullUp)} pull up / ${k(b.dive)} dive · ${roll} · ${k(b.boost)} boost · ${k(b.brake)} brake · LMB fire · ${k(b.scheme)} classic · ${k(b.assist)} flight assist · \` tuning`
+    : `click to fly · mouse steers · ${k(b.pullUp)}/${k(b.dive)} throttle · ${roll} · ${k(b.brake)} drift · ${k(b.boost)} boost · LMB fire · ${k(b.scheme)} arcade · ${k(b.assist)} flight assist · \` tuning`;
+}
 
 /** DOM HUD: speed readout, throttle/speed bar, hint per control scheme, arena warning, hit flash. */
 export class Hud {
@@ -42,6 +49,7 @@ export class Hud {
   private lastAgain = "";
   private lastScheme = "";
   private lastAssist = true;
+  private lastHint = "";
 
   constructor(private readonly root: HTMLElement) {
     this.speedEl = must(root.querySelector<HTMLElement>(".speed .v"));
@@ -76,10 +84,11 @@ export class Hud {
 
   update(flight: Flight, input: Input, outside: boolean): void {
     const scheme = input.scheme;
+    const h = input.padActive ? PAD_HINT : hint(scheme.name, input.binds);
+    if (h !== this.lastHint) (this.lastHint = h), (this.hintEl.textContent = h);
     if (scheme.name !== this.lastScheme || scheme.assist !== this.lastAssist) {
       this.lastScheme = scheme.name;
       this.lastAssist = scheme.assist;
-      this.hintEl.textContent = HINTS[scheme.name];
       this.schemeEl.textContent = `${scheme.name.toUpperCase()} CONTROLS${scheme.assist ? "" : " · ASSIST OFF"}`;
     }
     this.schemeEl.style.opacity = String(Math.max(0, Math.min(1, 2.5 - scheme.sinceSwitch)));

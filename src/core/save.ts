@@ -1,5 +1,7 @@
 import type { SchemeName } from "@/core/scheme";
 import type { DifficultyName } from "@/core/difficulty";
+import type { Quality } from "@/render/renderer";
+import { DEFAULT_BINDS, mergeBinds, type Binds } from "@/core/binds";
 
 /**
  * Persistent player state in localStorage, one key, one JSON blob. Settings are
@@ -14,6 +16,11 @@ export interface Settings {
   sens: number;
   difficulty: DifficultyName;
   mute: boolean;
+  /** mouse / pad Y axis flipped: push forward to dive */
+  invertY: boolean;
+  /** render tier; `?quality=` on the URL still wins for one page */
+  quality: Quality;
+  binds: Binds;
 }
 
 export interface MissionRecord {
@@ -36,7 +43,7 @@ export interface Save {
 const KEY = "stargate-explorer.save.v1";
 
 export const DEFAULT_SAVE: Save = {
-  settings: { scheme: "arcade", assist: true, sens: 1, difficulty: "normal", mute: false },
+  settings: { scheme: "arcade", assist: true, sens: 1, difficulty: "normal", mute: false, invertY: false, quality: "med", binds: { ...DEFAULT_BINDS } },
   progress: { ship: "f11", unlocked: ["f11"], missions: {} },
 };
 
@@ -46,7 +53,7 @@ export function loadSave(): Save {
     if (!raw) return structuredClone(DEFAULT_SAVE);
     const j = JSON.parse(raw) as Partial<Save>;
     return {
-      settings: { ...DEFAULT_SAVE.settings, ...(j.settings ?? {}) },
+      settings: { ...DEFAULT_SAVE.settings, ...(j.settings ?? {}), binds: mergeBinds(j.settings?.binds) },
       progress: { ...structuredClone(DEFAULT_SAVE.progress), ...(j.progress ?? {}) },
     };
   } catch {

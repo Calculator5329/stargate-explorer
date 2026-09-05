@@ -133,3 +133,10 @@ Append-only log. One entry per decision that constrains future work. Format: dat
 ### 2026-09-04 — Astra authors 3D defs from written briefs
 **Why:** Ethan pointed at GPT-6 Astra for "the 3D stuff". The two enemy hulls and seven presets came from briefs that fixed axes, sizes, palette slots and silhouette goals, with the builder's `ShipDef` shape as the contract; Astra ran as `codex exec` in a workspace-write sandbox with git, servers and the browser forbidden, and every def was typechecked and captured before being kept.
 **Consequences:** briefs live in `.astra/` (gitignored, they are scratch); the result is judged by capture, never by reading the numbers. Astra output never touches game logic, tunables or docs, and never commits.
+
+### 2026-09-04 — Keybinds are a table in the save; a quality change is a reload
+
+**Why:** `Input` used to test literal key codes. A rebind feature either threads a lookup through every consumer or gives `Input` one table and keeps everything else reading `input.pitchKey`/`roll`/`boost`. The table (`core/binds.ts`, action → `KeyboardEvent.code`) is a `Settings` field so it persists with the rest and merges over defaults when the save predates it. The renderer, its post stack and the world's planet segment count are built once in `main.ts`; rebuilding them live would mean tearing down the scene mid-mission for a setting nobody flips more than once. So a quality change writes the save and reloads the page without `?quality=`.
+
+**Consequences:** new flight actions get a `Binds` entry, a label, and a default; nothing outside `Input` and the menu sees key codes. Mouse buttons, Esc, the end-card keys and the backtick stay fixed. A pad maps onto the same `Input` fields, so the flight model and combat never know which device is speaking.
+
