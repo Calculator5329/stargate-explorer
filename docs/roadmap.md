@@ -135,7 +135,7 @@ Ethan asked for momentum, lethal rock hits, a canon secondary weapon, then "all 
 - [x] (2026-09-04) Dogfight feel: gliders jousted. Ethan picked "get on the tail" + "fear the guns" from four options; landed as `saddle` and `flinch` states in `combat/enemies.ts`. Roles per glider (shooter + wingmen) held until he has flown this.
 - [ ] Ethan flies the dogfight brain and reports: does it feel like a fight, and is it now too hard to get a kill? Then decide on per-glider roles.
 - [ ] Ethan plays the four missions and the Prometheus and reports: difficulty preset that fits, gate count/time for the Gauntlet, whether the Ha'tak fight is legible (which part to shoot next).
-- [ ] Not done tonight: obstacle types beyond rocks, mines and the hull. *(2026-09-04: gamepad landed later the same night; the deeper map (five systems, gate travel), the gunboat and the ring race with AI racers all landed, see M3/M4.)*
+- [ ] Not done tonight: derelict wreckage as an obstacle type. *(2026-09-04: ice shards landed as a belt style with Kheb and the shard run; gamepad landed later the same night; gamepad landed later the same night; the deeper map (five systems, gate travel), the gunboat and the ring race with AI racers all landed, see M3/M4.)*
 - **Exit:** Ethan's feedback on the four missions is about the game, not the tooling.
 
 ### M3 — Fleet & factions

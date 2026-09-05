@@ -1,4 +1,5 @@
 import type { SkyName } from "@/world/skybox";
+import type { BeltStyle } from "@/world/asteroids";
 
 /**
  * A star system is a look and a belt: which sky, which planet preset, where the
@@ -15,7 +16,7 @@ export interface SystemDef {
   planet: string;
   planetPos: [number, number, number];
   sunDir: [number, number, number];
-  belt: { count: number; seed: number; inner: number; outer: number; thickness: number; shapes: number };
+  belt: { count: number; seed: number; inner: number; outer: number; thickness: number; shapes: number; style?: BeltStyle };
 }
 
 export const SYSTEMS: SystemDef[] = [
@@ -68,6 +69,16 @@ export const SYSTEMS: SystemDef[] = [
     planetPos: [2200, -1200, 3600],
     sunDir: [0.5, -0.2, -0.85],
     belt: { count: 760, seed: 6660, inner: 60, outer: 1400, thickness: 380, shapes: 6 },
+  },
+  {
+    id: "kheb",
+    name: "KHEB",
+    blurb: "A dead grey moon and a field of ice. The shards are long and the gaps are narrow.",
+    sky: "frost",
+    planet: "moon",
+    planetPos: [-1400, 1800, -4200],
+    sunDir: [0.3, 0.75, 0.55],
+    belt: { count: 1100, seed: 9090, inner: 60, outer: 1350, thickness: 240, shapes: 6, style: "ice" },
   },
 ];
 

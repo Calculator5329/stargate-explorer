@@ -2,7 +2,10 @@
 
 Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
-## 2026-09-04 (late) — Settings, keybinds, gamepad
+## 2026-09-04 (late) — Settings, keybinds, gamepad, ice
+
+- **Ice fields:** `Asteroids` takes a `style`. `ice` is long chisel-tipped shards in pale blue-green with a cold teal shadow side, more tumble, fewer giants. Every belt shape now carries its own bounding radius (`bounds`), so collision derives the instance scale from it instead of the hard 1.05 rock constant; shards collide against their real faces.
+- **KHEB:** sixth system. Dead grey moon (the `moon` preset finally has a home), a new `frost` sky, a thick ice belt. **THE SHARD RUN** is its mission: twelve tight gates, no mines, no escorts, unlocked by the ring race.
 
 - **Menu:** invert Y (push to dive), a quality tier selector (low/med/high, restarts the sortie because the renderer is built once per page; `?quality=` on the URL still wins for that page), and a Keys panel. Click a key, press the new one; a key another action holds swaps into the old slot; DEFAULTS restores WASD. Bindings live in the save (`core/binds.ts`, `Settings.binds`) and the HUD hint is generated from them, so a rebound key shows up in the legend.
 - **Gamepad:** standard mapping polled in `Input.tick`. Left stick steers (dead zone and curve in `T.flight.padDead/padCurve`), right stick rolls and pulls/dives, RT fires, LT launches the missile, A boosts, B brakes, X/Y switch scheme/assist, bumpers barrel roll. The HUD hint switches to the pad legend once a pad produces input. Verified against a fake pad in `scripts/settings-test.mjs`; nobody has flown it with hardware yet.

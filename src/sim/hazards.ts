@@ -9,6 +9,8 @@ export interface RockField {
   radii: Float32Array;
   /** per base shape, packed (nx, ny, nz, d) face planes of the unit rock (narrow phase) */
   planes: Float32Array[];
+  /** per base shape: bounding radius of the unit geometry */
+  bounds: Float32Array;
   per: number;
   matrixAt(gi: number, out: Matrix4): void;
 }
@@ -46,7 +48,7 @@ export class Hazards {
       const cx = this.rocks.centers[i * 3] ?? 0, cy = this.rocks.centers[i * 3 + 1] ?? 0, cz = this.rocks.centers[i * 3 + 2] ?? 0;
       const dx = p.x - cx, dy = p.y - cy, dz = p.z - cz;
       if (dx * dx + dy * dy + dz * dz >= r * r) continue;
-      this.narrow(flight, i, r - R);
+      this.narrow(flight, i);
     }
 
     const dist = p.length();
@@ -65,13 +67,14 @@ export class Hazards {
     flight.vel.copy(flight.velDir).multiplyScalar(sp);
   }
 
-  /** Face-plane test in rock space; `scale` is the rock's uniform scale (its sphere radius / 1.05). */
-  private narrow(flight: Flight, gi: number, scale: number): void {
-    const s = scale / 1.05;
+  /** Face-plane test in rock space; the instance scale is its sphere radius over the unit shape's bound. */
+  private narrow(flight: Flight, gi: number): void {
+    const shape = Math.floor(gi / this.rocks.per);
+    const s = (this.rocks.radii[gi] ?? 1) / (this.rocks.bounds[shape] ?? 1);
     this.rocks.matrixAt(gi, _m);
     _inv.copy(_m).invert();
     _q3.copy(flight.pos).applyMatrix4(_inv);
-    const planes = this.rocks.planes[Math.floor(gi / this.rocks.per)]!;
+    const planes = this.rocks.planes[shape]!;
     const margin = (T.arena.shipRadius * flight.stats.size) / s;
     let best = -Infinity, bi = 0;
     for (let f = 0; f < planes.length; f += 4) {

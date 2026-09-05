@@ -1,4 +1,4 @@
-# STATUS.md — as of 2026-09-04 night (five systems, six missions, three player hulls, enemy roster; Ethan has flown only the morning build)
+# STATUS.md — as of 2026-09-04 late (six systems, seven missions, three player hulls, settings + gamepad, enemy roster; Ethan has flown only the morning build)
 
 Snapshot of what actually works. This is the project state snapshot, not the workspace root `STATUS.md` handoff file (see CLAUDE.md). Update when things change; keep the "Known issues" list honest.
 
@@ -34,7 +34,7 @@ Snapshot of what actually works. This is the project state snapshot, not the wor
 - **Enemy roster** (`combat/enemy-kinds.ts`): glider, interceptor, gunboat with separate stats tables and hulls; waves name their kinds. Headless verified (`scripts/kinds-test.mjs`); balance is a guess.
 - **Presets:** planets desert/ice/lava/jungle/gasGiant/moon, skies abydos/deepSpace/chulak/ember/void (`?planet=`, `?sky=`).
 - **Ring race** (`mission/race.ts`): AI racers on the gate chain, place-based card, best-time record. Headless verified; racer speed (165 ±8 %) against the player's cruise 150 + boost is a guess.
-- **Six missions in five systems**: belt-clear, gauntlet (Abydos) → ring-race (Tollana) → escort (Chulak) → blockade (Netu, unlocks the heavy) → hatak (P3X-774, unlocks the Prometheus). Three player hulls: Facet, F-21 Broadsword, Prometheus.
+- **Seven missions in six systems**: belt-clear, gauntlet (Abydos) → ring-race (Tollana) → shard-run (Kheb, ice field, no enemies) and escort (Chulak) → blockade (Netu, unlocks the heavy) → hatak (P3X-774, unlocks the Prometheus). Three player hulls: Facet, F-21 Broadsword, Prometheus.
 
 ## Partial
 - Combat balance is a first guess: no human has flown a wave. Enemy hp 40 / player round 12 (4 hits), enemy rounds 7 hp against 100. Glider AI has no formation, no wingman logic, no retreat.
@@ -43,7 +43,7 @@ Snapshot of what actually works. This is the project state snapshot, not the wor
 - `ships/loader.ts` exists but is unused and untested against a real GLTF (B migration hook; a glTF hull would need `outlineShell()` and toon materials applied per mesh).
 
 ## Not started
-Obstacle types beyond rocks/mines/the hull (derelicts, ice shards), a system for the moon preset, per-glider roles (held for Ethan's dogfight verdict), a real-pad check of the gamepad mapping.
+Derelict wreckage fields (Astra is authoring the geometry), per-glider roles (held for Ethan's dogfight verdict), a real-pad check of the gamepad mapping.
 
 ## Known issues
 - **Nothing beyond "Clear the field" has been flown by a human** (2026-09-04 overnight). Gauntlet timing (90 s, 360 m spacing), escort hull (600), turret range/cadence (1 km, 1.6 s) and the difficulty multipliers are guesses. The Ha'tak fight's "shoot this next" legibility is untested.

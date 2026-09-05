@@ -4,8 +4,12 @@ import { toonMaterial } from "@/render/toon";
 import { outlineGeometry, outlineMaterial } from "@/render/outline";
 import { noEdge } from "@/render/layers";
 
+/** what the belt is made of: faceted rock, ice shards, or derelict wreckage */
+export type BeltStyle = "rock" | "ice";
+
 export interface AsteroidOptions {
   count: number;
+  style?: BeltStyle;
   seed: number;
   inner: number;
   outer: number;
@@ -18,6 +22,24 @@ export interface AsteroidOptions {
 // lights a terracotta albedo; a flat violet emissive owns the shadow side.
 const TINTS = [0x8a4a32, 0x7a4030, 0x925438, 0x6e3c3a];
 const ROCK_GLOW = 0x140a2a;
+
+interface StyleDef {
+  tints: number[];
+  glow: number;
+  glowIntensity: number;
+  geometry(shape: number, rnd: () => number): THREE.BufferGeometry;
+  /** chance a piece is one of the big ones, and the two scale ranges [min, spread] */
+  bigChance: number;
+  big: [number, number];
+  small: [number, number];
+  tumble: number;
+}
+
+// Ice: pale blue-green shards, a cold teal shadow side. Kept mid-tone so the albedo stays under the bloom threshold.
+const STYLES: Record<BeltStyle, StyleDef> = {
+  rock: { tints: TINTS, glow: ROCK_GLOW, glowIntensity: 1.3, geometry: (_s, rnd) => rockGeometry(rnd), bigChance: 0.12, big: [22, 40], small: [3, 12], tumble: 1 },
+  ice: { tints: [0x7fb8d2, 0x6ea9c6, 0x93c7dc, 0x5f9dbb], glow: 0x08222e, glowIntensity: 1.6, geometry: (_s, rnd) => shardGeometry(rnd), bigChance: 0.08, big: [26, 34], small: [3, 14], tumble: 1.4 },
+};
 const _obj = new THREE.Object3D();
 const _axis = new THREE.Vector3();
 const _q = new THREE.Quaternion();
@@ -46,6 +68,37 @@ function rockGeometry(rnd: () => number): THREE.BufferGeometry {
   }
   g.computeVertexNormals();
   return g;
+}
+
+/**
+ * An ice shard: a jittered icosahedron stretched along one axis and pinched
+ * across another, then normalised so its farthest vertex sits at 1. Still
+ * convex, so the rock collision path handles it unchanged.
+ */
+function shardGeometry(rnd: () => number): THREE.BufferGeometry {
+  const g = rockGeometry(rnd);
+  const pos = g.getAttribute("position");
+  const stretch = 1.7 + rnd() * 0.9, pinch = 0.55 + rnd() * 0.25;
+  let max = 0;
+  for (let i = 0; i < pos.count; i++) {
+    _v.fromBufferAttribute(pos, i);
+    _v.set(_v.x * pinch, _v.y * stretch, _v.z);
+    // a chisel tip: the far end narrows
+    const tip = 1 - 0.35 * Math.max(0, _v.y / stretch);
+    pos.setXYZ(i, _v.x * tip, _v.y, _v.z * tip);
+    max = Math.max(max, Math.hypot(_v.x * tip, _v.y, _v.z * tip));
+  }
+  for (let i = 0; i < pos.count; i++) pos.setXYZ(i, pos.getX(i) / max, pos.getY(i) / max, pos.getZ(i) / max);
+  g.computeVertexNormals();
+  return g;
+}
+
+/** Radius of the smallest origin-centred sphere holding every vertex. */
+function boundRadius(g: THREE.BufferGeometry): number {
+  const pos = g.getAttribute("position");
+  let max = 0;
+  for (let i = 0; i < pos.count; i++) max = Math.max(max, _v.fromBufferAttribute(pos, i).length());
+  return max;
 }
 
 /**
@@ -105,6 +158,9 @@ export class Asteroids {
   readonly radii: Float32Array;
   /** per base shape: packed face planes of the unit rock (see `facePlanes`) */
   readonly planes: Float32Array[] = [];
+  /** per base shape: bounding radius of the unit geometry, so `radii[gi] / bounds[shape]` is the instance scale */
+  readonly bounds: Float32Array;
+  readonly style: BeltStyle;
   /** instances per shape; global index gi → shape gi / per, slot gi % per */
   readonly per: number;
   private readonly meshes: THREE.InstancedMesh[] = [];
@@ -113,15 +169,20 @@ export class Asteroids {
 
   constructor(o: AsteroidOptions) {
     const rnd = mulberry32(o.seed);
+    const style = STYLES[o.style ?? "rock"];
+    this.style = o.style ?? "rock";
     const per = Math.ceil(o.count / o.shapes);
     this.per = per;
     this.count = per * o.shapes;
     this.centers = new Float32Array(this.count * 3);
     this.radii = new Float32Array(this.count);
+    this.bounds = new Float32Array(o.shapes);
     for (let s = 0; s < o.shapes; s++) {
-      const rock = rockGeometry(rnd);
+      const rock = style.geometry(s, rnd);
       this.planes.push(facePlanes(rock));
-      const mesh = new THREE.InstancedMesh(rock, toonMaterial(TINTS[s % TINTS.length]!, { emissive: ROCK_GLOW, emissiveIntensity: 1.3 }), per);
+      const bound = boundRadius(rock) * 1.02;
+      this.bounds[s] = bound;
+      const mesh = new THREE.InstancedMesh(rock, toonMaterial(style.tints[s % style.tints.length]!, { emissive: style.glow, emissiveIntensity: style.glowIntensity }), per);
       const rates = new Float32Array(per);
       const axes = new Float32Array(per * 3);
       for (let i = 0; i < per; i++) {
@@ -129,15 +190,15 @@ export class Asteroids {
         const th = rnd() * Math.PI * 2;
         _obj.position.set(r * Math.cos(th), (rnd() * 2 - 1) * o.thickness * (0.3 + 0.7 * rnd()), r * Math.sin(th));
         _obj.quaternion.setFromEuler(new THREE.Euler(rnd() * 6.28, rnd() * 6.28, rnd() * 6.28));
-        const big = rnd() < 0.12;
-        const scale = big ? 22 + rnd() * 40 : 3 + rnd() * rnd() * 12;
+        const big = rnd() < style.bigChance;
+        const scale = big ? style.big[0] + rnd() * style.big[1] : style.small[0] + rnd() * rnd() * style.small[1];
         _obj.scale.setScalar(scale);
         _obj.updateMatrix();
         mesh.setMatrixAt(i, _obj.matrix);
         const gi = s * per + i;
         this.centers.set([_obj.position.x, _obj.position.y, _obj.position.z], gi * 3);
-        this.radii[gi] = scale * 1.05;
-        rates[i] = (0.03 + rnd() * 0.25) * (big ? 0.35 : 1);
+        this.radii[gi] = scale * bound;
+        rates[i] = (0.03 + rnd() * 0.25) * (big ? 0.35 : 1) * style.tumble;
         _axis.set(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5).normalize();
         axes.set([_axis.x, _axis.y, _axis.z], i * 3);
       }
