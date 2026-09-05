@@ -5,6 +5,7 @@ import { outlineGeometry, outlineMaterial } from "@/render/outline";
 import { noEdge } from "@/render/layers";
 import { ConvexGeometry } from "three/examples/jsm/geometries/ConvexGeometry.js";
 import { DERELICT_KINDS, derelictGeometry } from "@/world/derelict-geo";
+import { T } from "@/core/tunables";
 
 /** what the belt is made of: faceted rock, ice shards, or derelict wreckage */
 export type BeltStyle = "rock" | "ice" | "wreck";
@@ -18,6 +19,16 @@ export interface AsteroidOptions {
   /** vertical half-thickness of the belt */
   thickness: number;
   shapes: number;
+  /** layout: `clusters` dense knots of about `clusterR` across take `clusterShare` of the rocks */
+  clusters?: number;
+  clusterR?: number;
+  clusterShare?: number;
+  /** a ring band at radius `band`, half-width `bandW`, takes `bandShare` of the rocks; the rest scatter over the annulus */
+  band?: number;
+  bandW?: number;
+  bandShare?: number;
+  /** spare fragment slots per shape (default 40) */
+  frags?: number;
 }
 
 // Ethan's 2026-09-04 reference: plum bodies whose sun-facing facets go rust-orange. The warm key
@@ -160,10 +171,27 @@ function creaseLines(rock: THREE.BufferGeometry, instanceMatrix: THREE.Instanced
   return noEdge(lines);
 }
 
+/** Gaussian sample from two uniforms (Box-Muller). */
+function gauss(rnd: () => number): number {
+  const u = Math.max(1e-9, rnd()), v = rnd();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(6.283185 * v);
+}
+
+const FAR = 1e6;
+
 /**
  * Faceted asteroid belt: `shapes` base rocks, one InstancedMesh each plus an
  * instanced outline shell and instanced crease lines, slow per-instance tumble.
  * `centers`/`radii` expose every rock's bounding sphere for collision.
+ *
+ * Every rock is destructible (2026-09-04, Ethan: "blow apart asteroids"):
+ * `damage()` takes hull points off a rock and, when it breaks, spawns fragments
+ * from spare instance slots at the end of each shape's pool. Fragments fly,
+ * tumble fast, keep colliding like rocks, and shrink away after `fragLife`.
+ * Dead slots sit at `FAR` with radius 0, so every consumer's sphere test skips them for free.
+ *
+ * Layout (`clusters`/`band`): a share of the rocks pile into dense knots and a
+ * ring band instead of an even scatter, so a belt has lanes, walls and open sky.
  */
 export class Asteroids {
   readonly group = new THREE.Group();
@@ -177,77 +205,218 @@ export class Asteroids {
   readonly style: BeltStyle;
   /** instances per shape; global index gi → shape gi / per, slot gi % per */
   readonly per: number;
+  /** 1 while the slot holds a rock or fragment */
+  readonly alive: Uint8Array;
+  /** hull points left */
+  readonly hp: Float32Array;
+  /** xyz velocity per slot; zero for belt rocks, set for fragments */
+  readonly vel: Float32Array;
+  /** seconds left for a fragment; 0 = a permanent belt rock */
+  readonly ttl: Float32Array;
+  /** 1 for fragments of a rock the player broke: an enemy they hit is the player's kill */
+  readonly playerMade: Uint8Array;
+  /** rocks broken by the player this session (HUD/stat) */
+  broken = 0;
   private readonly meshes: THREE.InstancedMesh[] = [];
-  private readonly rates: Float32Array[] = [];
-  private readonly axes: Float32Array[] = [];
+  private readonly quats: Float32Array;
+  private readonly scales: Float32Array;
+  private readonly rates: Float32Array;
+  /** radius at spawn, for the fragment shrink-out */
+  private readonly fullR: Float32Array;
+  private readonly axes: Float32Array;
+  /** fragment slots live in the last `frags` slots of each shape; a ring cursor per shape */
+  private readonly frags: number;
+  private readonly fragHead: number[] = [];
 
   constructor(o: AsteroidOptions) {
     const rnd = mulberry32(o.seed);
     const style = STYLES[o.style ?? "rock"];
     this.style = o.style ?? "rock";
-    const per = Math.ceil(o.count / o.shapes);
+    this.frags = o.frags ?? 40;
+    const live = Math.ceil(o.count / o.shapes);
+    const per = live + this.frags;
     this.per = per;
     this.count = per * o.shapes;
     this.centers = new Float32Array(this.count * 3);
     this.radii = new Float32Array(this.count);
     this.bounds = new Float32Array(o.shapes);
+    this.alive = new Uint8Array(this.count);
+    this.hp = new Float32Array(this.count);
+    this.vel = new Float32Array(this.count * 3);
+    this.ttl = new Float32Array(this.count);
+    this.playerMade = new Uint8Array(this.count);
+    this.quats = new Float32Array(this.count * 4);
+    this.scales = new Float32Array(this.count);
+    this.rates = new Float32Array(this.count);
+    this.fullR = new Float32Array(this.count);
+    this.axes = new Float32Array(this.count * 3);
+    // layout: cluster centres sit in the middle of the annulus, never on the start
+    const nClusters = o.clusters ?? 0, clusterR = o.clusterR ?? 250;
+    const clusterShare = nClusters > 0 ? o.clusterShare ?? 0.55 : 0;
+    const bandShare = o.band !== undefined ? o.bandShare ?? 0.4 : 0;
+    const bandW = o.bandW ?? 120;
+    const cl: number[] = [];
+    for (let c = 0; c < nClusters; c++) {
+      const r = o.inner + (o.outer - o.inner) * (0.3 + 0.6 * rnd()), th = rnd() * Math.PI * 2;
+      cl.push(r * Math.cos(th), (rnd() * 2 - 1) * o.thickness * 0.5, r * Math.sin(th));
+    }
     for (let s = 0; s < o.shapes; s++) {
       const rock = style.geometry(s, rnd);
       this.planes.push(style.hull ? hullPlanes(rock) : facePlanes(rock));
       const bound = boundRadius(rock) * 1.02;
       this.bounds[s] = bound;
       const mesh = new THREE.InstancedMesh(rock, toonMaterial(style.tints[s % style.tints.length]!, { emissive: style.glow, emissiveIntensity: style.glowIntensity }), per);
-      const rates = new Float32Array(per);
-      const axes = new Float32Array(per * 3);
+      this.meshes.push(mesh);
+      this.fragHead.push(0);
       for (let i = 0; i < per; i++) {
-        const r = o.inner + (o.outer - o.inner) * Math.sqrt(rnd());
-        const th = rnd() * Math.PI * 2;
-        _obj.position.set(r * Math.cos(th), (rnd() * 2 - 1) * o.thickness * (0.3 + 0.7 * rnd()), r * Math.sin(th));
+        const gi = s * per + i;
+        if (i >= live) {
+          // spare fragment slot: parked far away, invisible
+          this.centers[gi * 3 + 1] = FAR;
+          this.quats[gi * 4 + 3] = 1;
+          this.write(gi);
+          continue;
+        }
+        const u = rnd();
+        if (u < clusterShare) {
+          const k = Math.floor(rnd() * nClusters) * 3;
+          _obj.position.set(cl[k]! + gauss(rnd) * clusterR * 0.5, cl[k + 1]! + gauss(rnd) * clusterR * 0.3, cl[k + 2]! + gauss(rnd) * clusterR * 0.5);
+        } else if (u < clusterShare + bandShare) {
+          const r = o.band! + (rnd() + rnd() - 1) * bandW, th = rnd() * Math.PI * 2;
+          _obj.position.set(r * Math.cos(th), (rnd() * 2 - 1) * o.thickness * 0.35, r * Math.sin(th));
+        } else {
+          const r = o.inner + (o.outer - o.inner) * Math.sqrt(rnd());
+          const th = rnd() * Math.PI * 2;
+          _obj.position.set(r * Math.cos(th), (rnd() * 2 - 1) * o.thickness * (0.3 + 0.7 * rnd()), r * Math.sin(th));
+        }
+        // keep everything inside the annulus, and off the start
+        const rr = Math.hypot(_obj.position.x, _obj.position.z);
+        if (rr < o.inner) _obj.position.multiplyScalar(o.inner / Math.max(1, rr));
+        else if (rr > o.outer) (_obj.position.x *= o.outer / rr), (_obj.position.z *= o.outer / rr);
         _obj.quaternion.setFromEuler(new THREE.Euler(rnd() * 6.28, rnd() * 6.28, rnd() * 6.28));
         const big = rnd() < style.bigChance;
         const scale = big ? style.big[0] + rnd() * style.big[1] : style.small[0] + rnd() * rnd() * style.small[1];
-        _obj.scale.setScalar(scale);
-        _obj.updateMatrix();
-        mesh.setMatrixAt(i, _obj.matrix);
-        const gi = s * per + i;
         this.centers.set([_obj.position.x, _obj.position.y, _obj.position.z], gi * 3);
+        this.quats.set([_obj.quaternion.x, _obj.quaternion.y, _obj.quaternion.z, _obj.quaternion.w], gi * 4);
+        this.scales[gi] = scale;
         this.radii[gi] = scale * bound;
-        rates[i] = (0.03 + rnd() * 0.25) * (big ? 0.35 : 1) * style.tumble;
+        this.alive[gi] = 1;
+        this.hp[gi] = this.radii[gi]! * T.rocks.hpPerMetre;
+        this.rates[gi] = (0.03 + rnd() * 0.25) * (big ? 0.35 : 1) * style.tumble;
         _axis.set(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5).normalize();
-        axes.set([_axis.x, _axis.y, _axis.z], i * 3);
+        this.axes.set([_axis.x, _axis.y, _axis.z], gi * 3);
+        this.write(gi);
       }
       mesh.castShadow = false;
       mesh.frustumCulled = false;
       const shell = noEdge(new THREE.InstancedMesh(outlineGeometry(rock.getAttribute("position").array), outlineMaterial, per));
       shell.instanceMatrix = mesh.instanceMatrix;
       shell.frustumCulled = false;
-      this.meshes.push(mesh);
-      this.rates.push(rates);
-      this.axes.push(axes);
       this.group.add(mesh, shell, creaseLines(rock, mesh.instanceMatrix, per));
     }
   }
 
   /** World matrix of rock `gi` (position, tumble, uniform scale). */
   matrixAt(gi: number, out: THREE.Matrix4): void {
-    this.meshes[Math.floor(gi / this.per)]!.getMatrixAt(gi % this.per, out);
+    const s = this.scales[gi]!;
+    _obj.position.set(this.centers[gi * 3]!, this.centers[gi * 3 + 1]!, this.centers[gi * 3 + 2]!);
+    _obj.quaternion.set(this.quats[gi * 4]!, this.quats[gi * 4 + 1]!, this.quats[gi * 4 + 2]!, this.quats[gi * 4 + 3]!);
+    out.compose(_obj.position, _obj.quaternion, _obj.scale.setScalar(s));
+  }
+
+  private write(gi: number): void {
+    this.matrixAt(gi, _obj.matrix);
+    this.meshes[Math.floor(gi / this.per)]!.setMatrixAt(gi % this.per, _obj.matrix);
+  }
+
+  /** Take `amount` off rock `gi`; true when it broke. `dir` (any length) pushes the fragments along the shot. */
+  damage(gi: number, amount: number, dir?: THREE.Vector3, byPlayer = true): boolean {
+    if (!this.alive[gi]) return false;
+    this.hp[gi] = this.hp[gi]! - amount;
+    if (this.hp[gi]! > 0) return false;
+    this.break(gi, dir, byPlayer);
+    return true;
+  }
+
+  private break(gi: number, dir: THREE.Vector3 | undefined, byPlayer: boolean): void {
+    const R = T.rocks;
+    const radius = this.radii[gi]!, shape = Math.floor(gi / this.per);
+    const cx = this.centers[gi * 3]!, cy = this.centers[gi * 3 + 1]!, cz = this.centers[gi * 3 + 2]!;
+    const vx = this.vel[gi * 3]!, vy = this.vel[gi * 3 + 1]!, vz = this.vel[gi * 3 + 2]!;
+    if (byPlayer) this.broken++;
+    this.retire(gi);
+    if (radius < R.fragMin) return;
+    const n = Math.max(2, Math.min(6, Math.round(radius / R.fragPer)));
+    if (dir) _v.copy(dir).normalize().multiplyScalar(R.fragPush);
+    else _v.set(0, 0, 0);
+    for (let k = 0; k < n; k++) {
+      const slot = this.per - this.frags + (this.fragHead[shape]! % this.frags);
+      this.fragHead[shape] = this.fragHead[shape]! + 1;
+      const fi = shape * this.per + slot;
+      _axis.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+      const fr = radius * R.fragScale * (0.75 + Math.random() * 0.5);
+      this.centers.set([cx + _axis.x * radius * 0.5, cy + _axis.y * radius * 0.5, cz + _axis.z * radius * 0.5], fi * 3);
+      const sp = R.fragSpeed * (0.6 + Math.random() * 0.8);
+      this.vel.set([vx + _axis.x * sp + _v.x, vy + _axis.y * sp + _v.y, vz + _axis.z * sp + _v.z], fi * 3);
+      _q.setFromEuler(new THREE.Euler(Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28));
+      this.quats.set([_q.x, _q.y, _q.z, _q.w], fi * 4);
+      const bound = this.bounds[shape]!;
+      this.scales[fi] = fr / bound;
+      this.radii[fi] = fr;
+      this.hp[fi] = fr * R.hpPerMetre;
+      this.fullR[fi] = fr;
+      this.ttl[fi] = R.fragLife * (0.8 + Math.random() * 0.4);
+      this.alive[fi] = 1;
+      this.playerMade[fi] = byPlayer ? 1 : 0;
+      this.rates[fi] = (0.5 + Math.random()) * R.fragTumble;
+      _axis.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+      this.axes.set([_axis.x, _axis.y, _axis.z], fi * 3);
+      this.write(fi);
+    }
+  }
+
+  /** Empty a slot: parked at FAR with radius 0 so no sphere test can reach it. */
+  private retire(gi: number): void {
+    this.alive[gi] = 0;
+    this.radii[gi] = 0;
+    this.scales[gi] = 0;
+    this.ttl[gi] = 0;
+    this.hp[gi] = 0;
+    this.playerMade[gi] = 0;
+    this.centers.set([0, FAR, 0], gi * 3);
+    this.vel.set([0, 0, 0], gi * 3);
+    this.write(gi);
   }
 
   tick(dt: number): void {
-    for (let m = 0; m < this.meshes.length; m++) {
-      const mesh = this.meshes[m]!;
-      const rates = this.rates[m]!;
-      const axes = this.axes[m]!;
-      for (let i = 0; i < mesh.count; i++) {
-        mesh.getMatrixAt(i, _obj.matrix);
-        _obj.matrix.decompose(_obj.position, _obj.quaternion, _obj.scale);
-        _axis.set(axes[i * 3] ?? 0, axes[i * 3 + 1] ?? 0, axes[i * 3 + 2] ?? 1);
-        _q.setFromAxisAngle(_axis, (rates[i] ?? 0) * dt);
-        _obj.quaternion.premultiply(_q);
-        _obj.updateMatrix();
-        mesh.setMatrixAt(i, _obj.matrix);
+    const N = this.count;
+    for (let gi = 0; gi < N; gi++) {
+      if (!this.alive[gi]) continue;
+      _axis.set(this.axes[gi * 3]!, this.axes[gi * 3 + 1]!, this.axes[gi * 3 + 2]!);
+      _q.setFromAxisAngle(_axis, this.rates[gi]! * dt);
+      _obj.quaternion.set(this.quats[gi * 4]!, this.quats[gi * 4 + 1]!, this.quats[gi * 4 + 2]!, this.quats[gi * 4 + 3]!).premultiply(_q);
+      this.quats.set([_obj.quaternion.x, _obj.quaternion.y, _obj.quaternion.z, _obj.quaternion.w], gi * 4);
+      const t = this.ttl[gi]!;
+      if (t > 0) {
+        // a fragment: drift, then shrink out over the last half second
+        this.centers[gi * 3] = this.centers[gi * 3]! + this.vel[gi * 3]! * dt;
+        this.centers[gi * 3 + 1] = this.centers[gi * 3 + 1]! + this.vel[gi * 3 + 1]! * dt;
+        this.centers[gi * 3 + 2] = this.centers[gi * 3 + 2]! + this.vel[gi * 3 + 2]! * dt;
+        const left = t - dt;
+        if (left <= 0) {
+          this.retire(gi);
+          continue;
+        }
+        this.ttl[gi] = left;
+        if (left < 0.5) {
+          const shape = Math.floor(gi / this.per), k = left / 0.5;
+          const full = this.fullR[gi]!;
+          this.radii[gi] = full * k;
+          this.scales[gi] = (full * k) / this.bounds[shape]!;
+        }
       }
-      mesh.instanceMatrix.needsUpdate = true;
+      this.write(gi);
     }
+    for (const m of this.meshes) m.instanceMatrix.needsUpdate = true;
   }
 }

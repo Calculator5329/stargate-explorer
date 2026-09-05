@@ -138,6 +138,15 @@ Ethan asked for momentum, lethal rock hits, a canon secondary weapon, then "all 
 - [x] Obstacle types beyond rocks, mines and the hull. *(2026-09-04 late: ice shards (Kheb, the shard run) and derelict wreckage (The Graveyard, the ambush) as belt styles; gamepad landed later the same night; the deeper map (five systems, gate travel), the gunboat and the ring race with AI racers all landed, see M3/M4.)*
 - **Exit:** Ethan's feedback on the four missions is about the game, not the tooling.
 
+### M2.6 — Asteroid batch (2026-09-05, Ethan: "a lot more asteroids and a more interesting map ... a mini-map ... blow apart asteroids ... if enemies go into asteroids, they're destroyed")
+
+- [x] Destructible rocks with fragments that keep colliding; player cannon and missiles break them. *(2026-09-05, `Asteroids.damage`, `T.rocks`, `scripts/rock-test.mjs`)*
+- [x] Enemies destroyed on rock impact; a player-made fragment that kills one is the player's kill. *(2026-09-05, `Enemies.rockHit`, `Enemy.crashCredit`)*
+- [x] Belts ~2x denser with per-system layout (cluster knots, ring bands). *(2026-09-05, `AsteroidOptions.clusters/band`, `world/systems.ts`)*
+- [x] HUD mini-map, heading-up, rocks/enemies/marker/arena edge. *(2026-09-05, `ui/minimap.ts`)*
+- [ ] Ethan flies it: rock hp, fragment speed and life, crash threshold, mini-map range and size are untuned guesses in `T.rocks`.
+- [ ] Rock-break sound of its own (a crunch, not the ship explosion), and a "rocks broken" line on the end card (`Asteroids.broken` already counts).
+
 ### M3 — Fleet & factions
 - [x] <!-- workspace:id=work:fbd1c463-3000-5d78-830c-2a559fa5d2a3 --> 3 player hulls, 3 enemy hulls, distinct silhouettes (see GRAPHICS.md silhouette test). *(2026-09-04: enemies glider / interceptor / gunboat; players Facet / F-21 Broadsword / Prometheus; plus the neutral racer. `?hull=` inspects any; silhouettes judged by capture, not yet by Ethan)*
 - [x] <!-- workspace:id=work:4f39c478-be65-577d-b085-12e3d36e930e --> Faction materials/palettes. *(2026-09-04 late: `SystemDef.faction` names a PALETTES entry and every enemy hull spawned in that system takes it; goauld default, lucian (oxblood/red, Netu), serpent (steel/teal, Kheb and the Graveyard). `node scripts/kinds-test.mjs system=netu` for a look.)*

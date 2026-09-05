@@ -1,10 +1,11 @@
 import * as THREE from "three";
+import type { Asteroids } from "@/world/asteroids";
 import { T, clamp } from "@/core/tunables";
 import { Flight } from "@/sim/flight";
 import { D } from "@/core/difficulty";
 import type { Input } from "@/core/input";
 import { Projectiles, type Shot } from "@/combat/projectiles";
-import { Enemies, type Enemy, type RockSpheres } from "@/combat/enemies";
+import { Enemies, type Enemy } from "@/combat/enemies";
 import { Explosions } from "@/fx/explosion";
 import { Missiles } from "@/combat/missiles";
 import type { Audio } from "@/audio/audio";
@@ -83,7 +84,7 @@ export class Combat {
   private readonly muzzle: THREE.Mesh[] = [];
   private muzzleT = 0;
 
-  constructor(readonly enemies: Enemies, private readonly rocks: RockSpheres, readonly ship: THREE.Object3D, private readonly audio: Audio) {
+  constructor(readonly enemies: Enemies, private readonly rocks: Asteroids, readonly ship: THREE.Object3D, private readonly audio: Audio) {
     this.group.add(this.shots.group, this.fx.group, enemies.group, this.missiles.group);
     enemies.targets.push(this.player);
     enemies.onCrash = (pos, n, speed) => this.fx.crash(pos, n, speed);
@@ -144,7 +145,7 @@ export class Combat {
     this.lockAndLaunch(dt, flight, input);
 
     this.enemies.tick(dt, P, this.shots);
-    for (const e of this.enemies.crashed) this.destroy(e, false);
+    for (const e of this.enemies.crashed) this.destroy(e, e.crashCredit);
     this.enemies.crashed.length = 0;
     // move rounds, then test the swept segment of each against its targets
     for (const s of this.shots.shots) {
@@ -223,7 +224,9 @@ export class Combat {
           const r = this.rocks.radii[i]! * 0.9;
           if (dx * dx + dy * dy + dz * dz < r * r) {
             m.alive = false;
-            this.fx.spawn(m.pos, ZEROV, 2.5);
+            const R = this.rocks.radii[i]!;
+            if (this.rocks.damage(i, M.damage, m.vel)) this.burst(m.pos, ZEROV, 2.5 + R * 0.12, Math.min(1, 0.5 + R * 0.015));
+            else this.fx.spawn(m.pos, ZEROV, 2.5);
             break;
           }
         }
@@ -319,7 +322,9 @@ export class Combat {
       const r = R.radii[i]! * 0.9;
       if (dx * dx + dy * dy + dz * dz > r * r) continue;
       this.shots.kill(s);
-      this.fx.spark(s.pos);
+      // only the player's rounds chip rocks; a broken rock bursts and its pieces fly on with the shot
+      if (s.side === "player" && R.damage(i, this.gunDamage, s.vel)) this.burst(s.pos, ZEROV, 1.5 + r * 0.12, Math.min(0.9, 0.35 + r * 0.015));
+      else this.fx.spark(s.pos);
       return;
     }
   }

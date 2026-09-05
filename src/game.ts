@@ -14,6 +14,7 @@ import { T } from "@/core/tunables";
 import { writeSave, type Save } from "@/core/save";
 import { Replay } from "@/replay/replay";
 import { Gate } from "@/travel/gate";
+import { Minimap } from "@/ui/minimap";
 
 /**
  * The game layer above flight: enemies, weapons, the mission script, sound and
@@ -33,6 +34,7 @@ export class Game {
   private lastStick = { x: 0, y: 0 };
   private flight: Flight;
   private cam: THREE.PerspectiveCamera | null = null;
+  private readonly map: Minimap;
 
   constructor(scene: THREE.Scene, world: World, ship: THREE.Object3D, canvas: HTMLCanvasElement, flight: Flight, private readonly save: Save, level: LevelDef) {
     this.enemies = new Enemies(world.asteroids, world.system.faction ? PALETTES[world.system.faction] : undefined);
@@ -42,6 +44,7 @@ export class Game {
     this.combat.onKill = (pos, vel) => this.replay.markKill(pos, vel, this.flight, this.lastStick);
     this.mission = createMission(level, { combat: this.combat, rocks: world.asteroids, audio: this.audio, flight });
     this.audio.setKey(level.system);
+    this.map = new Minimap(document.querySelector<HTMLCanvasElement>("#hud .map")!, world.asteroids);
     scene.add(this.combat.group, this.mission.group, this.gate.group);
     canvas.addEventListener("click", () => this.audio.unlock());
     window.addEventListener("keydown", (e) => {
@@ -113,6 +116,7 @@ export class Game {
     this.audio.update(flight.speed / T.flight.boostSpeed, flight.boosting);
     if (!this.mission.done) this.audio.setMood(this.enemies.aliveCount > 0 ? "combat" : "calm");
     hud.updateCombat(this.combat, this.mission, cam, this.combat.player.vel, this.replay.hasHighlight, this.gate.alive);
+    this.map.update(flight, this.enemies.list, this.mission.marker);
     const playing = this.replay.playing && this.replay.update(dt, cam, this.combat.ship, this.enemies.list, (p, v, s) => this.combat.burst(p, v, s, 0.6));
     hud.setReplay(playing);
   }

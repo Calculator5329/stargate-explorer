@@ -152,3 +152,10 @@ Append-only log. One entry per decision that constrains future work. Format: dat
 **Why:** Ethan asked Astra to improve the game's 3D art. The selected Facet silhouette stays; thin beveled plates break up its blank wings and nacelles using the existing palette. Optional `ShipDef.armor` describes convex XZ footprints, height, thickness and mirroring. No assets or dependencies added.
 
 **Consequences:** `buildShip` welds each solid's shell independently, then merges shell geometries. This preserves separate normals at touching parts while drawing the ship's outlines in one call. Armor is visual only; flight and collision dimensions stay the same. Captures, rather than an FPS estimate, judge the art.
+
+
+### 2026-09-05 — A rock is a slot; breaking one retires the slot and fragments borrow spare slots
+
+**Why:** destructible asteroids had to keep every existing consumer (hazards, enemies, combat, missions' `clear()`, the gate placer) working unchanged: they all walk `centers`/`radii` by global index. Removing instances would renumber everything and force a rebuild of the instanced meshes. Instead a broken rock keeps its index but parks at y=1e6 with radius 0, which every sphere test rejects for free, and fragments are written into a fixed tail of spare slots per shape (`frags`, default 40) on a ring cursor. Per-instance position/quaternion/scale live in typed arrays and the matrix is composed each tick, so fragments can move and shrink without decomposing matrices.
+
+**Consequences:** `Asteroids.count` includes the spare slots (so it exceeds `belt.count`); code that wants only real rocks checks `alive[i]` or `radii[i] > 0`. A burst of more than `frags` fragments per shape recycles the oldest. `RockSpheres` gained optional `vel`/`playerMade` so enemies can use relative closing speed and credit the player. The kill rule for enemies is a threshold on relative closing speed (`T.rocks.crashKill`), not the player's graze/kill damage curve, because Ethan asked for "if enemies go into asteroids, they're destroyed".

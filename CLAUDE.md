@@ -33,7 +33,7 @@ src/
   core/    loop, input (mouse + keys + gamepad), binds (rebindable key table), scheme (arcade/classic), tunables, random
   sim/     flight model (kinematic arcade-sim), hazards (rock collision, arena edge)
   render/  renderer + post stack, chase camera, inspect views, perf overlay
-  world/   procedural skybox, planet, sun, asteroids, systems (SystemDef: sky+planet+sun+belt per star system; belt.style picks rock, ice or wreck; faction recolours enemy hulls; derelict-geo is the wreck geometry), World composition
+  world/   procedural skybox, planet, sun, asteroids (destructible slots + fragments, cluster/band layout), systems (SystemDef: sky+planet+sun+belt per star system; belt.style picks rock, ice or wreck; faction recolours enemy hulls; derelict-geo is the wreck geometry), World composition
   ships/   parametric builder, ship defs, palettes, rig (ship + plumes), GLTF loader
   fx/      engine plumes, speed dust, explosions
   replay/  kill replay: pose ring buffer, highlight cut, cinematic playback
@@ -41,12 +41,12 @@ src/
   mission/ levels (data), mission (base + Waves), runners clear/run/protect/strike/race (race extends run: AI racers on the gate chain), index (factory)
   travel/  gate (return gate, Tracked), tunnel (wormhole shader quad), travel (dial → tunnel → reload with arrive=1 → fade)
   audio/   WebAudio synth (no assets)
-  ui/      DOM HUD (flight + combat layers), menu (Esc pause + settings), hub (mission select), debug panel
+  ui/      DOM HUD (flight + combat layers), minimap (2D canvas, heading-up), menu (Esc pause + settings), hub (mission select), debug panel
   core/    also save (localStorage blob), difficulty (enemy-side presets)
   game.ts  the layer above flight: owns combat, mission, audio, progress writes; main.ts only wires it
 docs/      roadmap, STATUS, DECISIONS, GRAPHICS, changelog, refs/, shots/
 ```
-New systems get their own folder under `src/` and are wired through `game.ts`, not `main.ts`. Keep `main.ts` as wiring only (120 lines today after menu, hub, save, travel and settings wiring; the M0 exit said under 60, treat that as a ceiling to trend back to, e.g. by moving the settings apply and the hub/travel glue into `ui/menu.ts` and `game.ts`). Headless checks: `?lock=free` skips pointer lock (and disables the menu) and `window.__game` / `window.__flight` / `__rocks` are exposed, so a playwright script can spawn enemies, hold fire and read kills (`scripts/fight-test.mjs` does exactly that; `capture-shots.mjs` `fight` view for the picture). `?mission=<id>&ship=<id>` picks a level and hull; `window.__game.mission` exposes phase/line/marker and `__game.combat.extras[i].damage(n)` kills a mission part, so a whole level can be driven to its end card without flying it. `node scripts/chain-test.mjs` does that for every mission in one browser context (kills spawns, teleports through gates, destroys capital parts) and checks the save's unlock chain; run it after touching missions, levels or the save.
+New systems get their own folder under `src/` and are wired through `game.ts`, not `main.ts`. Keep `main.ts` as wiring only (120 lines today after menu, hub, save, travel and settings wiring; the M0 exit said under 60, treat that as a ceiling to trend back to, e.g. by moving the settings apply and the hub/travel glue into `ui/menu.ts` and `game.ts`). Headless checks: `?lock=free` skips pointer lock (and disables the menu) and `window.__game` / `window.__flight` / `__rocks` are exposed, so a playwright script can spawn enemies, hold fire and read kills (`scripts/fight-test.mjs` does exactly that; `capture-shots.mjs` `fight` view for the picture). `?mission=<id>&ship=<id>` picks a level and hull; `window.__game.mission` exposes phase/line/marker and `__game.combat.extras[i].damage(n)` kills a mission part, so a whole level can be driven to its end card without flying it. `node scripts/chain-test.mjs` does that for every mission in one browser context (kills spawns, teleports through gates, destroys capital parts) and checks the save's unlock chain; run it after touching missions, levels or the save. `node scripts/rock-test.mjs` covers destructible rocks and lethal enemy crashes; run it after touching `world/asteroids.ts`, `Enemies.rockHit` or the rock loops in `combat.ts`.
 
 ## Working style
 - Small, verifiable steps. After any visual change, capture `?view=side&spin=0`, `?view=rear&spin=0` and the chase view into `docs/shots/YYYY-MM-DD-view.png` and compare against the previous one. Captures come from `node scripts/capture-shots.mjs` (headless Chromium via `playwright-core`, see `docs/shots/README.md`); the in-app preview pane cannot zoom or measure fps.

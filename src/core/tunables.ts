@@ -215,6 +215,24 @@ export const T = {
     regen: 4,
     regenDelay: 6,
   },
+  rocks: {
+    /** hull points per metre of bounding radius: a 5 m chip dies to two cannon rounds, a 40 m boulder wants a missile */
+    hpPerMetre: 6,
+    /** rocks smaller than this just vanish; bigger ones break into round(radius / fragPer) pieces, 2..6 */
+    fragMin: 6,
+    fragPer: 7,
+    /** fragment radius as a fraction of the parent's, and how fast pieces leave (m/s) plus the push along the shot */
+    fragScale: 0.38,
+    fragSpeed: 55,
+    fragPush: 40,
+    /** seconds a fragment lives before it shrinks away */
+    fragLife: 7,
+    fragTumble: 2.5,
+    /** a glider hitting a rock harder than this (m/s, relative to the rock) is destroyed; softer contact scrapes and bounces */
+    crashKill: 8,
+    /** mini-map radius in metres */
+    mapRange: 900,
+  },
   arena: {
     /** play-field radius; beyond it a soft current turns you back */
     radius: 1500,

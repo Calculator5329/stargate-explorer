@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { T, clamp } from "@/core/tunables";
-import { Flight } from "@/sim/flight";
 import { D } from "@/core/difficulty";
 import { ENEMY_KINDS, type EnemyKind, type EnemyStats } from "@/combat/enemy-kinds";
 import { ShipRig } from "@/ships/rig";
@@ -40,6 +39,8 @@ export interface Enemy {
   radius: number;
   /** index into `Enemies.targets`, assigned round-robin at spawn */
   tgt: number;
+  /** set when a crash was into a fragment the player made: the kill is the player's */
+  crashCredit: boolean;
 }
 
 export interface Target {
@@ -54,6 +55,10 @@ export interface RockSpheres {
   count: number;
   centers: Float32Array;
   radii: Float32Array;
+  /** fragments move: xyz velocity per rock (absent = everything is still) */
+  vel?: Float32Array;
+  /** 1 where the rock is a fragment of one the player broke */
+  playerMade?: Uint8Array;
 }
 
 const UP = new THREE.Vector3(0, 1, 0);
@@ -119,7 +124,7 @@ export class Enemies {
       });
       e = {
         kind, stats: K.stats, rig, alive: false, pos: new THREE.Vector3(), quat: new THREE.Quaternion(), prevPos: new THREE.Vector3(), prevQuat: new THREE.Quaternion(),
-        vel: new THREE.Vector3(), speed: 0, hp: 0, state: "pursue", stateT: 0, hold: new THREE.Vector3(0, 0, 1), fireCd: 0, flinchCd: 0, side: 1, sinceHit: 99, mats, radius: T.enemy.radius, tgt: 0,
+        vel: new THREE.Vector3(), speed: 0, hp: 0, state: "pursue", stateT: 0, hold: new THREE.Vector3(0, 0, 1), fireCd: 0, flinchCd: 0, side: 1, sinceHit: 99, mats, radius: T.enemy.radius, tgt: 0, crashCredit: false,
       };
       this.list.push(e);
       this.group.add(rig.root);
@@ -274,23 +279,34 @@ export class Enemies {
   /** Gliders that flew into a rock this tick; the combat layer drains this for the explosion. */
   readonly crashed: Enemy[] = [];
 
-  /** Sphere test against the belt: bounce, and take the same impact damage the player does. */
+  /**
+   * Sphere test against the belt. A real hit (closing faster than `crashKill`,
+   * relative to the rock, so a flying fragment counts) destroys the glider
+   * (2026-09-04, Ethan: "if enemies go into asteroids, they're destroyed"); a
+   * scrape bounces. A fragment the player made credits the kill to the player.
+   */
   private rockHit(e: Enemy): void {
     const R = this.rocks;
     for (let i = 0; i < R.count; i++) {
       const r = R.radii[i]! * 0.8 + e.radius;
+      if (r <= e.radius) continue; // empty slot
       const dx = e.pos.x - R.centers[i * 3]!, dy = e.pos.y - R.centers[i * 3 + 1]!, dz = e.pos.z - R.centers[i * 3 + 2]!;
       const d2 = dx * dx + dy * dy + dz * dz;
       if (d2 >= r * r) continue;
       const d = Math.sqrt(d2) || 1;
       _tmp.set(dx / d, dy / d, dz / d);
-      const into = -e.vel.dot(_tmp);
+      _tr.copy(e.vel);
+      if (R.vel) _tr.sub(_tf.set(R.vel[i * 3]!, R.vel[i * 3 + 1]!, R.vel[i * 3 + 2]!));
+      const into = -_tr.dot(_tmp);
       e.pos.addScaledVector(_tmp, r - d + 0.1);
       if (into > 5 && this.onCrash) this.onCrash(_lead.copy(e.pos).addScaledVector(_tmp, -e.radius), _tmp, into);
+      if (into > T.rocks.crashKill) {
+        e.crashCredit = R.playerMade?.[i] === 1;
+        if (this.damage(e, e.hp + 1)) this.crashed.push(e);
+        return;
+      }
       if (into > 0) e.vel.addScaledVector(_tmp, 2 * into).multiplyScalar(0.5);
       e.speed *= 0.5;
-      const dmg = Flight.impactDamage(into) * e.stats.hp * D.enemyHp;
-      if (dmg > 0 && this.damage(e, dmg)) this.crashed.push(e);
       return;
     }
   }

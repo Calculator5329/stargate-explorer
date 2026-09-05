@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-05 (03:00) — Destructible asteroids, denser structured belts, mini-map, lethal crashes
+
+Ethan, 2026-09-05 00:xx: "a lot more asteroids and a more interesting map ... a mini-map ... blow apart asteroids ... if enemies go into asteroids, they're destroyed. So if you blow apart an asteroid and it hits an enemy, they're dead." All four landed, verified headless only.
+
+- Every rock is destructible: `Asteroids.damage(gi, amount, dir)`; hull points scale with radius (`T.rocks.hpPerMetre` 6, so a 5 m chip dies to two rounds, a 40 m boulder wants a missile). A broken rock bursts and spawns 2..6 fragments (`T.rocks.frag*`) from spare instance slots at the end of each shape's pool: they fly on with the shot, tumble fast, collide like rocks, and shrink away after ~7 s. Player cannon and missiles break rocks; enemy rounds only spark.
+- Enemies that hit a rock harder than `T.rocks.crashKill` (8 m/s, relative to the rock, so a flying fragment counts) are destroyed. A fragment of a rock the player broke credits the kill to the player (`Enemy.crashCredit`). Soft scrapes still bounce.
+- Belts roughly doubled (900..2300 rocks per system) with a layout: `clusters` (dense knots) and `band` (a ring at a radius) take a share of the rocks, the rest scatter. Chulak and Kheb have a ring band, Tollana's race circuit is a band, Abydos/Netu/P3X-774/Graveyard have knots.
+- HUD mini-map (`ui/minimap.ts`, bottom right, 180 px): heading-up top-down view, 900 m range, rocks as dots sized by radius and faded by height difference, fragments amber, enemies red, marker/gate gold, arena edge ring.
+- `Asteroids` now stores per-instance position/quaternion/scale arrays and composes matrices (no per-tick decompose); dead slots park at y=1e6 with radius 0 so every sphere consumer skips them.
+- `scripts/rock-test.mjs`: breaks a rock under fire, flings a glider into a boulder, plants one in a fragment's path; all three pass. `chain-test.mjs` still passes all eight missions. Sim at ~1.1..1.7 ms in the headless captures. Captures: `shots/2026-09-05-minimap-chulak-band.png`, `shots/2026-09-05-kheb-dense.png`.
+
 ## 2026-09-05 — Fighter detail and outline batching
 
 - Facet now has modeled beveled wing panels, separate trailing-edge plates, nacelle covers and cooling vents, retaining Ethan's selected gray silhouette.

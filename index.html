@@ -21,6 +21,7 @@
       @keyframes blink { to { opacity: .35; } }
       #hud .flash { position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse at center, rgba(255,80,40,0) 45%, rgba(255,80,40,.9) 100%); }
       #hud .scheme { position: absolute; right: 24px; bottom: 24px; font-size: 13px; letter-spacing: .18em; color: #ffd9a8; opacity: 0; }
+      #hud .map { position: absolute; right: 24px; bottom: 24px; width: 180px; height: 180px; border-radius: 50%; background: rgba(8,14,26,.55); border: 1px solid rgba(127,212,255,.35); box-shadow: 0 0 0 4px rgba(8,14,26,.35); }
       #hud .perf { position: absolute; right: 24px; top: 16px; font-size: 12px; text-align: right; white-space: pre; opacity: .8; }
       #hud .hp { position: absolute; left: 24px; bottom: 90px; width: 160px; height: 4px; background: rgba(255,120,120,.2); }
       #hud .hp > i { display: block; height: 100%; width: 100%; background: #9fe3a0; }
@@ -132,6 +133,7 @@
       <div class="throttle"><i></i></div>
       <div class="speed"><span class="v">0</span><small>m/s</small></div>
       <div class="perf"></div>
+      <canvas class="map"></canvas>
     </div>
     <div id="menu">
       <div class="panel">
