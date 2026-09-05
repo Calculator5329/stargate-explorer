@@ -72,3 +72,19 @@ Every ship def must pass: rendered as a black silhouette at 64 px, side and fron
 
 ## 5. Reference capture
 Keep `docs/refs/` with screenshots of what we're aiming at, and `docs/shots/` with dated captures of our own build (`YYYY-MM-DD-view.png`) so progress is visible. Both gitignored if they get big.
+
+## 6. Where we are (2026-09-04, late)
+
+What the row-A direction has become after two days, so the next pass argues with the current state and not with section 1.
+
+| Element | Now | Still missing |
+|---|---|---|
+| Ships | Parametric builder, toon ramp, inverted-hull outlines. Player: Facet (F-302 lineage), F-21 Broadsword heavy, Prometheus. Enemy: glider, interceptor, gunboat, Ha'tak capital. Neutral: racer. Faction palettes per system (bronze default, oxblood lucian, steel-teal serpent). | A silhouette test judged by Ethan, not by capture. Damage states on player hulls. |
+| Belts | Three styles through one instanced pipeline: plum/rust rock, pale ice shards, gunmetal wreckage (Astra's derelict pieces). Baked crease lines, per-instance tumble, face-plane collision (convex hull for wrecks). | Non-uniform per-instance scale. Dust or particle haze between pieces. |
+| Skies | Six procedural presets (abydos, deepSpace, chulak, ember, void, frost): two nebula lobes, star field, optional soft galactic band. Per-sky grade tint. | A sky authored from a reference painting rather than parameters. |
+| Planets | Six presets (desert, ice, lava, jungle, ringed gas giant, moon): hard-stepped land/sea/light, ice line, one ring. | Clouds, city lights, a second moon. |
+| Post | MSAA HalfFloat, UnrealBloom on emissives only, grade pass (vignette, saturation, tint), ACES output. Screen-space edge pass off in every tier. | Nothing planned; the outline budget is spent in geometry on purpose. |
+| Motion | Plumes scale with throttle and boost, speed dust, kill replay with a cinematic cut, tunnel shader between systems. | Hit sparks on hulls, debris on wreck impacts. |
+
+The single biggest visual risk left is legibility in the wreck field: gunmetal wreck on a deep-space sky at speed. Ethan has not flown it. If it reads as grey mush, the first lever is the `wreck` tint set in `world/asteroids.ts`, the second is a warmer `frost`/`deepSpace` lobe behind it.
+
