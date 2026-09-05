@@ -76,13 +76,19 @@ spacing/glyph orientation/bloom, actual simulation hold in the browser, and the
 mission-driven gate close-up. No screenshot was produced in this lane. No visual
 acceptance, frame-rate measurement or sound-quality judgment is claimed.
 
-## Capture manifest (pending, files not created)
+## Capture manifest (taken 2026-09-05 by the reviewing session, `node scripts/capture-dist.mjs <dist> docs/design/gate-hub-redesign flow`)
 
-| Requested file | Intended contents |
+The lane's sandbox could not start vite or Chromium, so the session built the lane's dist and shot it through the in-process static server in `scripts/capture-dist.mjs`.
+
+| File | Contents |
 | --- | --- |
-| `gate-hub-redesign-hub.png` | `?hub=1&lock=free`, full address register, initial locks, selected address and ships |
-| `gate-hub-redesign-dial.png` | Destination at 1.15 seconds, three address glyphs and corresponding chevrons lit |
-| `gate-hub-redesign-gate.png` | Return gate after an actual headless mission completion, camera facing the ring at 115 m |
+| `gate-hub-redesign-hub.png` | `?hub=1&lock=free`: the address register with glyph addresses and English beneath, locks and ship choice |
+| `gate-hub-redesign-dial.png` | the destination dialing: address glyphs and their chevrons lit in order |
+| `gate-hub-redesign-gate-dialing.png` | the ring gate mid-dial, glyph band spinning, chevrons locking |
+| `gate-hub-redesign-gate-open.png` | the gate with the event horizon up |
+| `gate-hub-redesign-kawoosh.png`, `-tunnel.png`, `-arrive.png` | taken from main's dist during the same run; the lane's kawoosh and tunnel frames were not captured (the probe stalled on the `?arrive=1` reload) and remain unverified visually |
+
+Hub, dial and both gate frames were judged in review: flat dark console, legible glyph addresses, ring gate with a spinning glyph band and lit chevrons. The kawoosh and tunnel remain to be seen in play.
 
 The runnable capture driver below uses port 5199, asserts the real simulation is
 held during the paused dial, then kills actual enemy spawns as `chain-test.mjs`
