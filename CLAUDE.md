@@ -12,7 +12,7 @@ npm run build    # tsc --noEmit && vite build  — must pass before any commit
 npm run preview  # serve dist/
 ```
 Verify command is `npm run build` plus a look at the running game: a flight-feel change is verified by flying it, an art change by a capture. Standing build warning: one ~580 kB chunk (three). A warning that is not that one is new and blocks the commit.
-Inspection views for asset work: `?view=side|top|front|rear` (static cam, ship rotates; `&spin=0` holds it, `&dist=0.5` moves in). `?view=side&silhouette=1` is the black-on-white readability test. `?quality=low|med|high`, `?sky=abydos|deepSpace|chulak`.
+Inspection views for asset work: `?view=side|top|front|rear` (static cam, ship rotates; `&spin=0` holds it, `&dist=0.5` moves in). `?view=side&silhouette=1` is the black-on-white readability test. `?quality=low|med|high`, `?sky=abydos|deepSpace|chulak|ember|void`, `?planet=desert|ice|lava|jungle|gasGiant|moon`, `?system=abydos|chulak|p3x774`, `?hull=<key in ships/hulls.ts>` (any hull, player or enemy, in an inspect view).
 Backtick (`) toggles the lil-gui tuning panel.
 
 ## Hard conventions (do not break)
@@ -33,12 +33,13 @@ src/
   core/    loop, input, scheme (arcade/classic), tunables, random
   sim/     flight model (kinematic arcade-sim), hazards (rock collision, arena edge)
   render/  renderer + post stack, chase camera, inspect views, perf overlay
-  world/   procedural skybox, planet, sun, asteroids, World composition
+  world/   procedural skybox, planet, sun, asteroids, systems (SystemDef: sky+planet+sun+belt per star system), World composition
   ships/   parametric builder, ship defs, palettes, rig (ship + plumes), GLTF loader
   fx/      engine plumes, speed dust, explosions
   replay/  kill replay: pose ring buffer, highlight cut, cinematic playback
-  combat/  projectiles (pooled tracers), enemies (glider AI), combat (weapons + hit resolution), missiles, targets (Tracked/Lockable), glider-def (enemy hull), capital (Ha'tak)
+  combat/  projectiles (pooled tracers), enemies (AI, all kinds), enemy-kinds (kind → hull + T table), combat (weapons + hit resolution), missiles, targets (Tracked/Lockable), glider/interceptor/gunboat-def (enemy hulls), capital (Ha'tak)
   mission/ levels (data), mission (base + Waves), runners clear/run/protect/strike, index (factory)
+  travel/  gate (return gate, Tracked), tunnel (wormhole shader quad), travel (dial → tunnel → reload with arrive=1 → fade)
   audio/   WebAudio synth (no assets)
   ui/      DOM HUD (flight + combat layers), menu (Esc pause + settings), hub (mission select), debug panel
   core/    also save (localStorage blob), difficulty (enemy-side presets)

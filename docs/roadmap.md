@@ -135,17 +135,17 @@ Ethan asked for momentum, lethal rock hits, a canon secondary weapon, then "all 
 - [x] (2026-09-04) Dogfight feel: gliders jousted. Ethan picked "get on the tail" + "fear the guns" from four options; landed as `saddle` and `flinch` states in `combat/enemies.ts`. Roles per glider (shooter + wingmen) held until he has flown this.
 - [ ] Ethan flies the dogfight brain and reports: does it feel like a fight, and is it now too hard to get a kill? Then decide on per-glider roles.
 - [ ] Ethan plays the four missions and the Prometheus and reports: difficulty preset that fits, gate count/time for the Gauntlet, whether the Ha'tak fight is legible (which part to shoot next).
-- [ ] Not done tonight: a "race" mission distinct from the gauntlet (needs AI racers), a deeper map (multiple systems, gate travel), obstacle types beyond rocks, mines and the hull, a heavier enemy hull (bomber), gamepad.
+- [ ] Not done tonight: a "race" mission distinct from the gauntlet (needs AI racers), obstacle types beyond rocks, mines and the hull, gamepad. *(2026-09-04 evening: the deeper map (three systems, gate travel) and the heavier enemy hull (gunboat) landed, see M3/M4.)*
 - **Exit:** Ethan's feedback on the four missions is about the game, not the tooling.
 
 ### M3 — Fleet & factions
-- [ ] <!-- workspace:id=work:fbd1c463-3000-5d78-830c-2a559fa5d2a3 --> 3 player hulls, 3 enemy hulls, distinct silhouettes (see GRAPHICS.md silhouette test).
+- [ ] <!-- workspace:id=work:fbd1c463-3000-5d78-830c-2a559fa5d2a3 --> 3 player hulls, 3 enemy hulls, distinct silhouettes (see GRAPHICS.md silhouette test). *(2026-09-04: enemy side done, glider / interceptor / gunboat (`?hull=` inspects them); player side is Facet + Prometheus, a third player hull still open)*
 - [ ] <!-- workspace:id=work:4f39c478-be65-577d-b085-12e3d36e930e --> Faction materials/palettes.
-- [ ] <!-- workspace:id=work:b24057c9-9ff2-5002-a606-e79c2d569ced --> 3+ sky presets, 3+ planet presets.
-- [ ] <!-- workspace:id=work:b0ce8258-8118-50ac-b155-ac1f6e3adaa2 --> Enemy variety: interceptor, gunboat, one capital-scale target. *(capital-scale target landed 2026-09-04: `combat/capital.ts`; interceptor/gunboat still open)*
+- [x] <!-- workspace:id=work:b24057c9-9ff2-5002-a606-e79c2d569ced --> 3+ sky presets, 3+ planet presets. *(2026-09-04: skies abydos/deepSpace/chulak/ember/void, planets desert/ice/lava/jungle/gasGiant/moon; Astra authored the new ones)*
+- [x] <!-- workspace:id=work:b0ce8258-8118-50ac-b155-ac1f6e3adaa2 --> Enemy variety: interceptor, gunboat, one capital-scale target. *(2026-09-04: capital `combat/capital.ts`; interceptor + gunboat `combat/enemy-kinds.ts`, used by the missions)*
 
 ### M4 — Structure
-- [ ] <!-- workspace:id=work:ccb23c6e-65b9-507b-a9a3-fe96f5e509a5 --> Hub scene → gate dial UI → transit FX → system → objective → return.
+- [x] <!-- workspace:id=work:ccb23c6e-65b9-507b-a9a3-fe96f5e509a5 --> Hub scene → gate dial UI → transit FX → system → objective → return. *(2026-09-04: `travel/` + `world/systems.ts`; the hub is a DOM overlay rather than a scene, the return is a gate that opens on a win)*
 - [x] <!-- workspace:id=work:b43496f3-906d-5db6-9ea7-ceced0195364 --> (2026-09-04, `mission/levels.ts`; clear, run, protect, strike) Mission templates: dogfight, escort, capital strike.
 - [x] <!-- workspace:id=work:e90114d4-73ac-502d-bfab-5043ad89afcc --> (2026-09-04, Prometheus unlocks after the Ha'tak strike; `Game.record`) Progression: at least ship unlock.
 

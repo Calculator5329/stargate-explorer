@@ -1,4 +1,4 @@
-# STATUS.md — as of 2026-09-04 overnight (four missions, hub, menu, Prometheus; Ethan has played only "Clear the field")
+# STATUS.md — as of 2026-09-04 evening (three systems + gate travel, enemy roster; Ethan has flown the morning build once)
 
 Snapshot of what actually works. This is the project state snapshot, not the workspace root `STATUS.md` handoff file (see CLAUDE.md). Update when things change; keep the "Known issues" list honest.
 
@@ -29,6 +29,9 @@ Snapshot of what actually works. This is the project state snapshot, not the wor
 - **Mines** (`mission/mines.ts`): proximity mines on the Gauntlet gate rims and in a ring around the Ha'tak; lockable, shootable, 45 hull in the blast. **Death sequence**: tumble + burning bursts for 1.6 s before the final burst and the loss card.
 - **Prometheus** flyable: slower, heavier, bigger camera pull-back and collision radius.
 - **FX:** two-tone fireball + shockwave + chunks + smoke on every kill; crash dust on rock hits.
+- **Systems + gate travel** (`world/systems.ts`, `travel/`): three systems with their own sky, planet, sun and belt; missions live in a system; winning opens a return gate that dials home (chevron ring → wormhole tunnel → reload → fade); hub launches travel the same way. Headless verified (`scripts/travel-test.mjs`); nobody has watched the dial or tunnel on a real GPU.
+- **Enemy roster** (`combat/enemy-kinds.ts`): glider, interceptor, gunboat with separate stats tables and hulls; waves name their kinds. Headless verified (`scripts/kinds-test.mjs`); balance is a guess.
+- **Presets:** planets desert/ice/lava/jungle/gasGiant/moon, skies abydos/deepSpace/chulak/ember/void (`?planet=`, `?sky=`).
 
 ## Partial
 - Combat balance is a first guess: no human has flown a wave. Enemy hp 40 / player round 12 (4 hits), enemy rounds 7 hp against 100. Glider AI has no formation, no wingman logic, no retreat.
@@ -37,7 +40,7 @@ Snapshot of what actually works. This is the project state snapshot, not the wor
 - `ships/loader.ts` exists but is unused and untested against a real GLTF (B migration hook; a glTF hull would need `outlineShell()` and toon materials applied per mesh).
 
 ## Not started
-Bomber-scale enemy hull, gate transit / multiple systems (a deeper map), a race mission with AI racers, obstacle types beyond mines, gamepad, keybinds, invert, quality setting in the menu.
+A race mission with AI racers, obstacle types beyond rocks/mines/the hull (derelicts, ice shards), a fourth and fifth system using the lava/gasGiant/moon planets and ember/void skies, gamepad, keybinds, invert, quality setting in the menu, per-glider roles (held for Ethan's dogfight verdict).
 
 ## Known issues
 - **Nothing beyond "Clear the field" has been flown by a human** (2026-09-04 overnight). Gauntlet timing (90 s, 360 m spacing), escort hull (600), turret range/cadence (1 km, 1.6 s) and the difficulty multipliers are guesses. The Ha'tak fight's "shoot this next" legibility is untested.

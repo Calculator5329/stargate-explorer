@@ -121,3 +121,15 @@ Append-only log. One entry per decision that constrains future work. Format: dat
 ### 2026-09-04 — Settings and progress live in one localStorage blob; difficulty only touches the enemy side
 **Why:** the pause menu needed persistence and the "are they too fast or do I suck" question needed presets. Scaling the player's ship with difficulty would blur it with ship stats.
 **Consequences:** `core/save.ts` (`stargate-explorer.save.v1`, defaults merged over a partial or corrupt blob). `core/difficulty.ts` `D` multiplies enemy speed, hp, fire rate, damage and spread at use time; `T` stays the feel source and the tuning panel still rules. Ship stats (`ships/registry.ts`) are the only thing that changes the player.
+
+### 2026-09-04 — A star system is a page; gate travel is a reload
+**Why:** the World (sky, planet, sun, belt) is built once and everything from the shadow frustum to the rock spheres the AI reads assumes one belt. Rebuilding it live for a system swap would mean tearing down and re-wiring every system that holds a reference, for a transition the tunnel shader hides anyway.
+**Consequences:** `world/systems.ts` `SystemDef` is the unit of content; `Travel.depart` plays the dial and tunnel, then sets `location.search` with `arrive=1`, and the fresh page fades the tunnel out. Progress and settings survive because they already live in localStorage. Anything that must persist across a jump goes in the save blob or the query string, never in memory. A live in-scene swap is a later decision if the reload ever shows.
+
+### 2026-09-04 — Enemy kinds are `T` tables, not subclasses
+**Why:** the brain is one function of numbers (speeds, turn rate, cones, distances); the interceptor and gunboat differ from the glider in numbers and one switch (`dogfight` 0/1), not in logic. The tuning panel binds flat numeric sections of `T`, so a kind that is a section of `T` is live-tunable for free.
+**Consequences:** `combat/enemy-kinds.ts` maps kind → `{def, stats}` where `stats` is a reference into `T` (`T.enemy`, `T.interceptor`, `T.gunboat`); the three tables must share a shape (`EnemyStats = typeof T.enemy`). Per-shot damage rides on the round (`Shot.dmg`). A kind whose behaviour cannot be expressed as numbers (a bomber run, a minelayer) is a new state in the brain, gated by a flag in the table, before it is ever a subclass.
+
+### 2026-09-04 — Astra authors 3D defs from written briefs
+**Why:** Ethan pointed at GPT-6 Astra for "the 3D stuff". The two enemy hulls and seven presets came from briefs that fixed axes, sizes, palette slots and silhouette goals, with the builder's `ShipDef` shape as the contract; Astra ran as `codex exec` in a workspace-write sandbox with git, servers and the browser forbidden, and every def was typechecked and captured before being kept.
+**Consequences:** briefs live in `.astra/` (gitignored, they are scratch); the result is judged by capture, never by reading the numbers. Astra output never touches game logic, tunables or docs, and never commits.

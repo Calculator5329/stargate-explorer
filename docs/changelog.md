@@ -2,6 +2,16 @@
 
 Newest on top. Roadmap items are checked off in `roadmap.md` and recorded here.
 
+## 2026-09-04 (evening) — Three star systems, gate travel home, an enemy roster
+
+Ethan is away until tomorrow and asked for the rest of the plan to keep moving; the 3D pieces here (two enemy hulls, five planet presets, two sky presets) were authored by GPT-6 Astra from written briefs and reviewed by capture. None of it has been flown by a human.
+- **Systems** (`world/systems.ts`): a `SystemDef` names the sky, planet preset and position, sun direction and belt (count, seed, radii, thickness). Abydos (desert, orange/violet nebula, 900 rocks), Chulak (jungle world, green nebula, 1000 rocks in a thicker belt), P3X-774 (ice world, deep space, 520 rocks). Every level carries a system id; the World is built from it once per page. `?system=` and `?planet=` override for inspection.
+- **Gate travel** (`travel/`): winning a mission opens a return gate 700 m ahead (torus with nine breathing chevrons and a toon-rippled puddle) and makes it the HUD marker; flying through it, or `G` on the end card, dials home. Dialling is a DOM ring of seven chevrons lighting in turn with a tick each (`Travel`), then a fullscreen posterised wormhole shader (`Tunnel`) for 1.7 s, then a reload into the destination with `arrive=1`, which fades the tunnel out over 1.1 s. Launching from the hub goes the same way to the mission's system. Verified headless end to end (`scripts/travel-test.mjs`).
+- **Hub** groups missions under their system, "NO GATE ADDRESS YET" until one is unlocked.
+- **Enemy roster** (`combat/enemy-kinds.ts`): **interceptor** (Astra hull, 7 m needle, gold trim; hp 22, cruise 175 / dash 250, 2.0 rad/s, 0.6× rounds, flinches 90 % of the time) and **gunboat** (Astra hull, 22 m slab, red bridge, three engines; hp 170, cruise 85 / dash 115, 0.55 rad/s, 2.4× rounds, never saddles or flinches) join the glider. Each kind's numbers are a full table in `T` (`T.interceptor`, `T.gunboat`) so the tuning panel binds them. Waves name their kinds: the last belt-clear wave and the gauntlet chase bring interceptors, the escort's later waves bring gunboats, the Ha'tak launches interceptors first. Headless: all three fly, shoot and die (4 / 2 / 15 cannon hits).
+- **Planet presets** `ice`, `lava`, `jungle`, `gasGiant` (banded, ringed), `moon`; **sky presets** `ember`, `void`. Only desert/ice/jungle are used by a system so far.
+- Scripts: `scripts/cap.mjs name=query,query` captures; `scripts/kinds-test.mjs`.
+
 ## 2026-09-04 (midday) — Gliders dogfight instead of jousting
 
 Ethan: the fight was "stopping and turning around and going straight at the enemy ship, over and over". Two new brain states in `combat/enemies.ts`, existing `T.enemy` numbers untouched:
