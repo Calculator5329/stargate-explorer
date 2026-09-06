@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-09-06 — Duel, hunt and intercept; scripted enemy steering; no native scrollbars
+
+Ethan, 2026-09-06 (chat, on the brainstorm): duel "super good idea and pretty cheap, more of a free play mode"; hunt "really good idea"; intercept "okay, but it's less interesting ... since they're free, I would say go ahead"; "lets never have these scrollbars in this game, totally takes you out of it".
+
+- **Three mission types, 6 → 9; missions 14 → 17.** THE DUEL (Tollana, `beltScale` 0.06 so the belt is a handful of reference rocks; one foe spawned 900 m ahead nose-on per round, first to three, hull and rack restored between rounds, `?foe=glider|interceptor|gunboat|bomber|ace` overrides the kind). RUN IT DOWN (Chulak, an ace flies the nine-gate chain at 168 m/s and escapes through the last gate; inside 260 m it turns and fights for seven seconds, then runs again; catching it is boost management). THE BOMBER LINE (P3X-774, bombers spawn ahead and fly a straight line to a glowing relay 1300 m behind the start with gliders and interceptors riding along; a bomber at the relay is a leak, uncredited; three leaks lose the relay, two and a half minutes wins).
+- **Scripted steering on enemies** (`Enemy.steer`, `Enemy.steerSpeed`): a mission can hand any enemy a direction and a speed; the brain and the guns switch off while it is set, rock avoidance stays on and looks further ahead in proportion to the scripted speed (the ace's 80 m avoid distance is half a second at running speed). Quarry and runners are ordinary enemies otherwise: guns, missiles, replays, rock crashes and kill credit all apply.
+- **Scrollbars**: thin gold thumb on a transparent track everywhere (`scrollbar-width: thin` plus the WebKit pseudo-elements), `scrollbar-gutter: stable` on the hub panel, a `.scroll-fade` mask utility. The "ancient scroll" treatment Ethan asked for is a roadmap item with a design lane.
+- **Tests**: `scripts/chain-test.mjs` covers all 17 (the clock jump now applies to intercept as well as hold); new `scripts/pursuit-probe.mjs` asserts the quarry runs the chain unaided, turns to fight when the player closes, that runners close on the relay with escorts, that a runner at the relay counts one leak and the mission continues, and that `?foe=` takes.
+- **Rulings recorded** (roadmap "Later" section, brainstorm doc): combo maneuvers on B+W/A/D from boost energy, loadouts then custom ships, first-person foot mode with gate-walking as part of the game, boarding, planet surfaces, bases with upgraders and planet-to-planet gates. Scope guard on record: no drift toward No Man's Sky.
+
 ## 2026-09-05 (late night) — Six missions, three ships, two enemy kinds, a hold mission type, and a brainstorm
 
 Ethan, 2026-09-05: "Add more missions ships, and start brainstorming on new types of missions and playstyles".

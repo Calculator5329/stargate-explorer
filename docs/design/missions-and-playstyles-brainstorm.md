@@ -126,3 +126,19 @@ Plural, as always; these are three different bets, not a ranking.
 
 Whichever bet lands, the ace table and the bomber table want a pass from
 Ethan's hands first; every idea above leans on those two kinds.
+
+## Rulings (Ethan, 2026-09-06, chat)
+
+- **Built:** 5 duel ("super good idea and pretty cheap. It's more of a free play
+  mode"), 1 hunt ("really good idea"), 3 intercept ("okay, but it's less
+  interesting ... since they're free, I would say go ahead and do it").
+- **Later, in the roadmap:** 12 loadouts, growing into custom ships and
+  add-ons; combo maneuvers (not in the list above: B plus W/A/D as
+  predetermined moves paid from boost energy, "Mortal Kombat style"); a
+  first-person foot mode, with gate-walking as part of the game "but not the
+  entire point"; 7 boarding after foot mode; planet surfaces far out; bases
+  that park ships, hold the upgrader and gate between planets.
+- **Constraints:** third person stays for space. Scope guard: "we don't
+  necessarily want to charge forward on everything that broadens scope because
+  we are just going to turn ourselves into like No Man's Sky."
+- **Not ruled on:** 2, 4, 6, 8, 9, 10, 11, 13, 15, 16, 17 and the ships in D.

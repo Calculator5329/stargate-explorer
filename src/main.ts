@@ -34,6 +34,7 @@ const view = parseView(params.get("view"));
 const level = parseLevel(params.get("mission"));
 const system = { ...parseSystem(params.get("system") ?? level.system) };
 if (params.has("sky")) system.sky = parseSkyPreset(params.get("sky"));
+if (level.beltScale !== undefined) system.belt = { ...system.belt, count: Math.max(1, Math.round(system.belt.count * level.beltScale)) }; // the duel wants open space
 const sky = system.sky;
 const canvas = document.body.appendChild(document.createElement("canvas"));
 const r = new Renderer(canvas, quality);

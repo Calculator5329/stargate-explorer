@@ -212,3 +212,34 @@ new hull; kinds that need a new silhouette (the bomber) get a def under
 `combat/`. Franchise names stay in strings (the "Ha'tak" in titles) and out of
 identifiers, as before. The brainstorm for further types lives in
 `docs/design/missions-and-playstyles-brainstorm.md`.
+
+## 2026-09-06 — Missions script enemies through one hook; no native scrollbars; scope guard on the playstyle list
+
+**Decision:** a mission that needs an enemy to fly a path sets `Enemy.steer`
+(a direction) and `Enemy.steerSpeed` and the enemy brain stands down until the
+mission clears it. No second AI class, no separate "runner" entity: the hunt
+quarry and the bomber-line runners are the same `Enemy` objects the guns,
+missiles, replay, rock crashes and kill credit already handle. Rock avoidance
+stays on under scripting and looks further ahead in proportion to the scripted
+speed, because a straight line through a dense belt at 168 m/s with a
+half-second lookahead ends in a rock (measured, hunt probe run 2).
+
+Native scrollbars are banned in every surface of the game (Ethan 2026-09-06:
+"totally takes you out of it"). The global rule in `index.html` is a thin gold
+thumb on a transparent track; a richer "ancient scroll" treatment is a design
+item. New UI must not introduce an element that scrolls without that rule.
+
+The list of playstyles Ethan named (combos, loadouts and custom ships,
+first-person foot mode, boarding, surfaces, bases with gates between planets)
+is recorded in the roadmap under Later with his scope guard: "we don't
+necessarily want to charge forward on everything that broadens scope because we
+are just going to turn ourselves into like No Man's Sky". Each entry is one
+mechanic with an entry condition; none starts without Ethan promoting it.
+
+**Consequences:** new mission shapes that move enemies on rails cost a level
+type plus a runner and no AI work. A scripted enemy that must not shoot gets
+that for free (firing is gated on `!e.steer`); one that should shoot while
+flying a line needs a new flag, not a special case. The duel is the tuning
+bench for every enemy table because it isolates one kind in open space
+(`beltScale` on the level). Foot mode, when it comes, is a new folder and a
+new DECISIONS entry; nothing in `sim/flight.ts` should bend toward it now.

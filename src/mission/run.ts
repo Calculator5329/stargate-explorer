@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { Mission, fmt } from "@/mission/mission";
 import type { MissionCtx } from "@/mission/mission";
-import type { RunLevel, RaceLevel } from "@/mission/levels";
+import type { RunLevel, RaceLevel, HuntLevel } from "@/mission/levels";
 import { glowMaterial } from "@/render/toon";
 import { noEdge } from "@/render/layers";
 import type { Tracked } from "@/combat/targets";
@@ -37,14 +37,14 @@ export class RunMission extends Mission {
   readonly rings: Ring[] = [];
   next = 0;
   private left: number;
-  private readonly active: THREE.Material;
+  protected readonly active: THREE.Material;
   private readonly idle: THREE.Material;
-  private readonly passed: THREE.Material;
+  protected readonly passed: THREE.Material;
   private harassed = false;
   private pulse = 0;
-  private readonly mines: Mines;
+  protected readonly mines: Mines;
 
-  constructor(override readonly def: RunLevel | RaceLevel, ctx: MissionCtx) {
+  constructor(override readonly def: RunLevel | RaceLevel | HuntLevel, ctx: MissionCtx) {
     super(def, ctx);
     this.left = def.timeLimit;
     this.winTitle = "WINDOW MADE";

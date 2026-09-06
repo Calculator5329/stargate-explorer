@@ -2,7 +2,7 @@
 // Usage: node scripts/chain-test.mjs [mission-id ...] (default: all)
 // STARGATE_TEST_URL selects an isolated server; default remains localhost:5187.
 import { chromium } from "playwright-core";
-const ALL = ["belt-clear", "gauntlet", "ring-race", "wreck-race", "shard-run", "descent", "graveyard-ambush", "chulak-aces", "escort", "blockade", "netu-convoy", "hold-the-gate", "hatak", "tollana-siege"];
+const ALL = ["belt-clear", "duel", "gauntlet", "hunt", "ring-race", "wreck-race", "shard-run", "descent", "graveyard-ambush", "chulak-aces", "escort", "bomber-line", "blockade", "netu-convoy", "hold-the-gate", "hatak", "tollana-siege"];
 const ids = process.argv.length > 2 ? process.argv.slice(2) : ALL;
 const baseURL = process.env.STARGATE_TEST_URL ?? "http://localhost:5187/";
 const SAVE_KEY = "stargate-explorer.save.v1";
@@ -74,7 +74,7 @@ try {
       steps++;
       for (const e of g.enemies.list) if (e.alive) g.enemies.damage(e, 1e6);
       if (type === "strike") for (const x of g.combat.extras) if (x.alive && x.damage) x.damage(1e6);
-      if (type === "hold" && m.phase !== "intro" && m.clock < m.def.duration - 3) m.clock = m.def.duration - 3; // outlasting the clock for real is the whole mission; the chain test only needs the win path
+      if ((type === "hold" || type === "intercept") && m.phase !== "intro" && m.clock < m.def.duration - 3) m.clock = m.def.duration - 3; // outlasting the clock for real is the whole mission; the chain test only needs the win path
       if ((type === "run" || type === "race") && m.phase !== "intro" && performance.now() - lastGate > 500 && m.next < m.rings.length) {
         const r = m.rings[m.next];
         f.__jump = [r.pos.clone().addScaledVector(r.normal, -12), r.pos.clone().addScaledVector(r.normal, 12)];

@@ -6,6 +6,9 @@ import { ProtectMission } from "@/mission/protect";
 import { StrikeMission } from "@/mission/strike";
 import { RaceMission } from "@/mission/race";
 import { HoldMission } from "@/mission/hold";
+import { DuelMission } from "@/mission/duel";
+import { HuntMission } from "@/mission/hunt";
+import { InterceptMission } from "@/mission/intercept";
 
 export function createMission(def: LevelDef, ctx: MissionCtx): Mission {
   switch (def.type) {
@@ -21,5 +24,11 @@ export function createMission(def: LevelDef, ctx: MissionCtx): Mission {
       return new RaceMission(def, ctx);
     case "hold":
       return new HoldMission(def, ctx);
+    case "duel":
+      return new DuelMission(def, ctx);
+    case "hunt":
+      return new HuntMission(def, ctx);
+    case "intercept":
+      return new InterceptMission(def, ctx);
   }
 }

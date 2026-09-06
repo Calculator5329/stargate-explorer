@@ -41,6 +41,9 @@ export interface Enemy {
   tgt: number;
   /** set when a crash was into a fragment the player made: the kill is the player's */
   crashCredit: boolean;
+  /** a mission flying this ship: wanted direction (world) and speed replace the brain; it does not shoot while scripted. Rock avoidance still applies. */
+  steer: THREE.Vector3 | null;
+  steerSpeed: number;
 }
 
 export interface Target {
@@ -126,7 +129,7 @@ export class Enemies {
       });
       e = {
         kind, stats: K.stats, rig, alive: false, pos: new THREE.Vector3(), quat: new THREE.Quaternion(), prevPos: new THREE.Vector3(), prevQuat: new THREE.Quaternion(),
-        vel: new THREE.Vector3(), speed: 0, hp: 0, state: "pursue", stateT: 0, hold: new THREE.Vector3(0, 0, 1), fireCd: 0, flinchCd: 0, side: 1, sinceHit: 99, mats, radius: T.enemy.radius, tgt: 0, crashCredit: false,
+        vel: new THREE.Vector3(), speed: 0, hp: 0, state: "pursue", stateT: 0, hold: new THREE.Vector3(0, 0, 1), fireCd: 0, flinchCd: 0, side: 1, sinceHit: 99, mats, radius: T.enemy.radius, tgt: 0, crashCredit: false, steer: null, steerSpeed: 0,
       };
       this.list.push(e);
       this.group.add(rig.root);
@@ -150,6 +153,8 @@ export class Enemies {
     e.sinceHit = 99;
     e.radius = a.radius;
     e.tgt = this.spawned++;
+    e.steer = null;
+    e.steerSpeed = 0;
     return e;
   }
 
@@ -230,7 +235,7 @@ export class Enemies {
         _lead.copy(tgt.pos).addScaledVector(tgt.vel, tof).sub(e.pos).normalize();
         _want.copy(_lead);
         targetSpeed = dist > 400 ? a.dash : a.cruise;
-        if (dist < w.range * 0.6 && _fwd.dot(_lead) > Math.cos(a.fireCone) && e.fireCd <= 0) {
+        if (!e.steer && dist < w.range * 0.6 && _fwd.dot(_lead) > Math.cos(a.fireCone) && e.fireCd <= 0) {
           e.fireCd = 1 / (w.enemyFireRate * a.fireRate * D.enemyFireRate);
           _tmp.copy(_lead).addScaledVector(_right.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5), w.enemySpread * a.spread * D.enemySpread * 2).normalize();
           shots.fire("enemy", _lead.copy(e.pos).addScaledVector(_fwd, a.radius), _tmp, e.vel, a.damage);
@@ -245,12 +250,19 @@ export class Enemies {
         targetSpeed = a.dash;
       }
       if (!tgt.alive) _want.copy(_fwd);
+      if (e.steer) {
+        // scripted by a mission (a quarry running the gates, a bomber on its line): fly where it says, at the speed it says
+        _want.copy(e.steer);
+        targetSpeed = e.steerSpeed;
+      }
 
       // rocks ahead push the wanted direction away; the arena edge pulls it home
       const R = this.rocks;
+      // a scripted runner holds a straight line at speed through the belt, so it looks further ahead than the brain does (avoidDist is half a second at ace speed)
+      const look = e.steer ? Math.max(1, e.steerSpeed / 60) : 1;
       for (let i = 0; i < R.count; i++) {
         const cx = R.centers[i * 3]! - e.pos.x, cy = R.centers[i * 3 + 1]! - e.pos.y, cz = R.centers[i * 3 + 2]! - e.pos.z;
-        const reach = R.radii[i]! + a.avoidDist;
+        const reach = R.radii[i]! + a.avoidDist * look;
         const d2 = cx * cx + cy * cy + cz * cz;
         if (d2 > reach * reach) continue;
         const d = Math.sqrt(d2);

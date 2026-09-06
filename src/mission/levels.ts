@@ -28,6 +28,8 @@ interface BaseLevel {
   requires?: string;
   /** ship id unlocked on first completion */
   unlocks?: string;
+  /** multiply the system's rock count (0.06 = a few reference rocks in open space) */
+  beltScale?: number;
 }
 
 export interface ClearLevel extends BaseLevel {
@@ -116,7 +118,53 @@ export interface StrikeLevel extends BaseLevel {
   mines: number;
 }
 
-export type LevelDef = ClearLevel | RunLevel | ProtectLevel | StrikeLevel | RaceLevel | HoldLevel;
+/** Free play against one enemy kind, nose to nose, first to `rounds`. `?foe=<kind>` overrides the kind. */
+export interface DuelLevel extends BaseLevel {
+  type: "duel";
+  foe: EnemyKind;
+  rounds: number;
+  /** starting separation (m) */
+  distance: number;
+  /** seconds between rounds */
+  pause: number;
+}
+
+/** Pursuit: a quarry flies the gate chain and escapes through the last gate; it only turns to fight inside `fightDist`. */
+export interface HuntLevel extends BaseLevel, CourseFields {
+  type: "hunt";
+  quarry: EnemyKind;
+  /** m/s while running the chain */
+  quarrySpeed: number;
+  /** inside this range it stops running and fights for `fightT` seconds, then runs again after `fightCd` */
+  fightDist: number;
+  fightT: number;
+  fightCd: number;
+}
+
+/** Bombers on a line to a point behind the player; each one that reaches it is a leak. Outlast `duration` with fewer than `maxLeaks`. */
+export interface InterceptLevel extends BaseLevel {
+  type: "intercept";
+  duration: number;
+  firstDelay: number;
+  interval: number;
+  groupStart: number;
+  groupGrow: number;
+  maxAlive: number;
+  runner: EnemyKind;
+  runnerSpeed: number;
+  /** fighters that come with each group, normal brains */
+  escortsPer: number;
+  escortKinds?: EnemyKind[];
+  near: number;
+  far: number;
+  /** the point they are flying for sits this far behind the player's start (m) */
+  lineBehind: number;
+  maxLeaks: number;
+  restockEvery: number;
+  finaleLine: string;
+}
+
+export type LevelDef = ClearLevel | RunLevel | ProtectLevel | StrikeLevel | RaceLevel | HoldLevel | DuelLevel | HuntLevel | InterceptLevel;
 
 export const LEVELS: LevelDef[] = [
   {
@@ -132,6 +180,20 @@ export const LEVELS: LevelDef[] = [
       { count: 5, delay: 5, near: 800, far: 1100, kinds: ["glider", "interceptor", "glider", "interceptor", "glider"] },
     ],
     finaleLine: "Last wave. Interceptors with them, the quick ones.",
+  },
+  {
+    id: "duel",
+    type: "duel",
+    system: "tollana",
+    title: "THE DUEL",
+    blurb: "Free play. One ace, open space over the gas giant, nose to nose at 900 m, first to three. Add ?foe=glider|interceptor|gunboat|bomber to the address for a different opponent.",
+    intro: ["One ship, one pilot, nothing in the way.", "First to three. Do not take the head-on pass."],
+    requires: "belt-clear",
+    beltScale: 0.06,
+    foe: "ace",
+    rounds: 3,
+    distance: 900,
+    pause: 3,
   },
   {
     id: "gauntlet",
@@ -150,6 +212,28 @@ export const LEVELS: LevelDef[] = [
     harass: 2,
     harassKinds: ["interceptor"],
     minesPerGate: 2,
+  },
+  {
+    id: "hunt",
+    type: "hunt",
+    system: "chulak",
+    title: "RUN IT DOWN",
+    blurb: "An ace is running the gate chain out of Chulak and will escape through the last gate. Catch it before then; it only turns to fight when you are close.",
+    intro: ["Courier glider on the chain, running for the far gate.", "It is faster than your cruise and it knows the rock. Boost is how you catch it."],
+    requires: "gauntlet",
+    rings: 9,
+    spacing: 640,
+    wander: 360,
+    ringRadius: 40,
+    timeLimit: 170,
+    harassAt: 0,
+    harass: 0,
+    minesPerGate: 0,
+    quarry: "ace",
+    quarrySpeed: 168,
+    fightDist: 260,
+    fightT: 7,
+    fightCd: 6,
   },
   {
     id: "ring-race",
@@ -277,6 +361,31 @@ export const LEVELS: LevelDef[] = [
     finaleLine: "Last wave. Two gunboats, and they are going for the engines.",
     escortHp: 600,
     escortSpeed: 26,
+  },
+  {
+    id: "bomber-line",
+    type: "intercept",
+    system: "p3x774",
+    title: "THE BOMBER LINE",
+    blurb: "Bombers on a straight line to the relay behind you, gliders riding with them. Every bomber that reaches the relay is a leak; three leaks and it is gone. Two and a half minutes.",
+    intro: ["Bombers inbound on the relay, and they will not turn for you.", "Kill the bombers. The gliders are there to make you forget that."],
+    requires: "escort",
+    duration: 150,
+    firstDelay: 4,
+    interval: 16,
+    groupStart: 1,
+    groupGrow: 1,
+    maxAlive: 6,
+    runner: "bomber",
+    runnerSpeed: 105,
+    escortsPer: 2,
+    escortKinds: ["glider", "interceptor"],
+    near: 1100,
+    far: 1400,
+    lineBehind: 1300,
+    maxLeaks: 3,
+    restockEvery: 30,
+    finaleLine: "Last bombers on the line. Nothing reaches the relay.",
   },
   {
     id: "blockade",
