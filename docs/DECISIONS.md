@@ -187,3 +187,28 @@ retains its states and simulation-hold contract; its chevron audio calls also
 advance the DOM glyphs. No assets or dependencies were added. Local constants
 stay in the owned files for this lane. Build/adapter checks and the unfulfilled
 browser-capture requirement are recorded in `docs/design/gate-hub-redesign.md`.
+
+### 2026-09-05 — Escort hull is level data; enemy hulls are flyable by registry entry; "hold" is the sixth mission type
+
+**Why:** Ethan asked for more missions and ships in one breath. Two of the
+cheapest ways to get both were blocked by hard-coding: the protect runner built
+the Prometheus by name, and the hangar's locked-card text named the Ha'tak
+mission. Both moved to data (`ProtectLevel.escortHull/escortName/escortPalette/
+escortRadius`, `unlockedBy()` searching `LEVELS` for the mission that hands a
+hull over). A captured death glider became a player ship by adding one line to
+`ships/registry.ts` pointing at the enemy def: the builder does not care which
+side a def is on, so any enemy hull can be earned and flown at zero art cost.
+The hold type exists because every other type ends when a list is empty;
+outlasting a clock is a different pressure (spend or save missiles, kill or
+evade) and the cheapest new playstyle available.
+
+**Consequences:** new missions that escort something other than the carrier
+need only a hull key. A recoloured enemy hull as a friendly takes a palette name
+(`escortPalette`), not a new def. The chain test drives hold missions by
+setting the clock near the end, so it verifies the win path and the unlock but
+not the pacing; pacing is Ethan's to fly. Enemy kinds that differ only in
+numbers (the ace) are a `T` table plus a def spread with a new palette, not a
+new hull; kinds that need a new silhouette (the bomber) get a def under
+`combat/`. Franchise names stay in strings (the "Ha'tak" in titles) and out of
+identifiers, as before. The brainstorm for further types lives in
+`docs/design/missions-and-playstyles-brainstorm.md`.

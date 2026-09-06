@@ -1,7 +1,7 @@
 import type { Save } from "@/core/save";
 import { writeSave } from "@/core/save";
 import { LEVELS, type LevelDef } from "@/mission/levels";
-import { SHIPS } from "@/ships/registry";
+import { SHIPS, unlockedBy } from "@/ships/registry";
 import { fmt } from "@/mission/mission";
 import { SYSTEMS } from "@/world/systems";
 import { addressMarkup, scriptSvg, systemAddress } from "@/ui/glyphs";
@@ -94,7 +94,7 @@ export class Hub {
       b.dataset.focus = s.id;
       b.setAttribute("aria-pressed", String(s.id === this.ship));
       const st = s.stats;
-      b.innerHTML = `<b>${s.def.name}</b><small>${open ? s.blurb : "LOCKED · bring down the Ha'tak"}</small><div class="stats"><span>speed ${pct(st.speed)}</span><span>agility ${pct(st.agility)}</span><span>hull ${pct(st.hull)}</span><span>guns ${pct(st.guns)}</span><span>missiles ${st.missiles}</span></div>`;
+      b.innerHTML = `<b>${s.def.name}</b><small>${open ? s.blurb : `LOCKED · ${unlockedBy(s.id, LEVELS) ?? "no mission hands this one over yet"}`}</small><div class="stats"><span>speed ${pct(st.speed)}</span><span>agility ${pct(st.agility)}</span><span>hull ${pct(st.hull)}</span><span>guns ${pct(st.guns)}</span><span>missiles ${st.missiles}</span></div>`;
       b.addEventListener("click", () => { this.ship = s.id; this.build(); });
       ss.appendChild(b);
     }

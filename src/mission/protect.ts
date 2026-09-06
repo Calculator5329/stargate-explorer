@@ -4,7 +4,8 @@ import type { MissionCtx } from "@/mission/mission";
 import type { ProtectLevel } from "@/mission/levels";
 import type { Lockable } from "@/combat/targets";
 import { ShipRig } from "@/ships/rig";
-import { PROMETHEUS } from "@/ships/prometheus-def";
+import { HULLS } from "@/ships/hulls";
+import { PALETTES } from "@/ships/palettes";
 
 const _n = new THREE.Vector3();
 
@@ -20,12 +21,15 @@ export class ProtectMission extends ClearMission<ProtectLevel> {
   /** the parent's objective line and what we last showed, so the hull suffix is composed once, not appended every tick (2026-09-05 bug: the HUD filled with "Prometheus hull 100%") */
   private baseLine = "";
   private shownLine = "";
+  private readonly name: string;
 
   constructor(override readonly def: ProtectLevel, ctx: MissionCtx) {
     super(def, ctx);
-    this.winTitle = "PROMETHEUS SAFE";
+    this.name = def.escortName ?? "Prometheus";
+    this.winTitle = `${this.name.toUpperCase()} SAFE`;
     this.maxHp = def.escortHp;
-    const rig = new ShipRig(PROMETHEUS);
+    const hull = HULLS[def.escortHull ?? "prometheus"] ?? HULLS.prometheus!;
+    const rig = new ShipRig(def.escortPalette ? { ...hull, palette: PALETTES[def.escortPalette] } : hull);
     rig.root.traverse((o) => {
       if (o instanceof THREE.Mesh && o.material instanceof THREE.MeshToonMaterial) this.mats.push(o.material);
     });
@@ -37,7 +41,7 @@ export class ProtectMission extends ClearMission<ProtectLevel> {
     this.group.add(rig.root);
     const self = this;
     this.escort = {
-      rig, hp: def.escortHp, sinceHit: 99, pos: rig.root.position, vel: fwd.clone().multiplyScalar(def.escortSpeed), alive: true, radius: 30,
+      rig, hp: def.escortHp, sinceHit: 99, pos: rig.root.position, vel: fwd.clone().multiplyScalar(def.escortSpeed), alive: true, radius: def.escortRadius ?? 30,
       damage(amount) {
         if (!this.alive) return false;
         this.hp -= amount;
@@ -71,14 +75,14 @@ export class ProtectMission extends ClearMission<ProtectLevel> {
       if (d < r) e.pos.addScaledVector(_n.normalize(), (r - d) * Math.min(1, dt * 3));
     }
     if (!e.alive) {
-      this.fail("The Prometheus broke up over the belt.", "PROMETHEUS LOST");
+      this.fail(`The ${this.name} broke up over the belt.`, `${this.name.toUpperCase()} LOST`);
       return;
     }
     super.run(dt);
     if (this.done) return;
     this.marker = this.ctx.combat.enemies.aliveCount > 0 ? null : e;
     if (this.line !== this.shownLine) this.baseLine = this.line; // the wave machine wrote a new line
-    this.line = this.shownLine = `${this.baseLine}  ·  Prometheus hull ${Math.round((100 * e.hp) / this.maxHp)}%`;
+    this.line = this.shownLine = `${this.baseLine}  ·  ${this.name} hull ${Math.round((100 * e.hp) / this.maxHp)}%`;
   }
 
   override render(dt: number): void {
@@ -93,6 +97,6 @@ export class ProtectMission extends ClearMission<ProtectLevel> {
   }
 
   override summary(): string {
-    return `${super.summary()}\nPrometheus hull ${Math.round((100 * this.escort.hp) / this.maxHp)}%`;
+    return `${super.summary()}\n${this.name} hull ${Math.round((100 * this.escort.hp) / this.maxHp)}%`;
   }
 }

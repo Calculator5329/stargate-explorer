@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-05 (late night) — Six missions, three ships, two enemy kinds, a hold mission type, and a brainstorm
+
+Ethan, 2026-09-05: "Add more missions ships, and start brainstorming on new types of missions and playstyles".
+
+- **Missions 8 → 14.** RACE THROUGH THE WRECKS (race, Graveyard, six rivals, ten gates), THE DESCENT (run, P3X-774, fourteen gates, three mines a rim, aces join at gate five), THE ACES OF CHULAK (clear, aces; unlocks the captured glider), BRING THE TENDER HOME (protect, Netu, a captured gunboat hull in Tau'ri grey as the escort, bombers hunting it; unlocks the Lancer), HOLD THE GATE (new type, Abydos, three minutes against growing groups with a missile restock every 30 s; unlocks the Dart), THE SECOND MOTHERSHIP (strike, Tollana, aces on the ring, bombers on reinforcement, 22 mines).
+- **Hold mission type** (`mission/hold.ts`, `HoldLevel`): groups on an interval that grow per minute of clock, capped alive count, kinds cycled across spawns so the heavy end of the list arrives late, win when the clock runs out. Chain test drives it by jumping the clock.
+- **Escort is data**: `ProtectLevel.escortHull/escortName/escortPalette/escortRadius`; the runner and its HUD lines take the name from the level. The Prometheus escort is unchanged.
+- **Ships 3 → 6.** F-19 Dart (`ships/dart-def.ts`: light interceptor, speed 1.25, agility 1.3, hull 0.55, two missiles), F-24 Lancer (`ships/lancer-def.ts`: torpedo boat, eighteen missiles, light guns, two long tubes under the wings), captured Glider (the enemy def as a registry entry, no missiles). Hangar lock text now names the mission that hands a hull over instead of always saying "bring down the Ha'tak".
+- **Enemy kinds 3 → 5.** Bomber (`combat/bomber-def.ts`, `T.bomber`: 260 hp, slow, 3.6× damage, never dogfights) and Ace (`T.ace`: glider hull with gold trim, faster, tougher, flinches 95 % of the time, saddles long). `?hull=dart|lancer|bomber|ace` inspects them; first captures in `docs/shots/2026-09-06-hull-*.png` via the new `scripts/hull-shots.mjs`.
+- **Brainstorm**: `docs/design/missions-and-playstyles-brainstorm.md`: seventeen mission and playstyle ideas in three cost bands, four ship ideas, three different first-pick bets for Ethan.
+
 ## 2026-09-05 (night) — Replay of the last kill on V, victim in frame, crash kills credited, first hosting deploy
 
 Ethan, 2026-09-05 (feedback chat, fifth round): "deploy all and make sure ... the replays are actually showing the enemy ship, getting blown up and everything and then allow you to press v at any point at least for now to show the last kill as a replay ... it should be counted as one of your own kills if an enemy hits it into an asteroid and kills itself".

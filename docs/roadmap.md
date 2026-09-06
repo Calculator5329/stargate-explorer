@@ -174,6 +174,16 @@ Ethan: prefers classic; assist helps but may be too strong; arcade W/S up/down "
 - [ ] Ethan watches a few V replays in a live sortie: does the victim read, is 40 m past the kill the right parking spot, does 7 s before feel long?
 - [ ] Ethan dials a gate on the new hub: glyph legibility, gate model, kawoosh and tunnel; then a DECISIONS follow-up if the glyph set changes.
 
+### M2.8 — Fleet and mission expansion (2026-09-05, Ethan: "Add more missions ships, and start brainstorming on new types of missions and playstyles")
+- [x] Six new missions across the unlock tree: wreck-race, descent, chulak-aces, netu-convoy, hold-the-gate, tollana-siege. *(2026-09-05 late night; `scripts/chain-test.mjs` 14/14)*
+- [x] Hold mission type (outlast the clock) and a data-driven escort hull for protect missions. *(2026-09-05 late night; DECISIONS entry)*
+- [x] Three flyable hulls: F-19 Dart, F-24 Lancer, captured Glider; two enemy kinds: bomber, ace. *(2026-09-05 late night; first-pass geometry, captures in `docs/shots/2026-09-06-hull-*.png`)*
+- [x] Brainstorm of new mission types and playstyles. *(2026-09-05, `docs/design/missions-and-playstyles-brainstorm.md`)*
+- [ ] Ethan picks a bet from the brainstorm (breadth: duel + hunt; depth: loadouts + carrier playstyle; big swing: gate chase across systems + wingmen), or names a fourth.
+- [ ] Ethan flies the Dart, the Lancer and the captured Glider and says which stats are wrong; then the ace and bomber tables (`T.ace`, `T.bomber`) after a Chulak aces run and the tender convoy.
+- [ ] Hull art pass on the Dart, Lancer and bomber (first-pass parametric geometry tonight; a design lane against the new captures, the way the Prometheus pass 5 went).
+- [ ] Hold the Gate pacing: 3 minutes, groups of 2 growing by 2 per minute, cap 8 alive, restock every 30 s. Untested by a human; the chain test jumps the clock.
+
 ### M3 — Fleet & factions
 - [x] <!-- workspace:id=work:fbd1c463-3000-5d78-830c-2a559fa5d2a3 --> 3 player hulls, 3 enemy hulls, distinct silhouettes (see GRAPHICS.md silhouette test). *(2026-09-04: enemies glider / interceptor / gunboat; players Facet / F-21 Broadsword / Prometheus; plus the neutral racer. `?hull=` inspects any; silhouettes judged by capture, not yet by Ethan)*
 - [x] <!-- workspace:id=work:4f39c478-be65-577d-b085-12e3d36e930e --> Faction materials/palettes. *(2026-09-04 late: `SystemDef.faction` names a PALETTES entry and every enemy hull spawned in that system takes it; goauld default, lucian (oxblood/red, Netu), serpent (steel/teal, Kheb and the Graveyard). `node scripts/kinds-test.mjs system=netu` for a look.)*
