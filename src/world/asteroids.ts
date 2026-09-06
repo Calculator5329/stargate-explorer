@@ -75,6 +75,9 @@ function hullPlanes(g: THREE.BufferGeometry): Float32Array {
   return facePlanes(new ConvexGeometry(pts));
 }
 const _obj = new THREE.Object3D();
+const _pv = new THREE.Matrix4();
+const _frustum = new THREE.Frustum();
+const _sphere = new THREE.Sphere();
 const _axis = new THREE.Vector3();
 const _q = new THREE.Quaternion();
 const _v = new THREE.Vector3();
@@ -227,6 +230,10 @@ export class Asteroids {
   /** rocks broken by the player this session (HUD/stat) */
   broken = 0;
   private readonly meshes: THREE.InstancedMesh[] = [];
+  private readonly shells: THREE.InstancedMesh[] = [];
+  private readonly lines: THREE.LineSegments[] = [];
+  /** instances submitted to the GPU after the last `cull()` (perf overlay / tests) */
+  drawn = 0;
   private readonly quats: Float32Array;
   private readonly scales: Float32Array;
   private readonly rates: Float32Array;
@@ -316,7 +323,6 @@ export class Asteroids {
           // spare fragment slot: parked far away, invisible
           this.centers[gi * 3 + 1] = FAR;
           this.quats[gi * 4 + 3] = 1;
-          this.write(gi);
           continue;
         }
         for (let tries = 0; tries < 6; tries++) {
@@ -335,15 +341,58 @@ export class Asteroids {
         this.rates[gi] = (0.03 + rnd() * 0.25) * (big ? 0.35 : 1) * style.tumble;
         _axis.set(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5).normalize();
         this.axes.set([_axis.x, _axis.y, _axis.z], gi * 3);
-        this.write(gi);
       }
       mesh.castShadow = false;
       mesh.frustumCulled = false;
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       const shell = noEdge(new THREE.InstancedMesh(outlineGeometry(rock.getAttribute("position").array), outlineMaterial, per));
       shell.instanceMatrix = mesh.instanceMatrix;
       shell.frustumCulled = false;
-      this.group.add(mesh, shell, creaseLines(rock, mesh.instanceMatrix, per));
+      const lines = creaseLines(rock, mesh.instanceMatrix, per);
+      this.shells.push(shell);
+      this.lines.push(lines);
+      this.group.add(mesh, shell, lines);
     }
+    this.cull(null);
+  }
+
+  /**
+   * Pack the rocks the camera can see into the front of each shape's instance buffer and draw
+   * only those (2026-09-06 perf pass). The sim arrays keep their fixed `gi` layout; only the GPU
+   * side is compacted, and only the used range is uploaded. A null camera draws everything, which
+   * the inspect views and the first frame use. Rocks off-screen still collide and tumble.
+   */
+  cull(camera: THREE.Camera | null): void {
+    if (camera) {
+      _pv.multiplyMatrices(camera.projectionMatrix, _pv.copy(camera.matrixWorld).invert());
+      _frustum.setFromProjectionMatrix(_pv);
+    }
+    const per = this.per;
+    let drawn = 0;
+    for (let s = 0; s < this.meshes.length; s++) {
+      const mesh = this.meshes[s]!;
+      let k = 0;
+      for (let i = 0; i < per; i++) {
+        const gi = s * per + i;
+        if (!this.alive[gi]) continue;
+        if (camera) {
+          _sphere.center.set(this.centers[gi * 3]!, this.centers[gi * 3 + 1]!, this.centers[gi * 3 + 2]!);
+          _sphere.radius = this.radii[gi]!;
+          if (!_frustum.intersectsSphere(_sphere)) continue;
+        }
+        this.matrixAt(gi, _obj.matrix);
+        mesh.setMatrixAt(k++, _obj.matrix);
+      }
+      mesh.count = k;
+      this.shells[s]!.count = k;
+      (this.lines[s]!.geometry as THREE.InstancedBufferGeometry).instanceCount = k;
+      const attr = mesh.instanceMatrix;
+      attr.clearUpdateRanges();
+      if (k > 0) attr.addUpdateRange(0, k * 16);
+      attr.needsUpdate = true;
+      drawn += k;
+    }
+    this.drawn = drawn;
   }
 
   /** World matrix of rock `gi` (position, tumble, uniform scale). */
@@ -352,11 +401,6 @@ export class Asteroids {
     _obj.position.set(this.centers[gi * 3]!, this.centers[gi * 3 + 1]!, this.centers[gi * 3 + 2]!);
     _obj.quaternion.set(this.quats[gi * 4]!, this.quats[gi * 4 + 1]!, this.quats[gi * 4 + 2]!, this.quats[gi * 4 + 3]!);
     out.compose(_obj.position, _obj.quaternion, _obj.scale.setScalar(s));
-  }
-
-  private write(gi: number): void {
-    this.matrixAt(gi, _obj.matrix);
-    this.meshes[Math.floor(gi / this.per)]!.setMatrixAt(gi % this.per, _obj.matrix);
   }
 
   /** Take `amount` off rock `gi`; true when it broke. `dir` (any length) pushes the fragments along the shot. */
@@ -401,7 +445,6 @@ export class Asteroids {
       this.rates[fi] = (0.5 + Math.random()) * R.fragTumble;
       _axis.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
       this.axes.set([_axis.x, _axis.y, _axis.z], fi * 3);
-      this.write(fi);
     }
   }
 
@@ -415,7 +458,6 @@ export class Asteroids {
     this.playerMade[gi] = 0;
     this.centers.set([0, FAR, 0], gi * 3);
     this.vel.set([0, 0, 0], gi * 3);
-    this.write(gi);
   }
 
   tick(dt: number): void {
@@ -425,7 +467,11 @@ export class Asteroids {
       _axis.set(this.axes[gi * 3]!, this.axes[gi * 3 + 1]!, this.axes[gi * 3 + 2]!);
       _q.setFromAxisAngle(_axis, this.rates[gi]! * dt);
       _obj.quaternion.set(this.quats[gi * 4]!, this.quats[gi * 4 + 1]!, this.quats[gi * 4 + 2]!, this.quats[gi * 4 + 3]!).premultiply(_q);
-      this.quats.set([_obj.quaternion.x, _obj.quaternion.y, _obj.quaternion.z, _obj.quaternion.w], gi * 4);
+      const oq = _obj.quaternion;
+      this.quats[gi * 4] = oq.x;
+      this.quats[gi * 4 + 1] = oq.y;
+      this.quats[gi * 4 + 2] = oq.z;
+      this.quats[gi * 4 + 3] = oq.w;
       const t = this.ttl[gi]!;
       if (t > 0) {
         // a fragment: drift, then shrink out over the last half second
@@ -445,8 +491,6 @@ export class Asteroids {
           this.scales[gi] = (full * k) / this.bounds[shape]!;
         }
       }
-      this.write(gi);
     }
-    for (const m of this.meshes) m.instanceMatrix.needsUpdate = true;
   }
 }

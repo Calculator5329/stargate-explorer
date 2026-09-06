@@ -89,6 +89,7 @@ const menu = new Menu(document.getElementById("menu")!, canvas, save, {
     input.steer = params.has("steer") ? parseSteer(params.get("steer")) : s.steer;
     setRawMouse(s.rawMouse);
     setDifficulty(s.difficulty);
+    r.dynamic = s.dynamicRes;
     game?.audio.setMute(s.mute);
   },
   restart: () => location.reload(),
@@ -98,7 +99,7 @@ const menu = new Menu(document.getElementById("menu")!, canvas, save, {
   },
   hasReplay: () => game?.replay.hasHighlight ?? false,
 }, game !== null && !input.freeLock, level.title);
-Object.assign(window, { __game: game, __flight: flight, __input: input, __rocks: world.asteroids, __travel: travel, __hub: hub, __T: T });
+Object.assign(window, { __game: game, __flight: flight, __input: input, __rocks: world.asteroids, __travel: travel, __hub: hub, __T: T, __renderer: r });
 // headless tests (scripts/_*.mjs) drive the game through these
 createDebugPanel();
 
@@ -128,9 +129,11 @@ const loop = new Loop({
       game?.render(alpha, dt, r.camera, hud, flight);
       travel?.update(dt, r.camera);
     }
-    world.update(r.camera.position);
+    world.update(r.camera, r.gl, r.tier.bakeSize);
+    r.adapt(dt, loop.fps);
     r.render();
-    perf.update(dt, loop, r.gl.info);
+    perf.update(dt, loop, r.gl.info, r);
   },
 });
+Object.assign(window, { __loop: loop, __world: world });
 loop.start();

@@ -28,6 +28,8 @@ export interface Settings {
   invertY: boolean;
   /** render tier; `?quality=` on the URL still wins for one page */
   quality: Quality;
+  /** drop render resolution before dropping frames (Renderer.dynamic) */
+  dynamicRes: boolean;
   binds: Binds;
 }
 
@@ -51,7 +53,7 @@ export interface Save {
 const KEY = "stargate-explorer.save.v1";
 
 export const DEFAULT_SAVE: Save = {
-  settings: { scheme: "arcade", assist: true, assistStrength: 1, speedTurn: false, steer: "cursor", rawMouse: true, sens: 1, difficulty: "normal", mute: false, invertY: false, quality: "med", binds: { ...DEFAULT_BINDS } },
+  settings: { scheme: "arcade", assist: true, assistStrength: 1, speedTurn: false, steer: "cursor", rawMouse: true, sens: 1, difficulty: "normal", mute: false, invertY: false, quality: "med", dynamicRes: true, binds: { ...DEFAULT_BINDS } },
   progress: { ship: "f11", unlocked: ["f11"], missions: {} },
 };
 

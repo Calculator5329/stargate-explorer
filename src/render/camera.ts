@@ -28,6 +28,8 @@ export class ChaseCamera {
   /** the camera's own attitude, chasing the ship's with a lag so manoeuvres read on screen */
   private readonly frame = new Quaternion();
   private rollFrac = 0;
+  /** clock for the boost rumble */
+  private shakeT = 0;
 
   constructor(readonly cam: PerspectiveCamera) {}
 
@@ -59,8 +61,16 @@ export class ChaseCamera {
     this.vel.addScaledVector(_acc, dt);
     this.off.addScaledVector(this.vel, dt);
     this.cam.position.copy(shipPos).add(this.off);
-    const shake = c.hitShake * Math.exp(-sinceHit * 5) + c.boostShake * this.boostFrac;
-    if (shake > 1e-3) this.cam.position.addScaledVector(_up.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5), shake * 2);
+    const hit = c.hitShake * Math.exp(-sinceHit * 5);
+    if (hit > 1e-3) this.cam.position.addScaledVector(_up.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5), hit * 2);
+    // boost rumble: a sum of sines, not per-frame noise. White noise under a still aim cursor read as the
+    // cursor jittering whenever Shift was held (Ethan, 2026-09-06); this hums instead of stutters.
+    const rumble = c.boostShake * this.boostFrac;
+    if (rumble > 1e-3) {
+      const t = (this.shakeT += dt);
+      _up.set(Math.sin(t * 31) * Math.sin(t * 7.3), Math.sin(t * 27 + 1) * Math.sin(t * 9.1), Math.sin(t * 23 + 2) * Math.sin(t * 5.7));
+      this.cam.position.addScaledVector(_up, rumble);
+    }
 
     _fwd.set(0, 0, 1).applyQuaternion(this.frame);
     _target.copy(shipPos).addScaledVector(_fwd, c.lookAhead);

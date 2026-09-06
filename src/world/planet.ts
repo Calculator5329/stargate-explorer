@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { T } from "@/core/tunables";
 import { NOISE_GLSL } from "@/world/noise";
 import { noEdge } from "@/render/layers";
+import { FullScreenQuad } from "three/examples/jsm/postprocessing/Pass.js";
 
 export interface PlanetPalette {
   deep: number;
@@ -100,15 +101,23 @@ void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }`;
 
-// Hard steps everywhere: land/sea, 3 land tones, 2 sea tones, 3 light steps.
-const SURFACE_FRAG = /* glsl */ `
-uniform vec3 uSunDir, uDeep, uShallow, uLow, uMid, uHigh, uIce, uNight;
+// Hard steps everywhere: land/sea, 3 land tones, 2 sea tones, 3 light steps. The albedo and the land mask
+// are baked once into an equirect texture (BAKE_FRAG); the surface shader only lights it.
+const BAKE_VERT = /* glsl */ `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = vec4(position.xy, 0.0, 1.0);
+}`;
+
+const BAKE_FRAG = /* glsl */ `
+uniform vec3 uDeep, uShallow, uLow, uMid, uHigh, uIce;
 uniform float uSeaLevel, uTerrainLevel, uIceLine, uSeed, uBands;
-varying vec3 vN;
-varying vec3 vObj;
+varying vec2 vUv;
 ${NOISE_GLSL}
 void main() {
-  vec3 n = normalize(vObj);
+  float lon = (vUv.x - 0.5) * 6.2831853, lat = (vUv.y - 0.5) * 3.1415927;
+  vec3 n = vec3(cos(lat) * sin(lon), sin(lat), cos(lat) * cos(lon));
   float h = fbm(n * 2.4 + vec3(uSeed)) * 1.6 - 0.8;
   float detail = fbm(n * 9.0 + vec3(uSeed * 1.7));
   float hh = h + 0.12 * (detail - 0.5);
@@ -123,6 +132,20 @@ void main() {
   vec3 alb = mix(sea, ground, land);
   float ice = step(uIceLine, abs(n.y) + 0.06 * (detail - 0.5));
   alb = mix(alb, uIce, ice);
+  gl_FragColor = vec4(alb, land);
+}`;
+
+const SURFACE_FRAG = /* glsl */ `
+uniform vec3 uSunDir, uNight;
+uniform sampler2D uMap;
+varying vec3 vN;
+varying vec3 vObj;
+void main() {
+  vec3 n = normalize(vObj);
+  vec2 uv = vec2(atan(n.x, n.z) / 6.2831853 + 0.5, asin(clamp(n.y, -1.0, 1.0)) / 3.1415927 + 0.5);
+  vec4 t = texture2D(uMap, uv);
+  vec3 alb = t.rgb;
+  float land = t.a;
   float ndl = dot(normalize(vN), uSunDir);
   float day = smoothstep(-0.03, 0.03, ndl);
   float lit = 0.5 + 0.45 * smoothstep(0.36, 0.42, ndl);
@@ -177,8 +200,12 @@ void main() {
 export class Planet {
   readonly group = new THREE.Group();
   private readonly surfaceU;
+  private readonly bakeU;
   private readonly atmoU;
   private readonly seaLevel: number | undefined;
+  private readonly bakeMat: THREE.ShaderMaterial;
+  private rt: THREE.WebGLRenderTarget | null = null;
+  private bakedKey = "";
 
   constructor(o: PlanetOptions) {
     const p = o.palette;
@@ -188,6 +215,10 @@ export class Planet {
     const c = (v: number) => ({ value: new THREE.Color(v) });
     this.surfaceU = {
       uSunDir: { value: o.sunDir },
+      uNight: c(p.night),
+      uMap: { value: null as THREE.Texture | null },
+    };
+    this.bakeU = {
       uSeaLevel: { value: this.seaLevel ?? T.planet.seaLevel },
       uTerrainLevel: { value: T.planet.seaLevel },
       uBands: { value: o.bands ?? preset?.bands ?? 0 },
@@ -199,8 +230,8 @@ export class Planet {
       uMid: c(p.mid),
       uHigh: c(p.high),
       uIce: c(p.ice),
-      uNight: c(p.night),
     };
+    this.bakeMat = new THREE.ShaderMaterial({ vertexShader: BAKE_VERT, fragmentShader: BAKE_FRAG, uniforms: this.bakeU, depthTest: false, depthWrite: false });
     const surface = new THREE.Mesh(
       new THREE.SphereGeometry(o.radius, o.segments, Math.max(8, o.segments >> 1)),
       new THREE.ShaderMaterial({ vertexShader: SURFACE_VERT, fragmentShader: SURFACE_FRAG, uniforms: this.surfaceU }),
@@ -242,11 +273,28 @@ export class Planet {
     }
   }
 
-  update(): void {
-    this.surfaceU.uSeaLevel.value = this.seaLevel ?? T.planet.seaLevel;
-    this.surfaceU.uTerrainLevel.value = T.planet.seaLevel;
-    this.surfaceU.uIceLine.value = T.planet.iceLine;
+  /** Push the tunables in and re-bake the albedo map when they moved. `width` is the equirect width (height is half). */
+  update(gl: THREE.WebGLRenderer, width: number): void {
     this.atmoU.uStrength.value = T.planet.atmosphereStrength;
     this.atmoU.uRimWidth.value = T.planet.rimWidth;
+    const b = this.bakeU;
+    b.uSeaLevel.value = this.seaLevel ?? T.planet.seaLevel;
+    b.uTerrainLevel.value = T.planet.seaLevel;
+    b.uIceLine.value = T.planet.iceLine;
+    const key = `${width}|${b.uSeaLevel.value}|${b.uTerrainLevel.value}|${b.uIceLine.value}`;
+    if (key === this.bakedKey) return;
+    this.bakedKey = key;
+    if (!this.rt || this.rt.width !== width) {
+      this.rt?.dispose();
+      this.rt = new THREE.WebGLRenderTarget(width, width >> 1, { depthBuffer: false, stencilBuffer: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, generateMipmaps: false, wrapS: THREE.RepeatWrapping });
+      this.surfaceU.uMap.value = this.rt.texture;
+    }
+    const prev = gl.getRenderTarget();
+    gl.setRenderTarget(this.rt);
+    _quad.material = this.bakeMat;
+    _quad.render(gl);
+    gl.setRenderTarget(prev);
   }
 }
+
+const _quad = new FullScreenQuad();

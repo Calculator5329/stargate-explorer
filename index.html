@@ -202,7 +202,8 @@
         <label><span>Assist strength</span><input type="range" name="assistK" min="0.2" max="1" step="0.05" /><i class="assist-v"></i></label>
         <label><span>Difficulty</span><select name="difficulty"><option value="easy">easy</option><option value="normal">normal</option><option value="hard">hard</option></select></label>
         <label><span>Invert Y (push to dive)</span><input type="checkbox" name="invert" /></label>
-        <label><span>Quality (restarts the sortie)</span><select name="quality"><option value="low">low · no bloom, no shadows</option><option value="med">medium</option><option value="high">high · 2x pixels</option></select></label>
+        <label><span>Quality (restarts the sortie)</span><select name="quality"><option value="low">low · no bloom, no shadows, no AA</option><option value="med">medium · 2x MSAA</option><option value="high">high · 2x pixels, 4x MSAA</option></select></label>
+        <label><span>Dynamic resolution (drops pixels before frames)</span><input type="checkbox" name="dynamicRes" /></label>
         <label><span>Mute (M)</span><input type="checkbox" name="mute" /></label>
         <details class="binds"><summary>Keys</summary><div class="grid"></div><button class="reset">DEFAULTS</button></details>
         <div class="row"><button class="fly">FLY</button><button class="restart">RESTART</button><button class="replay">REPLAY THE KILL</button><button class="hub">MISSIONS</button></div>

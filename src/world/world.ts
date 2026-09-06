@@ -44,9 +44,11 @@ export class World {
     this.asteroids.tick(dt);
   }
 
-  update(camPos: THREE.Vector3): void {
-    this.sun.update(camPos);
-    this.sky.update();
-    this.planet.update();
+  /** Once per render frame, before `render()`: sun glare, the sky and planet bakes (no-ops once baked), belt culling. */
+  update(camera: THREE.Camera, gl: THREE.WebGLRenderer, bakeSize: number): void {
+    this.sun.update(camera.position);
+    this.sky.update(gl, bakeSize);
+    this.planet.update(gl, bakeSize);
+    this.asteroids.cull(this.asteroids.group.visible ? camera : null);
   }
 }

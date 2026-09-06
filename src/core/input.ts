@@ -98,8 +98,16 @@ export class Input {
     });
     document.addEventListener("mousemove", (e) => {
       if (!this.locked) return;
-      this.mdx += e.movementX;
-      this.mdy += e.movementY;
+      if (this.steer === "cursor") {
+        // the aim cursor moves at mouse-event rate, not sim rate: integrating it at 60 Hz made the cursor
+        // step visibly on a 144 Hz mouse/display and read as jitter (Ethan, 2026-09-06)
+        const c = this.cursor, R = T.flight.cursorRadius;
+        c.x = clamp(c.x + e.movementX * this.sens, -R, R);
+        c.y = clamp(c.y + e.movementY * this.sens, -R, R);
+      } else {
+        this.mdx += e.movementX;
+        this.mdy += e.movementY;
+      }
     });
     document.addEventListener("mousedown", (e) => {
       if (this.locked && e.button === 0) this.fire = true;
@@ -138,8 +146,6 @@ export class Input {
     const ySign = this.invertY ? 1 : -1;
     if (this.steer === "cursor") {
       const c = this.cursor, R = f.cursorRadius;
-      c.x = clamp(c.x + this.mdx * this.sens, -R, R);
-      c.y = clamp(c.y + this.mdy * this.sens, -R, R);
       if (f.cursorReturn > 0) {
         const k = Math.exp(-f.cursorReturn * dt);
         c.x *= k;

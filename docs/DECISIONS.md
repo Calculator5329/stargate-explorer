@@ -243,3 +243,15 @@ flying a line needs a new flag, not a special case. The duel is the tuning
 bench for every enemy table because it isolates one kind in open space
 (`beltScale` on the level). Foot mode, when it comes, is a new folder and a
 new DECISIONS entry; nothing in `sim/flight.ts` should bend toward it now.
+
+## 2026-09-06 — Bake what does not move; cull what the camera cannot see; drop pixels before frames
+
+**Context:** Ethan asked for an in-depth performance pass across hardware and devices. The local GPU is vsync-locked at 60 with 1 ms of GPU time on every tier, so measurement moved to SwiftShader at 720p as the weak-device proxy (`scripts/perf-bench.mjs`, `scripts/perf-attrib.mjs`). The cost order there: 4x MSAA on a HalfFloat target, bloom, the belt drawn unculled, then the procedural sky and planet shaders (five octaves of fbm per pixel per frame for a picture that never changes).
+
+**Decision:**
+- The skybox and the planet surface are **baked** on first use (cube map and equirect albedo respectively, `WebGLCubeRenderTarget` / `WebGLRenderTarget` sized by the tier's `bakeSize`) and only re-baked when an input uniform changes. The procedural shaders stay as the bake source, so the look is authored exactly as before and `scripts/bake-compare.mjs` proves it.
+- The belt is **frustum-culled by compaction**: sim arrays keep the fixed `gi` layout every consumer indexes, and `Asteroids.cull` rewrites only the GPU side each frame (visible instances packed to the front, `count` set on body, shell and lines, `addUpdateRange` on the used part). `matrixAt(gi)` remains the one place a rock's transform is built. No spatial structure yet; a sphere-versus-frustum test on 2200 rocks is under 0.2 ms.
+- Tiers cap **pixels**, not only device pixel ratio, and medium runs **2x MSAA**. The canvas never asks for its own antialiasing since the composer target carries the samples. **Dynamic resolution** is a setting with hysteresis (down fast, up slow) and a floor, on by default, because a frame drop is worse than a soft frame in a dogfight and the toon look survives a lower resolution better than most.
+- The **aim cursor integrates at mouse-event rate**; the tick only decays it. The boost rumble is deterministic sines. Per-frame randomness on the camera is reserved for hits.
+
+**Consequences:** a new sky or planet uniform that should animate must either be excluded from the bake key (and applied in the cube/surface material instead) or accept a re-bake per change; nothing in either preset animates today. Anything that reads `InstancedMesh` slot `i` of a shape as rock `gi` is now wrong; read the sim arrays. `Renderer.pixelRatio()` is the only place resolution is decided; the perf overlay shows `res N%` and `gpu X ms`, and `perf-bench`/`perf-attrib` are the measurement tools to rerun after any render change.

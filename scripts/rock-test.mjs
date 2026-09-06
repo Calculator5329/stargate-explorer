@@ -9,7 +9,7 @@ const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=sw
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 page.on("pageerror", (e) => console.error("page error:", e.message));
 page.on("console", (m) => { if (m.type() === "error") console.error("console:", m.text()); });
-await page.goto(`http://localhost:5187/?lock=free&quality=low${extra ? "&" + extra : ""}`, { waitUntil: "load" });
+await page.goto(`${process.env.STARGATE_TEST_URL ?? "http://localhost:5187/"}?lock=free&quality=low${extra ? "&" + extra : ""}`, { waitUntil: "load" });
 await page.waitForTimeout(1500);
 let fail = 0;
 const check = (ok, what) => { console.log(`${ok ? "ok  " : "FAIL"} ${what}`); if (!ok) fail++; };

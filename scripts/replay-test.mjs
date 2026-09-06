@@ -6,7 +6,7 @@ const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=sw
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
 page.on("pageerror", (e) => console.error("page error:", e.message));
 page.on("console", (m) => { if (m.type() === "error") console.error("console:", m.text()); });
-await page.goto("http://localhost:5187/?lock=free&quality=low", { waitUntil: "load" });
+await page.goto(`${process.env.STARGATE_TEST_URL ?? "http://localhost:5187/"}?lock=free&quality=low`, { waitUntil: "load" });
 await page.waitForTimeout(1500);
 await page.evaluate(() => {
   const g = window.__game, f = window.__flight;

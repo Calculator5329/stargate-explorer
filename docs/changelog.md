@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-09-06 — Performance pass and the Shift cursor jitter
+
+Ethan, 2026-09-06: "in-depth performance pass, improving performance and FPS across modes and hardware and different devices", and "the cursor that I use, it gets jittery, sometimes when I'm holding shift".
+
+- **Measured first.** On the RTX 5070 Ti every tier sits on vsync at 60 fps with about 1 ms of GPU time, so the local machine cannot show a bottleneck. SwiftShader at 720p (the weak-device proxy) put the cost order at: 4x MSAA on the HalfFloat target, then bloom, then the belt drawn unculled (331k triangles), then the procedural sky and planet shaders. Readings in `docs/evidence/2026-09-perf.md`.
+- **Sky and planet are baked.** The procedural skybox renders once into a cube map (`WebGLCubeRenderTarget`, 512 on low, 1024 above) and the planet's fbm surface once into an equirect albedo texture; both are re-baked only when their inputs change. The per-frame cost of five-octave noise per pixel is gone. `scripts/bake-compare.mjs before|after` captures the same two views for a pixel compare; the after captures match.
+- **Belt culling.** `Asteroids.cull(camera)` packs the alive rocks inside the frustum into the front of each shape's instance buffer, sets `count`/`instanceCount` on the body, shell and crease lines, and uploads only that range. Chase view on Abydos: 511 of 2202 instances drawn. The sim arrays keep their fixed layout, so collision, damage and fragments are unchanged (rock-test is the gate). Rock tumble no longer allocates per tick.
+- **Tiers re-cut.** Medium drops from 4x to 2x MSAA; low has none. Each tier caps the pixel count (2.1 / 3.7 / 8.3 megapixels) as well as the device pixel ratio, so a 4K display at "high" does not render 33 million samples. The canvas no longer asks for its own antialiasing (the composer target carries the MSAA; the canvas one was wasted). Menu labels say what each tier costs.
+- **Dynamic resolution** (`Renderer.adapt`, a setting, default on): every 1.5 s, under 50 fps the render scale drops 15 % (floor 55 %); after 6 s at 58 fps or better it climbs 10 %. The perf overlay shows `res N%` while it is below full. Off returns to the tier's full resolution at once.
+- **GPU timer in the overlay** (`gpu X ms`) from `EXT_disjoint_timer_query_webgl2` when the browser exposes it; SwiftShader and Chromium on Linux do.
+- **Cursor jitter under Shift.** Two causes, both fixed: the aim cursor was integrated once per sim tick (60 Hz) from accumulated mouse deltas, so on a 144 Hz mouse and display it stepped; it now moves in the mousemove handler and the tick only applies the return decay. And the boost rumble was per-frame `Math.random()` on the camera position, which under a still cursor read as the cursor shaking; it is now a sum of sines at three frequencies, so it hums instead of stutters. Hit shake stays random (it should read as a jolt).
+- **HUD** style writes (scheme fade, hit flash, boost bar, cursor transform) are change-gated; a same-value style write still costs a style recalc on some browsers.
+- **Tests**: `scripts/perf-probe.mjs` (cursor at event rate, relative mode unchanged, dynamic resolution steps, belt culls) is the gate for this batch; `rock-test.mjs` and `replay-test.mjs` now honour `STARGATE_TEST_URL` like the others.
+
 ## 2026-09-06 — Duel, hunt and intercept; scripted enemy steering; no native scrollbars
 
 Ethan, 2026-09-06 (chat, on the brainstorm): duel "super good idea and pretty cheap, more of a free play mode"; hunt "really good idea"; intercept "okay, but it's less interesting ... since they're free, I would say go ahead"; "lets never have these scrollbars in this game, totally takes you out of it".

@@ -51,6 +51,10 @@ export class Hud {
   private lastScheme = "";
   private lastAssist = true;
   private lastHint = "";
+  private lastSchemeO = "";
+  private lastFlashO = "";
+  private lastBoostW = "";
+  private lastCursorTf = "";
 
   constructor(private readonly root: HTMLElement) {
     this.speedEl = must(root.querySelector<HTMLElement>(".speed .v"));
@@ -93,9 +97,12 @@ export class Hud {
       this.lastAssist = scheme.assist;
       this.schemeEl.textContent = `${scheme.name.toUpperCase()} CONTROLS${scheme.assist ? "" : " · ASSIST OFF"}`;
     }
-    this.schemeEl.style.opacity = String(Math.max(0, Math.min(1, 2.5 - scheme.sinceSwitch)));
+    // style writes are change-gated: a same-value write still invalidates layout on some browsers
+    const so = Math.max(0, Math.min(1, 2.5 - scheme.sinceSwitch)).toFixed(2);
+    if (so !== this.lastSchemeO) (this.lastSchemeO = so), (this.schemeEl.style.opacity = so);
     this.warnEl.classList.toggle("hidden", !outside);
-    this.flashEl.style.opacity = String(Math.max(0, 0.55 - flight.sinceHit * 1.6));
+    const fo = Math.max(0, 0.55 - flight.sinceHit * 1.6).toFixed(3);
+    if (fo !== this.lastFlashO) (this.lastFlashO = fo), (this.flashEl.style.opacity = fo);
     const s = Math.round(flight.speed);
     if (s !== this.lastSpeed) {
       this.speedEl.textContent = String(s);
@@ -107,7 +114,8 @@ export class Hud {
       this.barEl.style.width = `${(Math.min(1, bar) * 100).toFixed(1)}%`;
       this.lastBar = bar;
     }
-    this.boostEl.style.width = `${(flight.boostEnergy * 100).toFixed(1)}%`;
+    const bw = `${(flight.boostEnergy * 100).toFixed(1)}%`;
+    if (bw !== this.lastBoostW) (this.lastBoostW = bw), (this.boostEl.style.width = bw);
     this.boostEl.classList.toggle("low", flight.boostEnergy < T.flight.boostMinEngage && !flight.boosting);
     this.hintEl.classList.toggle("hidden", input.locked);
     // cursor steer: the aim cursor sits where the nose is heading (invert Y flips the mouse, not the picture)
@@ -115,7 +123,8 @@ export class Hud {
     this.cursorEl.classList.toggle("on", cursorOn);
     if (cursorOn) {
       const c = input.cursor, k = T.flight.cursorRadius > 0 ? Math.min(1, window.innerHeight * 0.42 / T.flight.cursorRadius) : 1;
-      this.cursorEl.style.transform = `translate(${(c.x * k).toFixed(1)}px, ${((input.invertY ? -c.y : c.y) * k).toFixed(1)}px)`;
+      const tf = `translate(${(c.x * k).toFixed(1)}px, ${((input.invertY ? -c.y : c.y) * k).toFixed(1)}px)`;
+      if (tf !== this.lastCursorTf) (this.lastCursorTf = tf), (this.cursorEl.style.transform = tf);
     }
   }
 

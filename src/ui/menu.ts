@@ -58,6 +58,8 @@ export class Menu {
     const mute = q<HTMLInputElement>(root, "[name=mute]");
     const invert = q<HTMLInputElement>(root, "[name=invert]");
     const qual = q<HTMLSelectElement>(root, "[name=quality]");
+    const dyn = q<HTMLInputElement>(root, "[name=dynamicRes]");
+    dyn.checked = s.dynamicRes;
     scheme.value = s.scheme;
     invert.checked = s.invertY;
     qual.value = s.quality;
@@ -84,10 +86,11 @@ export class Menu {
       s.difficulty = parseDifficulty(diff.value);
       s.mute = mute.checked;
       s.invertY = invert.checked;
+      s.dynamicRes = dyn.checked;
       writeSave(save);
       hooks.apply(s);
     };
-    for (const c of [scheme, assist, assistK, steer, raw, sens, diff, mute, invert]) c.addEventListener("input", commit);
+    for (const c of [scheme, assist, assistK, steer, raw, sens, diff, mute, invert, dyn]) c.addEventListener("input", commit);
     // the renderer is built once per page, so a tier change is a reload
     qual.addEventListener("input", () => {
       s.quality = parseQuality(qual.value);

@@ -132,11 +132,27 @@ void main() {
   gl_FragColor = vec4(col, 1.0);
 }`;
 
-/** Single-draw-call procedural sky: 3 star layers + 2 posterised fbm nebula lobes with a hot core. */
+const CUBE_FRAG = /* glsl */ `
+uniform samplerCube uSky;
+varying vec3 vDir;
+void main() { gl_FragColor = textureCube(uSky, normalize(vDir)); }`;
+
+/**
+ * Procedural sky: 3 star layers + 2 posterised fbm nebula lobes with a hot core.
+ * The procedure (three 5-octave fbm and two value-noise taps per pixel) is
+ * evaluated once into a cube map at `bake()`; the visible box samples that.
+ * Per-frame cost went from the most expensive full-screen pass in the game to
+ * one texture fetch (2026-09-06 performance pass). Re-baked when the sky
+ * tunables change.
+ */
 export class Skybox {
   readonly mesh: THREE.Mesh;
   private readonly u;
   private readonly nebulaBase: number;
+  private readonly proc: THREE.Mesh;
+  private readonly cubeMat: THREE.ShaderMaterial;
+  private rt: THREE.WebGLCubeRenderTarget | null = null;
+  private bakedKey = "";
 
   constructor(name: SkyName) {
     const p = SKY_PRESETS[name];
@@ -160,14 +176,39 @@ export class Skybox {
       depthTest: false,
       depthWrite: false,
     });
-    this.mesh = noEdge(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat));
+    this.proc = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat);
+    this.proc.frustumCulled = false;
+    this.cubeMat = new THREE.ShaderMaterial({
+      vertexShader: VERT,
+      fragmentShader: CUBE_FRAG,
+      uniforms: { uSky: { value: null } },
+      side: THREE.BackSide,
+      depthTest: false,
+      depthWrite: false,
+    });
+    this.mesh = noEdge(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), this.cubeMat));
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = -1;
     this.nebulaBase = p.nebula;
   }
 
-  update(): void {
+  /** Push the tunables into the procedure and re-bake if they moved. `size` is the cube face size. */
+  update(gl: THREE.WebGLRenderer, size: number): void {
     this.u.uNebula.value = this.nebulaBase * T.sky.nebulaStrength;
     this.u.uStars.value = T.sky.starDensity;
+    const key = `${size}|${this.u.uNebula.value}|${this.u.uStars.value}`;
+    if (key === this.bakedKey) return;
+    this.bakedKey = key;
+    if (!this.rt || this.rt.width !== size) {
+      this.rt?.dispose();
+      this.rt = new THREE.WebGLCubeRenderTarget(size, { type: THREE.HalfFloatType, generateMipmaps: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+      this.cubeMat.uniforms.uSky!.value = this.rt.texture;
+    }
+    const cam = new THREE.CubeCamera(0.1, 10, this.rt);
+    _bakeScene.add(this.proc);
+    cam.update(gl, _bakeScene);
+    _bakeScene.remove(this.proc);
   }
 }
+
+const _bakeScene = new THREE.Scene();

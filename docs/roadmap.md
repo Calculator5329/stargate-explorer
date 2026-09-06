@@ -163,6 +163,16 @@ Ethan: prefers classic; assist helps but may be too strong; arcade W/S up/down "
 - [x] Space brakes in classic too (drift only via assist off). *(2026-09-05, Ethan: "make space actually work to brake")*
 - [x] Barrel roll: camera holds its up, the hull spins on screen. *(2026-09-05, `scripts/barrel-test.mjs` 0° swing; Ethan to fly it)*
 - [x] Replay: 7 s before / 3 s after, both cameras parked in the world so speed reads. *(2026-09-05, `scripts/replay-test.mjs`; Ethan to watch one)*
+
+### M2.10 — Performance pass (2026-09-06, Ethan: "in-depth performance pass ... across modes and hardware and different devices", and the aim cursor "gets jittery ... when I'm holding shift")
+- [x] Measure before touching anything: per-tier frame bench on the real GPU and on SwiftShader as the weak-device proxy, GPU-time attribution per cost (bloom, belt, shells, sky, planet), CPU profile. *(2026-09-06, `scripts/perf-bench.mjs`, `scripts/perf-attrib.mjs`, readings in `docs/evidence/2026-09-perf.md`)*
+- [x] Sky and planet surface baked once (cube map, equirect albedo) instead of five-octave fbm per pixel per frame; before/after captures identical. *(2026-09-06, `Skybox.update(gl, size)`, `Planet.update(gl, width)`, `scripts/bake-compare.mjs`)*
+- [x] Belt frustum culling with instance compaction and partial buffer upload; the sim still tumbles and collides every rock. *(2026-09-06, `Asteroids.cull`, drawn 511 of 2202 in the chase view)*
+- [x] Tiers re-cut for weak GPUs: medium MSAA 4 → 2, per-tier pixel caps, canvas antialias off (the composer target carries the MSAA), dynamic resolution with hysteresis as a setting (on by default). *(2026-09-06, `Renderer.adapt`, `Settings.dynamicRes`)*
+- [x] GPU time in the perf overlay via `EXT_disjoint_timer_query_webgl2` where the browser exposes it. *(2026-09-06)*
+- [x] Shift cursor jitter: the aim cursor integrates at mouse-event rate instead of the 60 Hz tick, and the boost rumble is a sum of sines instead of per-frame white noise. *(2026-09-06, `scripts/perf-probe.mjs`; Ethan to hold Shift and confirm)*
+- [ ] Ethan reports how the dynamic resolution reads on his machine (the perf overlay shows `res N%` while it is below full) and whether medium at 2x MSAA still looks clean on the outlines.
+- [ ] A real weak device (a laptop iGPU or a phone) measured against the SwiftShader proxy; the tier thresholds are set from the proxy only.
 - [x] Ha'tak: guns damage ring guns and shield nodes from the start, shielded-pyramid cue, torpedo reload 14 s. *(2026-09-05, `scripts/chain-test.mjs`)*
 - [ ] Ethan flies the Ha'tak again: is the part legibility enough now (marker + line), or do the ring guns and nodes need their own HUD boxes?
 - [x] Barrel roll flipped the screen instead of following the roll: camera up taken from the lagged frame, `barrelFollow` 4.5 → 18. *(2026-09-05, `scripts/barrel-test.mjs`; superseded the same night by the roll-hold camera below)*
