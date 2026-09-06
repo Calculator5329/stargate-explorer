@@ -151,7 +151,8 @@ export class Combat {
     this.lockAndLaunch(dt, flight, input);
 
     this.enemies.tick(dt, P, this.shots);
-    for (const e of this.enemies.crashed) this.destroy(e, e.crashCredit);
+    // every rock crash is the player's kill: chased into a rock or hit by a fragment alike (Ethan, 2026-09-05)
+    for (const e of this.enemies.crashed) this.destroy(e, true);
     this.enemies.crashed.length = 0;
     // move rounds, then test the swept segment of each against its targets
     for (const s of this.shots.shots) {

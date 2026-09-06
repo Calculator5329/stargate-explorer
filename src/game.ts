@@ -54,7 +54,11 @@ export class Game {
         return;
       }
       if (e.code === "KeyR" && this.mission.done) location.reload();
-      if (e.code === "KeyV" && this.mission.done && this.cam) this.replay.play(this.cam);
+      // V at any point replays the last kill (the sim holds while it plays; Ethan, 2026-09-05)
+      if (e.code === "KeyV" && this.cam) {
+        this.replay.cutNow();
+        this.replay.play(this.cam);
+      }
     });
   }
 

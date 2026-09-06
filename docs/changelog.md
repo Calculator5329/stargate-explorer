@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-09-05 (night) — Replay of the last kill on V, victim in frame, crash kills credited, first hosting deploy
+
+Ethan, 2026-09-05 (feedback chat, fifth round): "deploy all and make sure ... the replays are actually showing the enemy ship, getting blown up and everything and then allow you to press v at any point at least for now to show the last kill as a replay ... it should be counted as one of your own kills if an enemy hits it into an asteroid and kills itself".
+
+- **V at any time replays the last kill** (`Game` keydown → `Replay.cutNow()` + `play()`): the sim already holds while a replay runs, so the fight pauses and resumes where it was; V or Esc skips out. The clip is always the most recent kill (the best-score gate is gone), so what you just did is what you watch. HUD hint carries `V last kill`.
+- **The victim stays in frame**: the second camera parks 40 m past the kill point along the ship's heading, 20 m to starboard, and looks back down the approach, so the enemy flies toward the lens and blows up 40 m away instead of passing behind it. The first camera looks at the ship again (a lerp toward a far kill lost the ship at 24 m). `scripts/replay-test.mjs` now asserts the victim and the kill point on screen just before the burst and drives a mid-sortie V.
+- **A rock kill is your kill**: every enemy that dies on an asteroid, belt rock or flung fragment, credits the player (`Combat` passes `byPlayer` for all crashes, so it also cuts a replay). `scripts/rock-test.mjs` flipped its belt-rock assertion from "no credit" to "credited".
+- **Deploy**: `firebase deploy --only hosting:stargate` from `dist/` to https://stargate-explorer-5329.web.app, on Ethan's instruction in the feedback chat; `.firebase/` cache ignored. Working title and place names are still franchise terms (see CLAUDE.md IP note); this is a private playtest URL, not a publication.
+
 ## 2026-09-05 (late) — Strafe thrusters, speed-coupled turn toggle, Space brakes, roll-hold camera, replay from the ground, Ha'tak guns bite
 
 Ethan, 2026-09-05 (feedback chat, fourth round): "For maneuverability ideas, let's do one and then two could be a switcher option"; "barrel roll camera should stay and I should see my ship spin instead of the whole camera spinning. steer feels really good now. make space actually work to brake"; replays "don't seem to show movement + kill just right yet. more time before + a little after the kill ... it looked like I was a stationary ship moving a tiny bit to the right and left"; "the top 3 things on the hatak ship if I hit with my normal guns it does nothing same for hitting the rest of the hatak ship ... out of torpedos (maybe a slow slow reload)".

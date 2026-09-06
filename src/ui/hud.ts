@@ -15,8 +15,8 @@ function hint(name: SchemeName, b: Binds): string {
   const k = keyName;
   const roll = `${k(b.rollLeft)}/${k(b.rollRight)} roll (double-tap: barrel roll) · ${k(b.strafeLeft)}/${k(b.strafeRight)} strafe`;
   return name === "arcade"
-    ? `click to fly · mouse steers · ${k(b.pullUp)} pull up / ${k(b.dive)} dive · ${roll} · ${k(b.boost)} boost · ${k(b.brake)} brake · LMB fire · ${k(b.scheme)} classic · ${k(b.assist)} flight assist · \` tuning`
-    : `click to fly · mouse steers · ${k(b.pullUp)}/${k(b.dive)} throttle · ${roll} · ${k(b.brake)} brake · ${k(b.boost)} boost · LMB fire · ${k(b.scheme)} arcade · ${k(b.assist)} flight assist · \` tuning`;
+    ? `click to fly · mouse steers · ${k(b.pullUp)} pull up / ${k(b.dive)} dive · ${roll} · ${k(b.boost)} boost · ${k(b.brake)} brake · LMB fire · ${k(b.scheme)} classic · ${k(b.assist)} flight assist · V last kill · \` tuning`
+    : `click to fly · mouse steers · ${k(b.pullUp)}/${k(b.dive)} throttle · ${roll} · ${k(b.brake)} brake · ${k(b.boost)} boost · LMB fire · ${k(b.scheme)} arcade · ${k(b.assist)} flight assist · V last kill · \` tuning`;
 }
 
 /** DOM HUD: speed readout, throttle/speed bar, hint per control scheme, arena warning, hit flash. */

@@ -1,6 +1,6 @@
 // Headless test of destructible rocks and lethal crashes against the running dev server (5187).
 //  1. shoot the nearest rock dead ahead until it breaks: expects fragments (ttl>0 slots) and rocks.broken to rise
-//  2. spawn a glider and fling it into a rock: expects it dead within a second, no kill credit
+//  2. spawn a glider and fling it into a rock: expects it dead within a second, credited to the player (Ethan, round 5: a rock kill is your kill)
 //  3. spawn a glider next to a player-made fragment moving at it: expects a kill credited to the player
 // Usage: node scripts/rock-test.mjs [system=abydos]   → docs/shots/_rock-test.png
 import { chromium } from "playwright-core";
@@ -68,7 +68,7 @@ const r2 = await page.evaluate(async () => {
 });
 console.log("crash", JSON.stringify(r2));
 check(!r2.alive, "glider destroyed on rock impact");
-check(r2.kills === 0, "no kill credit for a belt rock");
+check(r2.kills === 1, "belt-rock crash credits the player");
 
 // --- 3. a fragment the player made kills a glider: credited
 const r3 = await page.evaluate(async () => {

@@ -39,8 +39,9 @@ interface Highlight {
   /** where and when the scored kill happened; the second camera is parked beside it */
   kill: THREE.Vector3;
   killT: number;
-  /** the ship's starboard axis at the kill: the parked camera sits off to that side, clear of the path */
+  /** the ship's starboard axis and heading at the kill: the parked camera sits ahead of the kill and off to that side, clear of the path */
   killSide: THREE.Vector3;
+  killFwd: THREE.Vector3;
   score: number;
 }
 
@@ -129,14 +130,13 @@ export class Replay {
     let score = 1 + Math.min(1, Math.hypot(stick.x, stick.y)) + Math.min(1, flight.speed / 300);
     if (this.sinceBarrel < 3) score += 2.5;
     if (flight.boosting) score += 0.5;
-    // a later kill replaces an earlier one unless the earlier was clearly better
-    if (!this.pending || score >= this.pending.score * 0.8) this.pending = { at: this.t, score };
+    // the latest kill is the one on offer (Ethan, 2026-09-05: "press v at any point ... to show the last kill")
+    this.pending = { at: this.t, score };
   }
 
   private cut(): void {
     const P = this.pending!;
     this.pending = null;
-    if (this.highlight && P.score < this.highlight.score * 0.8) return;
     const from = P.at - PRE, to = P.at + POST;
     const n = Math.min(this.count, FRAMES);
     const frames = new Float32Array(n * STRIDE);
@@ -167,8 +167,15 @@ export class Replay {
     let kf = 0;
     for (let i = 0; i < k; i++) if (Math.abs(frames[i * STRIDE]! - killT) < Math.abs(frames[kf * STRIDE]! - killT)) kf = i;
     const ko = kf * STRIDE;
-    const killSide = new THREE.Vector3(-1, 0, 0).applyQuaternion(_q.set(frames[ko + 4]!, frames[ko + 5]!, frames[ko + 6]!, frames[ko + 7]!));
-    this.highlight = { frames, count: k, bursts, shots: shots.subarray(0, m * SSTRIDE), kill: kill ? kill.pos.clone() : new THREE.Vector3(frames[k * STRIDE - STRIDE + 1], frames[k * STRIDE - STRIDE + 2], frames[k * STRIDE - STRIDE + 3]), killT, killSide, score: P.score };
+    _q.set(frames[ko + 4]!, frames[ko + 5]!, frames[ko + 6]!, frames[ko + 7]!);
+    const killSide = new THREE.Vector3(-1, 0, 0).applyQuaternion(_q);
+    const killFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(_q);
+    this.highlight = { frames, count: k, bursts, shots: shots.subarray(0, m * SSTRIDE), kill: kill ? kill.pos.clone() : new THREE.Vector3(frames[k * STRIDE - STRIDE + 1], frames[k * STRIDE - STRIDE + 2], frames[k * STRIDE - STRIDE + 3]), killT, killSide, killFwd, score: P.score };
+  }
+
+  /** Cut the pending kill now instead of waiting POST seconds (V pressed mid-sortie). */
+  cutNow(): void {
+    if (this.pending) this.cut();
   }
 
   play(cam: THREE.PerspectiveCamera): boolean {
@@ -253,11 +260,13 @@ export class Replay {
       cam.fov = 55;
       _look.copy(_p);
     } else {
-      cam.position.copy(c.kill).addScaledVector(c.killSide, 32).addScaledVector(Y, 11);
-      cam.fov = 60;
-      // frame the ship with the kill point pulled a third of the way in until it goes off, then follow the ship out
+      // parked past the kill point along the ship's heading and off to starboard, looking back down the approach:
+      // the victim is 40 m in front of the lens with the ship closing behind it, the burst goes off close, then the
+      // ship passes and the camera swings after it (Ethan, 2026-09-05: "showing the enemy ship getting blown up")
+      cam.position.copy(c.kill).addScaledVector(c.killFwd, 40).addScaledVector(c.killSide, 20).addScaledVector(Y, 9);
+      cam.fov = 62;
       const after = Math.min(1, Math.max(0, (this.clipT - c.killT) / 0.8));
-      _look.copy(_p).lerp(c.kill, 0.35 * (1 - after));
+      _look.copy(_p).lerp(c.kill, 0.5 * (1 - after));
     }
     cam.up.copy(Y);
     cam.lookAt(_look);
