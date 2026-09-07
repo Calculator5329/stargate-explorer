@@ -2,6 +2,8 @@
 
 ## Fleet art revision · 2026-09-06
 
+**Integration pending:** verified revision commit `923375b` is on `lane/sg1-ship-review` in `/home/ethan/projects/games/.agent-worktrees/stargate-explorer/lanes/sg1-ship-review`. The supported lane close refused because the canonical checkout has unrelated uncommitted designer work (`docs/changelog.md`, `docs/roadmap.md`, `scripts/editor-test.mjs`, and designer captures). Nothing in that checkout was overwritten. Review at `http://127.0.0.1:5191/fleet-review.html` or the worktree's offline `public/fleet-review.html`. Once the designer work is preserved by its writer, retry `agent lane close sg1-ship-review --repo /home/ethan/projects/games/stargate-explorer --into main --keep-worktree`; do not merge around the dirty-checkout refusal.
+
 Revised fleet art works in both inspect views and gameplay. Original definitions are retained exactly; `?art=original` restores the previous fleet. `/fleet-review.html` is the offline old/new review (12 entries, six angles, attributed SG-1 references); all twelve entries have a revision, including a material-only Ha’tak pass. [Verification and limitations](design/sg1-fleet/README.md). Owner preference and target-hardware performance remain unmeasured.
 
 Snapshot of what actually works. This is the project state snapshot, not the workspace root `STATUS.md` handoff file (see CLAUDE.md). Update when things change; keep the "Known issues" list honest.
