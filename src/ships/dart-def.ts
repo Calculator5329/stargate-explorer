@@ -1,3 +1,5 @@
+import { selectArt } from '@/ships/art-version';
+import { auxiliaryRevision } from '@/ships/refinements';
 import type { ShipDef } from "@/ships/defs";
 import { PALETTES } from "@/ships/palettes";
 
@@ -8,7 +10,7 @@ import { PALETTES } from "@/ships/palettes";
  * small blades, nothing like the fighter's delta or the Broadsword's slab.
  * Ship-local +Z forward, +Y up, +X port; metres, angles in radians.
  */
-export const DART: ShipDef = {
+export const DART_ORIGINAL: ShipDef = {
   name: "F-19 Dart",
   ringVerts: 14,
   hull: [
@@ -64,3 +66,6 @@ export const DART: ShipDef = {
   // Cold white-blue ID flashes: the fast one.
   palette: { ...PALETTES.tauri, accent: 0xd8e6f2, glow: 0x9fd0ff },
 };
+
+export const DART_REVISED = auxiliaryRevision(DART_ORIGINAL, 'dart');
+export const DART = selectArt(DART_ORIGINAL, DART_REVISED);

@@ -1,0 +1,78 @@
+{
+  "checks": [
+    "All 12 entries and 6 camera controls load both embedded images",
+    "Preferences and notes survive reload; review export includes selection",
+    "390px mobile layout has no horizontal overflow",
+    "Both art versions boot in gameplay; original fighter restored exactly; all five enemies spawn; bomber retains its revised material",
+    "No browser page errors"
+  ],
+  "gameplay": [
+    {
+      "art": "original",
+      "sample": [
+        {
+          "kind": "glider",
+          "color": 9073478,
+          "canopy": 0.25
+        },
+        {
+          "kind": "interceptor",
+          "color": 9073478,
+          "canopy": null
+        },
+        {
+          "kind": "gunboat",
+          "color": 9073478,
+          "canopy": 0.25
+        },
+        {
+          "kind": "bomber",
+          "color": 9073478,
+          "canopy": 0.25
+        },
+        {
+          "kind": "ace",
+          "color": 9073478,
+          "canopy": 0.25
+        }
+      ],
+      "palette": 9073478,
+      "originalFighter": true,
+      "bomberColor": 6048304
+    },
+    {
+      "art": "revised",
+      "sample": [
+        {
+          "kind": "glider",
+          "color": 7632235,
+          "canopy": 0.025
+        },
+        {
+          "kind": "interceptor",
+          "color": 7632235,
+          "canopy": null
+        },
+        {
+          "kind": "gunboat",
+          "color": 6843232,
+          "canopy": 0.04
+        },
+        {
+          "kind": "bomber",
+          "color": 7961712,
+          "canopy": 0.03
+        },
+        {
+          "kind": "ace",
+          "color": 7236186,
+          "canopy": 0.025
+        }
+      ],
+      "palette": 9073478,
+      "originalFighter": false,
+      "bomberColor": 7961712
+    }
+  ],
+  "errors": []
+}

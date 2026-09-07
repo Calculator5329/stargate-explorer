@@ -1,0 +1,15 @@
+{
+  "base": "e9252389cfc68ea5953a088363a3683ae92cc985",
+  "exactOriginalDefinitionChecks": [
+    "src/ships/prometheus-def.ts",
+    "src/combat/glider-def.ts",
+    "src/combat/bomber-def.ts",
+    "src/ships/heavy-def.ts",
+    "src/ships/dart-def.ts",
+    "src/ships/lancer-def.ts",
+    "src/ships/racer-def.ts",
+    "src/combat/interceptor-def.ts",
+    "src/combat/gunboat-def.ts",
+    "src/ships/variants/index.ts"
+  ]
+}

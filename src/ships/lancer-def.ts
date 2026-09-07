@@ -1,3 +1,5 @@
+import { selectArt } from '@/ships/art-version';
+import { auxiliaryRevision } from '@/ships/refinements';
 import type { ShipDef } from "@/ships/defs";
 import { PALETTES } from "@/ships/palettes";
 
@@ -8,7 +10,7 @@ import { PALETTES } from "@/ships/palettes";
  * a fat hull with two big tubes hanging under it; nothing else in the hangar
  * carries its load outside. Ship-local +Z forward, +Y up, +X port; metres.
  */
-export const LANCER: ShipDef = {
+export const LANCER_ORIGINAL: ShipDef = {
   name: "F-24 Lancer",
   ringVerts: 16,
   hull: [
@@ -68,3 +70,6 @@ export const LANCER: ShipDef = {
   // Warning-orange ID flashes on the tubes' carrier.
   palette: { ...PALETTES.tauri, accent: 0xd9822b },
 };
+
+export const LANCER_REVISED = auxiliaryRevision(LANCER_ORIGINAL, 'lancer');
+export const LANCER = selectArt(LANCER_ORIGINAL, LANCER_REVISED);

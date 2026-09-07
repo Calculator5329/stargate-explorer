@@ -1,3 +1,5 @@
+import { selectArt } from '@/ships/art-version';
+import { auxiliaryRevision } from '@/ships/refinements';
 /**
  * Heavy enemy: ~22.5 m long, 18 m span, ~4.4 m tall, excluding plumes.
  * Black silhouette reads as a broad armoured slab with a blunt bow, four gun
@@ -9,7 +11,7 @@
  */
 import type { ShipDef } from "@/ships/defs";
 
-export const GUNBOAT: ShipDef = {
+export const GUNBOAT_ORIGINAL: ShipDef = {
   name: "Gunboat",
   ringVerts: 16,
   hull: [
@@ -69,3 +71,6 @@ export const GUNBOAT: ShipDef = {
   decals: [],
   palette: { body: 0x2e3239, accent: 0xa8793e, dark: 0x15171c, glow: 0xff3828, canopy: 0x30251e },
 };
+
+export const GUNBOAT_REVISED = auxiliaryRevision(GUNBOAT_ORIGINAL, 'gunboat');
+export const GUNBOAT = selectArt(GUNBOAT_ORIGINAL, GUNBOAT_REVISED);

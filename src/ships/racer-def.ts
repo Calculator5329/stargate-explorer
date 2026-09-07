@@ -1,3 +1,5 @@
+import { selectArt } from '@/ships/art-version';
+import { auxiliaryRevision } from '@/ships/refinements';
 /**
  * Neutral civilian racer: ~11 m long, ~8 m span, ~3.4 m tall, excluding plumes.
  * Two oversized engine nacelles on short straight outriggers flank a slim
@@ -10,7 +12,7 @@
  */
 import type { ShipDef } from "@/ships/defs";
 
-export const RACER: ShipDef = {
+export const RACER_ORIGINAL: ShipDef = {
   name: "Racer",
   ringVerts: 12,
   hull: [
@@ -61,3 +63,6 @@ export const RACER: ShipDef = {
   ],
   palette: { body: 0xeee9dc, accent: 0x00b99c, dark: 0x202b30, glow: 0xb5f8ff, canopy: 0x173e49 },
 };
+
+export const RACER_REVISED = auxiliaryRevision(RACER_ORIGINAL, 'racer');
+export const RACER = selectArt(RACER_ORIGINAL, RACER_REVISED);

@@ -253,3 +253,6 @@ Scope guard, Ethan 2026-09-06: "we don't necessarily want to charge forward on e
 
 ## Non-goals (for now)
 Multiplayer, mobile/touch, VR, mod support, story/dialogue system.
+
+## SG-1 fleet likeness, September 6
+- [x] (2026-09-06) Refine the fleet against SG-1 references, retain original designs, and deliver a captured side-by-side HTML comparison with verification. [Review and evidence](design/sg1-fleet/README.md). Twelve fleet entries revised, including a material-only Ha’tak pass. Owner visual preference remains open.

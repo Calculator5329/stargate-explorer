@@ -1,3 +1,4 @@
+import { originalArt } from '@/ships/art-version';
 import * as THREE from "three";
 import { mulberry32 } from "@/core/random";
 import { glowMaterial, toonMaterial } from "@/render/toon";
@@ -116,7 +117,7 @@ export class Capital {
   private burstsFired = 0;
   private readonly parts: Part[] = [];
 
-  constructor(opts: { turrets?: number; scale?: number } = {}) {
+  constructor(opts: { turrets?: number; scale?: number; originalArt?: boolean } = {}) {
     const turretCount = opts.turrets ?? 6;
     this.scale = opts.scale ?? 1;
     this.rnd = mulberry32(0x4a7a);
@@ -150,7 +151,12 @@ export class Capital {
     this.buildLobes(ring);
     this.buildStruts(ring);
     this.buildWindows(ring);
-    this.emit(ring, mats, this.ring);
+    // The screen ship separates a gold pyramid from a dark industrial outer structure.
+    // Keep the old material path exact for the original-fleet switch and paired captures.
+    const ringMats = (opts.originalArt ?? originalArt) ? mats : {
+      ...mats, gold: toonMaterial(0x626468), bronze: toonMaterial(0x383c40), dark: toonMaterial(0x1f2327),
+    };
+    this.emit(ring, ringMats, this.ring);
     this.group.add(this.ring);
 
     // ── turrets on the ring, shield nodes on the collar ──

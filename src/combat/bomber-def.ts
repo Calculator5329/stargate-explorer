@@ -1,3 +1,5 @@
+import { selectArt } from '@/ships/art-version';
+import { bomberRevision } from '@/ships/refinements';
 /**
  * Heavy bomber: ~19 m long, ~21 m span, ~3.6 m tall, excluding plumes.
  * Black silhouette reads as a flat, broad arrowhead with a squat raised bridge
@@ -8,7 +10,7 @@
  */
 import type { ShipDef } from "@/ships/defs";
 
-export const BOMBER: ShipDef = {
+export const BOMBER_ORIGINAL: ShipDef = {
   name: "Bomber",
   ringVerts: 16,
   hull: [
@@ -65,3 +67,6 @@ export const BOMBER: ShipDef = {
   decals: [],
   palette: { body: 0x5c4a30, accent: 0xc98a3c, dark: 0x22190f, glow: 0xffa040, canopy: 0x3a2a12 },
 };
+
+export const BOMBER_REVISED = bomberRevision(BOMBER_ORIGINAL);
+export const BOMBER = selectArt(BOMBER_ORIGINAL, BOMBER_REVISED);

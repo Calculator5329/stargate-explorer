@@ -1,0 +1,69 @@
+{
+  "errors": [],
+  "records": [
+    {
+      "hull": "f11",
+      "version": "original",
+      "view": "perspective",
+      "file": "docs/design/sg1-fleet/captures/f11-original-perspective.png",
+      "triangles": 2072,
+      "calls": 8
+    },
+    {
+      "hull": "f11",
+      "version": "revised",
+      "view": "perspective",
+      "file": "docs/design/sg1-fleet/captures/f11-revised-perspective.png",
+      "triangles": 2456,
+      "calls": 8
+    },
+    {
+      "hull": "glider",
+      "version": "original",
+      "view": "perspective",
+      "file": "docs/design/sg1-fleet/captures/glider-original-perspective.png",
+      "triangles": 800,
+      "calls": 4
+    },
+    {
+      "hull": "glider",
+      "version": "revised",
+      "view": "perspective",
+      "file": "docs/design/sg1-fleet/captures/glider-revised-perspective.png",
+      "triangles": 1236,
+      "calls": 4
+    },
+    {
+      "hull": "bomber",
+      "version": "original",
+      "view": "perspective",
+      "file": "docs/design/sg1-fleet/captures/bomber-original-perspective.png",
+      "triangles": 1104,
+      "calls": 4
+    },
+    {
+      "hull": "bomber",
+      "version": "revised",
+      "view": "perspective",
+      "file": "docs/design/sg1-fleet/captures/bomber-revised-perspective.png",
+      "triangles": 1708,
+      "calls": 4
+    },
+    {
+      "hull": "prometheus",
+      "version": "original",
+      "view": "perspective",
+      "file": "docs/design/sg1-fleet/captures/prometheus-original-perspective.png",
+      "triangles": 4870,
+      "calls": 7
+    },
+    {
+      "hull": "prometheus",
+      "version": "revised",
+      "view": "perspective",
+      "file": "docs/design/sg1-fleet/captures/prometheus-revised-perspective.png",
+      "triangles": 5670,
+      "calls": 7
+    }
+  ]
+}

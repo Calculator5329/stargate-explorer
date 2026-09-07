@@ -1,3 +1,5 @@
+import { selectArt } from '@/ships/art-version';
+import { carrierRevision } from '@/ships/refinements';
 import type { ArmorDef, EngineDef, FinDef, HatchDef, ShipDef } from "@/ships/defs";
 import { PALETTES } from "@/ships/palettes";
 
@@ -76,7 +78,7 @@ const masts: FinDef[] = [
   { root: [-2.7, DECK + 6.8, TZ + 1.4], height: 1.6, rootChord: 1.6, tipChord: 0.5, sweep: 0.4, angle: Math.PI, thickness: 0.18 },
 ];
 
-export const PROMETHEUS: ShipDef = {
+export const PROMETHEUS_ORIGINAL: ShipDef = {
   name: "Prometheus",
   ringVerts: 16,
   hull: [
@@ -151,3 +153,6 @@ export const PROMETHEUS: ShipDef = {
   // Local palette only: one gunmetal grey, a darker slate for the accent and a paler grey on the canopy slot.
   palette: { ...PALETTES.tauri, body: 0x7f8792, accent: 0x454d57, canopy: 0x9aa2ab },
 };
+
+export const PROMETHEUS_REVISED = carrierRevision(PROMETHEUS_ORIGINAL);
+export const PROMETHEUS = selectArt(PROMETHEUS_ORIGINAL, PROMETHEUS_REVISED);

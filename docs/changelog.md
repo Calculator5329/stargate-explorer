@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-06 — Reversible SG-1 fleet graphics
+
+Refined the fighter, glider, bomber and Prometheus against SG-1 references; added construction details and quieter materials to six original hulls. The ace inherits the new glider. Every previous definition remains intact, selectable with `?art=original` or an `old-` inspect key. Added the offline `/fleet-review.html` comparison with six paired views, source stills and browser-local review notes. Ha’tak gains a darker outer structure around the gold pyramid; its geometry is retained. [Evidence](design/sg1-fleet/README.md).
+
 ## 2026-09-06 — The game designer: campaign board, encounter composer, campaign in JSON
 
 Ethan, 2026-09-06: plan the levels, unlocks and power properly instead of "randomly did a bunch of levels", and build a game builder alongside the game so he can arrange prebuilt pieces in a UI. Agreed priorities: campaign board, encounter composer, then the move composer, then stat sheets; in-game mode with files as the store.
