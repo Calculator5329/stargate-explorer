@@ -282,3 +282,17 @@ new DECISIONS entry; nothing in `sim/flight.ts` should bend toward it now.
 ## 2026-09-06 — Blender benchmark stays separate
 
 Ethan explicitly authorized one Blender death-glider benchmark and comparison, with no replacements. Author source with Blender Python, export GLB, and prove it through the existing Three.js loader in a separate review entry point. Keep all runtime registries and ShipRig unchanged until a later owner decision. Portable Blender is an authoring tool in the task cache, not a runtime dependency. Both game-toon and exported metallic treatments are shown because geometry and material direction are separate judgments.
+## 2026-09-06: Moves are step lists the bar pays for; trigger keys are content, not a bind
+
+**Context:** Ethan's move-composer packet (`planning/reports/move-composer-packet-20260906`, answered 2026-09-07T02:08Z). Seven calls, all on the recommended option, plus two notes: a sandbox to try moves in, and trigger keys that are not only B.
+
+**Decision:**
+- **A move is data**: `src/content/moves.json`, typed by `sim/moves.ts` (`MoveDef`: trigger `{key, dir}`, cost, duration, steps of `brake | boost | snapPitch | yaw | roll | hop` with start, length, amount). `Flight.tick` interprets it inline: no per-move code, no second physics path. While a move runs the player's stick, roll keys and boost are ignored; the steps add rates or set the speed target; a boost step lifts the cap. The barrel roll stays its own thing (a double-tap, not a chord) and yields to a move.
+- **The boost bar is the one currency.** Cost is a bar fraction paid on start; below it the chord does nothing. No second meter, no cooldown table.
+- **Trigger keys live on the move, not in `binds.ts`.** `Input.moveKeys` is derived from the table, so a family on F or T needs no code. The direction half of a chord comes from the pull-up / dive / roll binds, so rebinding W or A moves the chord with it. A direction tap inside the window belongs to the move; the double-tap barrel and the pull are suppressed for that tap.
+- **The camera reuses the barrel treatment** (`rolling` = barrel or move): follow the nose only, FOV kick, pull-back. No per-move camera data yet.
+- **The sandbox is a level type** (`sandbox`), not a mode flag: it rides the same mission factory, editor schema and hub card as every other level, and the campaign carries one (`proving-ground`).
+- **TRY IT is live, unsaved.** The designer hands its working `moves` array to `Flight.moves` and `Input.moveKeys` by reference and starts the move on the level already loaded; SAVE is what writes `moves.json`. A tried move never reaches the file by accident.
+- **Player only.** Enemies have no bar and no trigger policy; the interpreter does not know who owns it, so that is a later mission-side decision.
+
+**Consequences:** a new primitive step is one `StepKind`, one case in the flight switch, one unit label and one help line in the composer. A move that needs something the primitives cannot express (a target-relative turn, a weapon burst) wants a new step kind, not a special case. `Content.save` posts two files; a third table follows the same route. The four starter numbers are guesses until Ethan flies the proving ground.
