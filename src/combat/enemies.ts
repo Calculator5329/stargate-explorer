@@ -1,3 +1,5 @@
+import { PALETTES } from '@/ships/palettes';
+import { originalArt } from '@/ships/art-version';
 import * as THREE from "three";
 import { T, clamp } from "@/core/tunables";
 import { D } from "@/core/difficulty";
@@ -124,7 +126,9 @@ export class Enemies {
     const K = ENEMY_KINDS[kind];
     let e = this.list.find((x) => !x.alive && x.kind === kind);
     if (!e) {
-      const rig = new ShipRig(this.palette ? { ...K.def, palette: this.palette } : K.def);
+      // Standard Goa'uld hulls retain their own metal and exhaust colors; special factions still recolor.
+      const palette = originalArt || this.palette !== PALETTES.goauld ? this.palette : undefined;
+      const rig = new ShipRig(palette ? { ...K.def, palette } : K.def);
       const mats: THREE.MeshToonMaterial[] = [];
       rig.root.traverse((o) => {
         if (o instanceof THREE.Mesh && o.material instanceof THREE.MeshToonMaterial && o.name !== "canopy") mats.push(o.material);

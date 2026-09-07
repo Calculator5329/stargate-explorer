@@ -1,3 +1,5 @@
+import { selectArt } from '@/ships/art-version';
+import { fighterRevision } from '@/ships/refinements';
 /**
  * Alternative looks for the player fighter, each a deliberate direction, all
  * expressed with the existing builder vocabulary (no builder changes). Loaded
@@ -222,7 +224,9 @@ const LANCE: ShipDef = {
 export const VARIANTS: Record<string, ShipDef> = { a: FACET, b: BRAWLER, c: LANCE, original: F11_HALBERD };
 
 /** The shipped player hull: Ethan picked A on 2026-09-04 ("a"). */
-export const PLAYER_HULL = FACET;
+export const PLAYER_ORIGINAL = FACET;
+export const PLAYER_REVISED = fighterRevision(FACET);
+export const PLAYER_HULL = selectArt(PLAYER_ORIGINAL, PLAYER_REVISED);
 
 /** `?variant=a|b|c|original` swaps the player fighter's def; other hulls and unknown keys pass through. */
 export function pickVariant(def: ShipDef, params: URLSearchParams): ShipDef {

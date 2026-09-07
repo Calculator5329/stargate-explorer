@@ -1,3 +1,5 @@
+import { selectArt } from '@/ships/art-version';
+import { gliderRevision } from '@/ships/refinements';
 import type { ShipDef } from "@/ships/defs";
 
 /**
@@ -7,7 +9,7 @@ import type { ShipDef } from "@/ships/defs";
  * exhaust. ~9 m long, ~13 m span. Lives here rather than ships/defs.ts so the
  * enemy roster can grow independently of the player hulls.
  */
-export const GLIDER: ShipDef = {
+export const GLIDER_ORIGINAL: ShipDef = {
   name: "Glider",
   ringVerts: 12,
   hull: [
@@ -44,3 +46,6 @@ export const GLIDER: ShipDef = {
   decals: [],
   palette: { body: 0x454a52, accent: 0xc9a24a, dark: 0x1e2024, glow: 0xffa040, canopy: 0x3a2a10 },
 };
+
+export const GLIDER_REVISED = gliderRevision(GLIDER_ORIGINAL);
+export const GLIDER = selectArt(GLIDER_ORIGINAL, GLIDER_REVISED);

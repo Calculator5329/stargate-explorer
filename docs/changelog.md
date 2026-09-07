@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-06 — Isolated Blender death-glider benchmark
+
+Authored an editable Blender glider and five-material GLB with engine/muzzle attachment nodes. Added a separate Three.js inspector and self-contained comparison against original/preferred procedural gliders, with game-toon and metallic treatments. Verified exported axes, all views, live orbit and review controls. No fleet, ShipRig, combat or save changes. [Evidence](design/blender-glider/README.md).
+
+## 2026-09-06 — Owner-directed SG-1 variants
+
+Recorded Ethan’s twelve first-pass choices and explicit choice to keep gameplay roles with SG-1-derived variants. Broadsword/Dart now derive from F-302, Lancer/Racer from X-301, Interceptor from death glider, Gunboat from Al’kesh. Added rear/underside Al’kesh and licensed-model Prometheus reference photographs. Rebuilt Prometheus with a long forebody and aft bridge/pods, and Ha’tak with an angular outer structure and pyramid panel courses. Al’kesh original remains the default; the new candidate is opt-in. Original and first-pass models remain available. Updated the comparison and separated previous owner feedback from new candidate choices. Build, browser review, art-selection preservation and Ha’tak combat probes passed. Target-hardware performance remains unmeasured.
+
+## 2026-09-06 — Reversible SG-1 fleet graphics
+
+Refined the fighter, glider, bomber and Prometheus against SG-1 references; added construction details and quieter materials to six original hulls. The ace inherits the new glider. Every previous definition remains intact, selectable with `?art=original` or an `old-` inspect key. Added the offline `/fleet-review.html` comparison with six paired views, source stills and browser-local review notes. Ha’tak gains a darker outer structure around the gold pyramid; its geometry is retained. [Evidence](design/sg1-fleet/README.md).
 ## 2026-09-06: Moves, the boost bar pays, a chord triggers, the designer composes, a proving ground to try them
 
 Ethan answered the move-composer packet (all seven calls on the recommended option) with two notes: "some type of sandbox mode where I can test all these different moves out" and "it doesn't necessarily just need to be the B key. It could be other keys as well for different types of moves". Both are in.

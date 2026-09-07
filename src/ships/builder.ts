@@ -40,7 +40,7 @@ export function buildShip(def: ShipDef): THREE.Group {
     accent: toonMaterial(p.accent),
     dark: toonMaterial(p.dark),
     glow: glowMaterial(p.glow),
-    canopy: toonMaterial(p.canopy, { emissive: p.glow, emissiveIntensity: 0.25 }),
+    canopy: toonMaterial(p.canopy, { emissive: p.glow, emissiveIntensity: def.canopyGlow ?? 0.25 }),
   };
   for (const [slot, tris] of soup.buckets) {
     if (tris.length === 0) continue;
@@ -386,7 +386,9 @@ function armor(soup: Soup, def: ArmorDef, mirror: boolean): void {
   const center = mean(bottom);
   const bevel = def.thickness * 0.45;
   const top = bottom.map((p) => {
-    const inward = center.clone().sub(p).normalize().multiplyScalar(bevel);
+    const inward = center.clone().sub(p);
+    if (def.topScale === undefined) inward.normalize().multiplyScalar(bevel);
+    else inward.multiplyScalar(1 - def.topScale);
     return p.clone().add(inward).setY(def.y + def.thickness);
   });
   const interior = center.clone().setY(def.y + def.thickness / 2);

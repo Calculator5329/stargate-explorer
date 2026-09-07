@@ -1,3 +1,6 @@
+import { roleVariant } from '@/ships/sg1-geometry';
+import { selectArt } from '@/ships/art-version';
+import { auxiliaryRevision } from '@/ships/refinements';
 import type { ShipDef } from "@/ships/defs";
 import { PALETTES } from "@/ships/palettes";
 
@@ -6,7 +9,7 @@ import { PALETTES } from "@/ships/palettes";
  * forebody, recessed tandem cockpit and two stacked pairs of tail engines.
  * Ship-local +Z forward, +Y up, +X port; metres, angles in radians.
  */
-export const HEAVY: ShipDef = {
+export const HEAVY_ORIGINAL: ShipDef = {
   name: "F-21 Broadsword",
   ringVerts: 16,
   hull: [
@@ -76,3 +79,7 @@ export const HEAVY: ShipDef = {
   // Warm ID flashes also colour the builder's narrow leading edges and fin tips.
   palette: { ...PALETTES.tauri, accent: 0xb87543 },
 };
+
+export const HEAVY_PASS1 = auxiliaryRevision(HEAVY_ORIGINAL, 'heavy');
+export const HEAVY_REVISED = roleVariant(HEAVY_ORIGINAL, 'heavy');
+export const HEAVY = selectArt(HEAVY_ORIGINAL, HEAVY_REVISED, HEAVY_PASS1);

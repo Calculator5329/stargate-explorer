@@ -1,0 +1,54 @@
+{
+  "checks": [
+    {
+      "art": "revised",
+      "bomber": "original",
+      "prometheus": "candidate",
+      "heavy": "candidate"
+    },
+    {
+      "art": "candidate",
+      "bomber": "candidate",
+      "prometheus": "candidate",
+      "heavy": "candidate"
+    },
+    {
+      "art": "pass1",
+      "bomber": "pass1",
+      "prometheus": "pass1",
+      "heavy": "pass1"
+    },
+    {
+      "art": "original",
+      "bomber": "original",
+      "prometheus": "original",
+      "heavy": "original"
+    }
+  ],
+  "originalCapitalWithPriorCamera": [
+    {
+      "view": "front",
+      "unchanged": true
+    },
+    {
+      "view": "perspective",
+      "unchanged": true
+    },
+    {
+      "view": "rear",
+      "unchanged": true
+    },
+    {
+      "view": "side",
+      "unchanged": true
+    },
+    {
+      "view": "silhouette",
+      "unchanged": true
+    },
+    {
+      "view": "top",
+      "unchanged": true
+    }
+  ]
+}

@@ -103,6 +103,8 @@ export interface HatchDef {
 
 /** Convex armor footprint in local XZ, extruded upward from y. */
 export interface ArmorDef {
+  /** Optional upper footprint scale for tapered superstructures; omitted keeps the normal bevel. */
+  topScale?: number;
   points: [number, number][];
   y: number;
   thickness: number;
@@ -122,6 +124,8 @@ export interface DecalDef {
 }
 
 export interface ShipDef {
+  /** Glass reflection tint; legacy hulls retain the original 0.25 emissive level. */
+  canopyGlow?: number;
   name: string;
   ringVerts: number;
   hull: HullSection[];
