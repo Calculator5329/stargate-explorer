@@ -43,7 +43,7 @@ src/
   replay/  kill replay: pose ring buffer, highlight cut, cinematic playback
   combat/  projectiles (pooled tracers), enemies (AI, all kinds), enemy-kinds (kind → hull + T table; the ace is a glider hull with gold trim), combat (weapons + hit resolution), missiles, targets (Tracked/Lockable), glider/interceptor/gunboat/bomber-def (enemy hulls), capital (Ha'tak)
   content/ campaign.json: the acts and every level; the only place a level is defined (the designer writes it, `mission/levels.ts` types and checks it)
-  editor/  the game designer (`?edit=1`, dev server only, code-split): board (campaign cards, requires arrows, act bands, power curve), encounter (the inspector), schema (which fields each level type shows), power (the threat model), content (working copy, undo, save through `/__content/save`)
+  editor/  the game designer (`?edit=1`, dev server only, code-split): board (campaign cards, requires arrows, act bands, power curve), encounter (the inspector), schema (which fields each level type shows), power (the threat model), packs (prebuilt wave packs), wizard (new-level questions), content (working copy, undo, save through `/__content/save`)
   mission/ levels (types + the JSON import), mission (base + Waves), runners clear/run/protect/strike/race/hold/duel/hunt/intercept (race and hunt extend run; protect takes any hull in ships/hulls.ts as the escort; hold and intercept outlast a clock; duel is free play with ?foe=; hunt and intercept drive enemies through Enemy.steer), index (factory)
   travel/  gate (return gate, Tracked), tunnel (wormhole shader quad), travel (dial → tunnel → in-page system swap at 0.6 s via onSwap → arrive fade; a page opened with arrive=1 still fades in)
   audio/   WebAudio synth (no assets)

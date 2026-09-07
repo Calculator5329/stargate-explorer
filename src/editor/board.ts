@@ -16,6 +16,7 @@ export interface BoardOpts {
   content: Content;
   selected: () => string | null;
   select: (id: string) => void;
+  deselect: () => void;
   /** null = the ship the chain would have handed over by then */
   shipOverride: () => string | null;
 }
@@ -148,7 +149,7 @@ export class Board {
         prevAct = l.act ?? "";
       }
       const pct = Math.round(r.threat * 100);
-      rows.push(`<div class="curve-row${l.id === sel ? " sel" : ""}" data-id="${esc(l.id)}"><span class="cl">${esc(l.title)}</span><span class="bar"><i class="${threatBand(r.threat)}" style="width:${Math.min(100, r.threat * 66)}%"></i></span><span class="cv">${pct}%</span><span class="cm">${r.clearMin.toFixed(1)} min</span><span class="cs">${esc(SHIPS[r.ship]?.def.name ?? r.ship)}</span></div>`);
+      rows.push(`<div class="curve-row${l.id === sel ? " sel" : ""}" data-id="${esc(l.id)}"><span class="cl">${esc(l.title)} <em>${l.type}</em></span><span class="bar"><i class="${threatBand(r.threat)}" style="width:${Math.min(100, r.threat * 66)}%"></i></span><span class="cv">${pct}%</span><span class="cm">${r.clearMin.toFixed(1)} min</span><span class="cs">${esc(SHIPS[r.ship]?.def.name ?? r.ship)}</span></div>`);
     }
     this.curve.innerHTML = rows.join("");
     for (const row of this.curve.querySelectorAll<HTMLElement>(".curve-row")) row.onclick = () => this.o.select(row.dataset.id!);
@@ -164,9 +165,34 @@ export class Board {
     return { x: e.clientX - b.left, y: e.clientY - b.top };
   }
 
+  /** lay every act out as a tree: depth in the requires chain is the column, siblings stack down */
+  tidy(): void {
+    const c = this.o.content;
+    const depth = (l: LevelDef, d = 0): number => (l.requires && d < 64 ? depth(c.level(l.requires) ?? l, d + 1) : d);
+    let y = 40;
+    for (const a of c.acts) {
+      const rows = new Map<number, number>();
+      let bottom = y;
+      const mine = c.levels.filter((l) => l.act === a.id).sort((p, q) => (p.board?.y ?? 0) - (q.board?.y ?? 0));
+      if (!mine.length) continue;
+      const minDepth = Math.min(...mine.map((l) => depth(l)));
+      for (const l of mine) {
+        const col = depth(l) - minDepth;
+        const row = rows.get(col) ?? 0;
+        rows.set(col, row + 1);
+        l.board = { x: 40 + col * 270, y: y + row * 92 };
+        bottom = Math.max(bottom, l.board.y + NH);
+      }
+      y = bottom + 2 * PAD + 40;
+    }
+  }
+
   private down(e: PointerEvent): void {
     const n = this.nodeAt(e);
-    if (!n) return;
+    if (!n) {
+      if (this.o.selected()) this.o.deselect();
+      return;
+    }
     const l = this.o.content.level(n.id);
     if (!l?.board) return;
     const p = this.local(e);

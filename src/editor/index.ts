@@ -75,6 +75,7 @@ body.editing #hud,body.editing #dial,body.editing #hub,body.editing #menu{displa
 #editor .curve-row:hover{border-color:rgba(207,233,255,.25)}
 #editor .curve-row.sel{border-color:#ffd9a8}
 #editor .curve-row .cl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#editor .curve-row .cl em{font-style:normal;color:#5f7d9c;font-size:11px}
 #editor .curve-row .bar{height:10px;background:rgba(207,233,255,.08);position:relative}
 #editor .curve-row .bar i{position:absolute;inset:0 auto 0 0;display:block}
 #editor .curve-row .bar i.low{background:#7fd58a}
@@ -131,6 +132,33 @@ body.editing #hud,body.editing #dial,body.editing #hub,body.editing #menu{displa
 #editor .power p{margin:8px 0 0;color:#cfe9ff}
 #editor .power p.dim{color:#5f7d9c;font-size:11px}
 #editor .problems{margin-top:12px;padding:8px;border:1px solid #ff8a8a;color:#ff8a8a}
+#editor .packs{margin:14px 0 4px;border-top:1px dashed rgba(207,233,255,.2);padding-top:8px}
+#editor .packs-head{color:#5f7d9c;font-size:10px;letter-spacing:.14em;margin-bottom:4px}
+#editor .pack{display:flex;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid rgba(207,233,255,.08)}
+#editor .pack>div{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0}
+#editor .pack b{color:#cfe9ff;font-weight:600}
+#editor .pack span{color:#8fb3d9;font-size:11px}
+#editor .pack small{color:#5f7d9c;font-size:11px}
+#editor .pack button{padding:2px 8px}
+#editor .wizard-back{position:absolute;inset:0;z-index:5;background:rgba(4,5,10,.8);display:flex;align-items:flex-start;justify-content:center;padding-top:6vh;overflow:auto}
+#editor .wizard{width:880px;max-width:94vw;background:#0f1322;border:1px solid rgba(255,217,168,.4);padding:18px 22px 16px}
+#editor .wz-head{display:flex;align-items:baseline;gap:12px;margin-bottom:8px}
+#editor .wz-head b{color:#ffd9a8;letter-spacing:.14em}
+#editor .wz-head span,#editor .wz-sub{color:#8fb3d9;font-size:12px}
+#editor .wz-step{margin:14px 0}
+#editor .wz-step>b{display:block;color:#ffd9a8;font-size:11px;letter-spacing:.14em;margin-bottom:6px}
+#editor .wz-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+#editor .wz-cards.small{grid-template-columns:repeat(4,1fr)}
+#editor .wz-card{text-align:left;display:flex;flex-direction:column;gap:3px;padding:8px 10px;background:rgba(207,233,255,.03);border:1px solid rgba(207,233,255,.2);letter-spacing:0;color:#cfe9ff}
+#editor .wz-card b{color:#cfe9ff;letter-spacing:.06em}
+#editor .wz-card span{color:#8fb3d9;font-size:11px;line-height:1.35}
+#editor .wz-card.on{border-color:#ffd9a8;background:rgba(255,217,168,.07)}
+#editor .wz-card.on b{color:#ffd9a8}
+#editor .wz-row{display:flex;gap:12px;align-items:center}
+#editor .wz-row select,#editor .wz-row input{font:inherit;background:rgba(0,0,0,.35);border:1px solid rgba(207,233,255,.25);color:#cfe9ff;padding:5px 8px;min-width:280px}
+#editor .wz-row input{flex:1}
+#editor .wz-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+#editor button:disabled{opacity:.4;cursor:default}
 #editor .empty{color:#8fb3d9;margin-top:20px;line-height:1.45}
 #editor .empty b{color:#ffd9a8;letter-spacing:.12em}
 #editor .empty p{margin:8px 0}
@@ -156,7 +184,7 @@ export function mountEditor(o: EditorOpts): EditorHandle {
 
   const root = document.createElement("div");
   root.id = "editor";
-  root.innerHTML = `<div class="top"><b>GAME DESIGNER</b><button class="tab on" data-tab="board">BOARD</button><button class="tab" data-tab="acts">ACTS</button><button class="tab" data-tab="help">HOW THIS WORKS</button><span class="spacer"></span><span class="status"></span><button class="undo">UNDO</button><button class="save primary">SAVE</button><button class="close">FLY (ESC)</button></div><div class="main"></div>`;
+  root.innerHTML = `<div class="top"><b>GAME DESIGNER</b><button class="tab on" data-tab="board">BOARD</button><button class="tab" data-tab="acts">ACTS</button><button class="tab" data-tab="help">HOW THIS WORKS</button><span class="spacer"></span><span class="status"></span><button class="tidy" title="lay the chain out left to right, act by act">TIDY</button><button class="undo">UNDO</button><button class="save primary">SAVE</button><button class="close">FLY (ESC)</button></div><div class="main"></div>`;
   document.body.append(root);
   document.body.classList.add("editing");
   const main = root.querySelector<HTMLElement>(".main")!, status = root.querySelector<HTMLElement>(".status")!;
@@ -181,7 +209,7 @@ export function mountEditor(o: EditorOpts): EditorHandle {
     },
   };
 
-  const board = new Board({ content, selected: () => selected, select, shipOverride: () => shipOverride });
+  const board = new Board({ content, selected: () => selected, select, deselect: () => select(null), shipOverride: () => shipOverride });
   const inspector = new Encounter({
     content,
     selected: () => selected,
@@ -285,11 +313,16 @@ export function mountEditor(o: EditorOpts): EditorHandle {
 
   content.onChange = render;
   for (const b of root.querySelectorAll<HTMLElement>(".tab")) b.onclick = () => ((tab = b.dataset.tab as typeof tab), render());
+  root.querySelector<HTMLButtonElement>(".tidy")!.onclick = () => {
+    content.snapshot();
+    board.tidy();
+    content.changed();
+  };
   root.querySelector<HTMLButtonElement>(".undo")!.onclick = () => content.undo() || setStatus("nothing to undo");
   root.querySelector<HTMLButtonElement>(".save")!.onclick = () => {
     setStatus("saving...");
     void content.save().then((r) => {
-      if (r === "saved") setStatus("saved; the page reloads with the new campaign");
+      if (r === "saved") setStatus(`saved ${new Date().toLocaleTimeString()}; reloading on the new campaign`);
       else if (r === "invalid") setStatus("not saved: fix the problems first", "err");
       else setStatus("no content store: run the dev server (npm run dev), the built game cannot save", "err");
     });

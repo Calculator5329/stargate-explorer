@@ -86,13 +86,35 @@ const typed = await page.evaluate(() => {
 check(typed.type === "hold" && typed.duration > 0 && typed.title === titleBefore && typed.requires === "gauntlet" && typed.act === "act2", `type change applied the hold template and kept identity (${JSON.stringify(typed)})`);
 await page.click("#editor .undo");
 
-// new level, then delete it
+// new level through the wizard: pick a type and a pack, name it, create; then delete it
 await page.click("#editor .inspector button.wide >> nth=-1");
-const made = await page.evaluate(() => ({ n: window.__editor.content.levels.length, sel: window.__editor.selected, req: window.__editor.content.level(window.__editor.selected)?.requires }));
-check(made.n === info.levels + 1 && made.req === "escort", `new level added after the selected one (${made.sel} requires ${made.req})`);
+await page.waitForSelector("#editor .wizard");
+await page.click('#editor .wz-card[data-type="clear"]');
+await page.click('#editor .wz-card[data-pack="gunboat-wall"]');
+await page.fill("#editor .wz-title", "the netu picket");
+await page.click("#editor .wz-go");
+const made = await page.evaluate(() => {
+  const l = window.__editor.content.level(window.__editor.selected);
+  return { n: window.__editor.content.levels.length, sel: window.__editor.selected, req: l?.requires, title: l?.title, waves: l?.waves?.length, act: l?.act, wizardGone: !document.querySelector("#editor .wizard") };
+});
+check(made.n === info.levels + 1 && made.req === "escort" && made.title === "THE NETU PICKET" && made.waves === 2 && made.act === "act2" && made.wizardGone, `wizard made the level after the selected one with the pack (${JSON.stringify(made)})`);
+// a pack dropped into the wave list
+await page.click("#editor .pack button >> nth=3");
+const packed = await page.evaluate(() => window.__editor.content.level(window.__editor.selected).waves.length);
+check(packed === 3, `pack appended its waves (${packed})`);
 await page.click("#editor .inspector button.danger");
 const gone = await page.evaluate(() => window.__editor.content.levels.length);
 check(gone === info.levels, `delete removed it (${gone})`);
+
+// tidy lays every card out without losing one
+await page.click("#editor .tidy");
+const tidy = await page.evaluate(() => {
+  const ls = window.__editor.content.levels;
+  const spots = new Set(ls.map((l) => `${l.board.x},${l.board.y}`));
+  return { n: ls.length, distinct: spots.size };
+});
+check(tidy.distinct === tidy.n, `tidy gave every card its own spot (${tidy.distinct} of ${tidy.n})`);
+await page.click("#editor .undo");
 
 // save to a scratch file through the content store
 const saved = await page.evaluate((f) => window.__editor.content.save(f), testFile);

@@ -6,6 +6,8 @@ import { SHIPS } from "@/ships/registry";
 import type { Content } from "@/editor/content";
 import { COMMON, KINDS, TYPE_FIELDS, TYPE_HELP, TYPE_LABEL, defaultsFor, type Field } from "@/editor/schema";
 import { esc, readFor, threatBand } from "@/editor/board";
+import { WAVE_PACKS } from "@/editor/packs";
+import { openWizard } from "@/editor/wizard";
 
 /**
  * The encounter composer: the inspector for one level, in the order a designer thinks about it. What it is
@@ -175,14 +177,22 @@ export class Encounter {
     const c = this.o.content;
     return this.btn("+ NEW LEVEL", "wide", () => {
       const sel = this.level;
-      const id = c.freshId("new sortie");
-      const l = defaultsFor("clear", { id, system: sel?.system ?? "abydos", title: "NEW SORTIE", ...(sel ? { requires: sel.id, act: sel.act ?? "" } : {}) });
-      if (!l.act) delete l.act;
-      l.board = sel?.board ? { x: sel.board.x + 270, y: sel.board.y } : { x: 40, y: 40 };
-      c.snapshot();
-      c.levels.push(l);
-      c.changed();
-      this.o.select(id);
+      openWizard({ content: c, after: sel?.id ?? null, done: (pick) => {
+        const id = c.freshId(pick.title);
+        const req = pick.after ? c.level(pick.after) : undefined;
+        const l = defaultsFor(pick.type, { id, system: pick.system, title: pick.title, ...(req ? { requires: req.id } : {}), ...(req?.act ? { act: req.act } : c.acts[0] ? { act: c.acts[0].id } : {}) });
+        if (pick.type === "clear" || pick.type === "protect") {
+          const pk = WAVE_PACKS.find((p) => p.id === pick.pack);
+          if (pk && (l.type === "clear" || l.type === "protect")) l.waves = structuredClone(pk.waves);
+        }
+        // sit just right of the level it follows, or at the top left
+        l.board = req?.board ? { x: req.board.x + 270, y: req.board.y } : { x: 40, y: 40 };
+        while (c.levels.some((x) => x.board && x.board.x === l.board!.x && Math.abs(x.board.y - l.board!.y) < 70)) l.board.y += 92;
+        c.snapshot();
+        c.levels.push(l);
+        c.changed();
+        this.o.select(id);
+      } });
     });
   }
 
@@ -298,6 +308,14 @@ export class Encounter {
       ws.push({ ...last, ...(last.kinds ? { kinds: [...last.kinds] } : {}) });
     }));
     wrap.append(add);
+    // the shelf: prebuilt fights, appended as waves, then edited like any other
+    const shelf = h(`<div class="packs"><div class="packs-head">OR DROP IN A PREBUILT PACK</div></div>`);
+    for (const pk of WAVE_PACKS) {
+      const row = h(`<div class="pack"><div><b>${esc(pk.name)}</b><span>${pk.waves.length} wave${pk.waves.length === 1 ? "" : "s"}: ${pk.waves.map((w) => resolved(w.count, w.kinds)).join(" · ")}</span><small>${esc(pk.blurb)}</small></div><button>ADD</button></div>`);
+      row.querySelector("button")!.onclick = () => this.edit(() => ws.push(...structuredClone(pk.waves)));
+      shelf.append(row);
+    }
+    wrap.append(shelf);
     this.root.append(wrap);
   }
 }
