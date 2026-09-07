@@ -129,6 +129,19 @@ export const TYPE_LABEL: Record<LevelDef["type"], string> = {
   duel: "DUEL (one on one)",
 };
 
+/** one plain sentence per type: what the player does, how it is won, how it is lost */
+export const TYPE_HELP: Record<LevelDef["type"], string> = {
+  clear: "Waves of enemies spawn round you, one after another. Win when the last wave is dead; lose when your hull is gone.",
+  protect: "A big friendly ship crawls toward the gate while waves come in. Win when the waves are done and the escort lives; lose if it dies or you do.",
+  run: "Fly a chain of gates before the clock runs out. Chasers can join at a chosen gate and mines can sit on the gates.",
+  race: "The gate chain again, against rival racers. Win by crossing the last gate first.",
+  hunt: "One fast quarry runs the gate chain ahead of you and turns to fight when you get close. Kill it before the clock.",
+  hold: "Survive at the gate for a set time while groups keep coming. Win when the clock hits zero.",
+  intercept: "Bombers run a line toward a relay behind you, with escorts. Kill them before they cross; too many leaks and you lose.",
+  strike: "A mothership ahead: shoot its ring guns, then the three shield nodes, then the core, with escorts and reinforcements on you.",
+  duel: "One enemy, open space, best of N rounds. Hull is restored between rounds.",
+};
+
 /** A fresh level of the given type with sensible middle-of-the-road numbers; the base fields are kept from `from`. */
 export function defaultsFor(type: LevelDef["type"], from: Partial<LevelDef> & { id: string; system: string }): LevelDef {
   const base = { id: from.id, system: from.system, title: from.title ?? "NEW SORTIE", blurb: from.blurb ?? "", intro: from.intro ?? ["Briefing goes here."], ...(from.requires ? { requires: from.requires } : {}), ...(from.unlocks ? { unlocks: from.unlocks } : {}), ...(from.act ? { act: from.act } : {}), ...(from.board ? { board: from.board } : {}) };

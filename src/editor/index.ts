@@ -31,7 +31,8 @@ export interface EditorHandle {
 }
 
 const CSS = `
-#editor{position:fixed;inset:0;z-index:40;display:grid;grid-template-rows:44px 1fr;grid-template-columns:1fr 400px;background:rgba(8,10,20,.93);color:#cfe9ff;font:13px/1.35 ui-monospace,Menlo,Consolas,monospace;user-select:none}
+body.editing #hud,body.editing #dial,body.editing #hub,body.editing #menu{display:none!important}
+#editor{position:fixed;inset:0;z-index:40;display:grid;grid-template-rows:44px 1fr;grid-template-columns:1fr 460px;background:#0b0d16;color:#cfe9ff;font:13px/1.35 ui-monospace,Menlo,Consolas,monospace;user-select:none}
 #editor[hidden]{display:none}
 #editor *{box-sizing:border-box}
 #editor .top{grid-column:1/3;display:flex;align-items:center;gap:14px;padding:0 14px;border-bottom:1px solid rgba(255,217,168,.25)}
@@ -82,10 +83,14 @@ const CSS = `
 #editor .curve-row .cv{text-align:right}
 #editor .curve-row .cm,#editor .curve-row .cs{color:#8fb3d9}
 #editor .inspector{overflow:auto;border-left:1px solid rgba(255,217,168,.25);padding:12px 14px 40px}
-#editor .inspector .head .id{color:#8fb3d9;font-size:11px;letter-spacing:.1em}
-#editor .inspector .actions{display:flex;gap:6px;margin:8px 0 4px}
-#editor .inspector .section{color:#ffd9a8;letter-spacing:.14em;font-size:11px;margin:16px 0 6px;padding-bottom:3px;border-bottom:1px solid rgba(255,217,168,.2)}
-#editor .row{display:grid;grid-template-columns:120px 1fr;gap:4px 10px;align-items:center;margin:4px 0}
+#editor .inspector .head .ttl{color:#ffd9a8;font-size:16px;font-weight:700;letter-spacing:.06em}
+#editor .inspector .head .id{color:#5f7d9c;font-size:11px;letter-spacing:.08em;margin-top:2px}
+#editor .inspector .actions{display:flex;gap:6px;margin:10px 0 4px}
+#editor .inspector .section{margin:22px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(255,217,168,.25)}
+#editor .inspector .section b{display:block;color:#ffd9a8;letter-spacing:.14em;font-size:11px}
+#editor .inspector .section p{margin:3px 0 0;color:#8fb3d9;font-size:12px;line-height:1.4}
+#editor .help{margin:2px 0 8px;padding:6px 8px;border-left:2px solid rgba(255,217,168,.5);color:#cfe9ff;font-size:12px;line-height:1.4}
+#editor .row{display:grid;grid-template-columns:130px 1fr;gap:4px 10px;align-items:center;margin:5px 0}
 #editor .row label,#editor .row.note>span:first-child{color:#8fb3d9;font-size:12px}
 #editor .row small{grid-column:2;color:#5f7d9c;font-size:11px}
 #editor .row input,#editor .row select,#editor .row textarea{font:inherit;background:rgba(0,0,0,.35);border:1px solid rgba(207,233,255,.25);color:#cfe9ff;padding:3px 6px;width:100%;min-width:0}
@@ -102,27 +107,38 @@ const CSS = `
 #editor .chip.k-bomber{border-color:#ff8a8a}
 #editor .chip.k-ace{border-color:#ffd9a8;color:#ffd9a8}
 #editor button.chip.add{padding:1px 8px}
-#editor .waves .wave-head,#editor .waves .wave{display:grid;grid-template-columns:18px 1fr 1fr 1fr 1fr 66px;gap:4px;align-items:center;margin:3px 0}
-#editor .waves .wave-head span{color:#5f7d9c;font-size:10px;letter-spacing:.08em}
-#editor .waves .wave input{font:inherit;background:rgba(0,0,0,.35);border:1px solid rgba(207,233,255,.25);color:#cfe9ff;padding:2px 4px;width:100%;min-width:0}
-#editor .waves .wave .n{color:#8fb3d9}
-#editor .waves .wave .tools{display:flex;gap:2px}
-#editor .waves .wave .tools button{padding:1px 5px}
-#editor .waves .wave .chips{grid-column:2/7;margin-bottom:6px}
-#editor .waves .wave .chips small{color:#5f7d9c}
+#editor .waves .wave{border:1px solid rgba(207,233,255,.2);padding:8px 10px;margin:8px 0;background:rgba(207,233,255,.03)}
+#editor .waves .wave-top{display:flex;align-items:center;gap:10px}
+#editor .waves .wave-top b{color:#ffd9a8;letter-spacing:.1em;font-size:11px}
+#editor .waves .wave-top .sum{flex:1;color:#cfe9ff}
+#editor .waves .tools{display:flex;gap:2px}
+#editor .waves .tools button{padding:1px 5px}
+#editor .waves .wave-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:8px}
+#editor .waves .wave-grid label{display:flex;flex-direction:column;gap:2px;color:#8fb3d9;font-size:11px}
+#editor .waves .wave-grid input{font:inherit;background:rgba(0,0,0,.35);border:1px solid rgba(207,233,255,.25);color:#cfe9ff;padding:3px 6px;width:100%;min-width:0}
+#editor .waves .wave-mix{display:flex;gap:10px;align-items:center;margin-top:8px}
+#editor .waves .wave-mix>span{color:#8fb3d9;font-size:11px;width:24px}
+#editor .waves .wave-mix small{color:#5f7d9c}
 #editor .power .big{display:flex;align-items:baseline;gap:10px;margin:6px 0}
 #editor .power .big b{font-size:28px}
 #editor .power .big.low b{color:#7fd58a}
 #editor .power .big.mid b{color:#ffd9a8}
 #editor .power .big.high b{color:#ff8a8a}
 #editor .power .big span{color:#8fb3d9;font-size:12px}
+#editor .power .big em{font-style:normal;color:#cfe9ff}
 #editor .power .grid{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:2px 10px}
 #editor .power .grid span{color:#8fb3d9}
 #editor .power p{margin:8px 0 0;color:#cfe9ff}
 #editor .power p.dim{color:#5f7d9c;font-size:11px}
 #editor .problems{margin-top:12px;padding:8px;border:1px solid #ff8a8a;color:#ff8a8a}
-#editor .empty{color:#8fb3d9;margin-top:20px}
+#editor .empty{color:#8fb3d9;margin-top:20px;line-height:1.45}
 #editor .empty b{color:#ffd9a8;letter-spacing:.12em}
+#editor .empty p{margin:8px 0}
+#editor .guide{max-width:760px;padding:24px 28px;line-height:1.5}
+#editor .guide h2{color:#ffd9a8;letter-spacing:.14em;font-size:12px;margin:22px 0 6px}
+#editor .guide h2:first-child{margin-top:0}
+#editor .guide p{margin:4px 0;color:#cfe9ff}
+#editor .guide p b{color:#ffd9a8;font-weight:600}
 #editor .acts{padding:18px}
 #editor .acts .act{display:grid;grid-template-columns:90px 260px 1fr auto;gap:10px;align-items:center;margin:6px 0}
 #editor .acts input{font:inherit;background:rgba(0,0,0,.35);border:1px solid rgba(207,233,255,.25);color:#cfe9ff;padding:4px 6px;width:100%}
@@ -133,15 +149,16 @@ export function mountEditor(o: EditorOpts): EditorHandle {
   const content = new Content();
   let selected: string | null = content.level(o.currentLevelId) ? o.currentLevelId : null;
   let shipOverride: string | null = null;
-  let tab: "board" | "acts" = "board";
+  let tab: "board" | "acts" | "help" = "board";
   const style = document.createElement("style");
   style.textContent = CSS;
   document.head.append(style);
 
   const root = document.createElement("div");
   root.id = "editor";
-  root.innerHTML = `<div class="top"><b>GAME DESIGNER</b><button class="tab on" data-tab="board">BOARD</button><button class="tab" data-tab="acts">ACTS</button><span class="spacer"></span><span class="status"></span><button class="undo">UNDO</button><button class="save primary">SAVE</button><button class="close">FLY (ESC)</button></div><div class="main"></div>`;
+  root.innerHTML = `<div class="top"><b>GAME DESIGNER</b><button class="tab on" data-tab="board">BOARD</button><button class="tab" data-tab="acts">ACTS</button><button class="tab" data-tab="help">HOW THIS WORKS</button><span class="spacer"></span><span class="status"></span><button class="undo">UNDO</button><button class="save primary">SAVE</button><button class="close">FLY (ESC)</button></div><div class="main"></div>`;
   document.body.append(root);
+  document.body.classList.add("editing");
   const main = root.querySelector<HTMLElement>(".main")!, status = root.querySelector<HTMLElement>(".status")!;
 
   const handle: EditorHandle = {
@@ -154,11 +171,13 @@ export function mountEditor(o: EditorOpts): EditorHandle {
     show() {
       handle.active = true;
       root.hidden = false;
+      document.body.classList.add("editing");
       render();
     },
     hide() {
       handle.active = false;
       root.hidden = true;
+      document.body.classList.remove("editing");
     },
   };
 
@@ -231,13 +250,33 @@ export function mountEditor(o: EditorOpts): EditorHandle {
     main.replaceChildren(wrap);
   }
 
+  function renderHelp(): void {
+    const g = document.createElement("div");
+    g.className = "guide";
+    g.innerHTML = `
+<h2>THE BOARD</h2>
+<p>Every card is one level. Drag them anywhere; the layout is saved with the campaign. The arrow into a card comes from the level that has to be won first. The dashed bands are the acts: drop a card inside another band and it moves to that act. Acts are only grouping and order, the game does not gate on them yet.</p>
+<h2>THE PILLS AND THE POWER CURVE</h2>
+<p>The pill on a card is the estimated share of the hull a player loses flying that level in the ship the chain has handed over by then. <b>Green</b> under 45% is comfortable, <b>gold</b> up to 90% is a real fight, <b>red</b> above that kills anyone not flying well. The power curve under the board lists the same numbers in campaign order, so a spike or a flat stretch shows at a glance. It is a model from the game's own tables, not a measurement; trust the shape, not the decimals.</p>
+<h2>THE INSPECTOR</h2>
+<p>Click a card and it opens on the right, top to bottom in the order you would think about it: what the level is, where it happens, where it sits in the chain, the fight itself, the story text, and how hard it comes out. Every section opens with a line saying what the fields do. Number boxes commit when you leave them or press Enter.</p>
+<h2>WAVES AND KINDS</h2>
+<p>Wave levels spawn one wave at a time, each a set number of seconds after the previous one is dead. A wave's <b>mix</b> is a list of kinds the game cycles through: four ships with GUNBOAT, GLIDER gives gunboat, glider, gunboat, glider. Click a chip to change its kind, × to drop it, + to add one. No chips means all gliders.</p>
+<h2>SAVING AND FLYING</h2>
+<p><b>SAVE</b> (Ctrl+S) writes the campaign file in the repo and the page reloads on it; until then nothing touches disk and <b>UNDO</b> (Ctrl+Z) steps back. <b>FLY IT</b> runs the selected level right now: the designer hides, the pointer locks, and releasing the pointer (Esc) brings the designer back. Flying a different level than the one loaded saves first and reloads into it.</p>
+<h2>WHAT IS NOT HERE YET</h2>
+<p>Ships and enemy kinds are still numbers in code (the stat sheet is next after this). Moves and combos have no editor yet. The threat model's three feel constants are guesses until a real flight calibrates them.</p>`;
+    main.replaceChildren(g);
+  }
+
   function render(): void {
     if (!handle.active) return;
     for (const b of root.querySelectorAll<HTMLElement>(".tab")) b.classList.toggle("on", b.dataset.tab === tab);
     if (tab === "board") {
       if (board.root.parentElement !== main) main.replaceChildren(board.root);
       board.render();
-    } else renderActs();
+    } else if (tab === "help") renderHelp();
+    else renderActs();
     inspector.render();
     const problems = content.problems();
     if (problems.length) setStatus(`${problems.length} problem${problems.length > 1 ? "s" : ""}: ${problems[0]}`, "err");
