@@ -31,6 +31,8 @@ export interface Settings {
   /** drop render resolution before dropping frames (Renderer.dynamic) */
   dynamicRes: boolean;
   binds: Binds;
+  /** the start screen has been seen and dismissed once; later loads go straight to "click to fly" */
+  onboarded: boolean;
 }
 
 export interface MissionRecord {
@@ -53,7 +55,7 @@ export interface Save {
 const KEY = "stargate-explorer.save.v1";
 
 export const DEFAULT_SAVE: Save = {
-  settings: { scheme: "arcade", assist: true, assistStrength: 1, speedTurn: false, steer: "cursor", rawMouse: true, sens: 1, difficulty: "normal", mute: false, invertY: false, quality: "med", dynamicRes: true, binds: { ...DEFAULT_BINDS } },
+  settings: { scheme: "arcade", assist: true, assistStrength: 1, speedTurn: false, steer: "cursor", rawMouse: true, sens: 1, difficulty: "normal", mute: false, invertY: false, quality: "med", dynamicRes: true, binds: { ...DEFAULT_BINDS }, onboarded: false },
   progress: { ship: "f11", unlocked: ["f11"], missions: {} },
 };
 

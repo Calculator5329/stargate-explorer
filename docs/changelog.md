@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-09-06 — Feedback round 6: in-page gate travel, Prometheus pass 6, Ha'tak fixed, replays that show the kill
+
+Ethan, 2026-09-06: transitions sound bad and HUD text shows in the wormhole; the Prometheus should look like the real one (four reference images); interceptors too hard, gunboats too easy, the Ha'tak's three nodes impossible; a more discreet settings menu; replays that show everything including asteroid kills, with good angles.
+
+- **Gate travel stays on the page.** The reload at the end of the tunnel is gone: at 0.6 s into the tunnel (fully covered) `main.ts` tears down the sortie (world, rig, mission, combat, gate, tracers, all disposed through `render/dispose.ts`) and builds the destination in place, then rewrites the URL with `history.replaceState`. The AudioContext, the pointer lock and the settings survive, so there is no silence and no click-to-resume at the far end. The reload path remains only for a page opened with `?arrive=1`.
+- **No text in the wormhole.** `#hud.travel` hides every HUD layer for the whole trip (the old rule only held while the dial overlay was up, which is removed half a second into the tunnel). The start screen is shown once, until the first FLY (`Settings.onboarded`); after that the game loads straight into the sortie and Esc toggles the menu.
+- **Transition sound.** Engine ducked through the trip, a kawoosh burst at the tunnel, a wormhole sweep (noise through a lowpass sweeping 180 → 2600 → 320 Hz over a sub sine, two shimmers) that runs into the arrival fade, chevron blips softened. The missile launch sound is no longer reused for the gate.
+- **Prometheus pass 6** from the reference images, described in `docs/refs/prometheus-references-2026-09-06.md`: one long flat box hull, two open hangar boxes on the bow flanks with their mouths forward, a low raised deck with a stepped command tower and antenna masts just aft of centre, dark greeble strips along every flank, a full-beam stern wall with four rectangular exhausts, one gunmetal grey. Captures `docs/shots/2026-09-06-hull-prometheus-*.png` against the `-before-` set.
+- **Ha'tak nodes were unkillable** because they sat inside the pyramid's 91 m collision sphere and rounds died on the "shielded" hull first. `Capital` now has a solid hit shape (pyramid with an inverted underside and the ring band): `hitBy` for segments, `contains` and `pushOut` for the player, and `Lockable.hits` lets any target supply an exact hit test that `combat.ts` uses for rounds and missiles. `scripts/hatak-probe.mjs` is the gate.
+- **Balance** (`core/tunables.ts`, guesses until flown): interceptor hp 20, cruise 158, dash 218, wider flinch and slower fire; gunboat hp 260, tighter fire cone, faster cadence, damage 3.0; bomber hp 320.
+- **Replays.** Enemies are recorded by id in 16 slots (the old list-index slots lost anything spawned after the tenth), rock breaks are recorded and replayed as bursts, both cameras park at the first candidate spot outside every rock with a sight line to the kill and the ship (`Replay.park`), shot A looks a little ahead of the ship so the victim is in the picture, shot B settles between the ship and the wreck after the kill instead of on the ship alone. `Replay.progress` exposes the clip position for the test.
+- **Perf-pass cleanups landed with this**: `Flight.reset`, `ChaseCamera.reset`, `Hud.reset`, `World.dispose` and friends exist for the swap; `scripts/travel-test.mjs` honours `STARGATE_TEST_URL`.
+- **Gates run**: travel-test, chain-test 17/17, replay-test, rock-test, pursuit-probe, perf-probe, hatak-probe, `npm run build` (the standing three chunk warning only). Nothing flown by a human yet.
+
 ## 2026-09-06 — Performance pass and the Shift cursor jitter
 
 Ethan, 2026-09-06: "in-depth performance pass, improving performance and FPS across modes and hardware and different devices", and "the cursor that I use, it gets jittery, sometimes when I'm holding shift".

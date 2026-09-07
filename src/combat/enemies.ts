@@ -9,6 +9,8 @@ import type { Projectiles } from "@/combat/projectiles";
 export type EnemyState = "pursue" | "break" | "evade" | "saddle" | "flinch";
 
 export interface Enemy {
+  /** index in `Enemies.list`, stable for the page: the replay records enemies by it */
+  id: number;
   kind: EnemyKind;
   /** the kind's table in `T` */
   stats: EnemyStats;
@@ -128,7 +130,7 @@ export class Enemies {
         if (o instanceof THREE.Mesh && o.material instanceof THREE.MeshToonMaterial && o.name !== "canopy") mats.push(o.material);
       });
       e = {
-        kind, stats: K.stats, rig, alive: false, pos: new THREE.Vector3(), quat: new THREE.Quaternion(), prevPos: new THREE.Vector3(), prevQuat: new THREE.Quaternion(),
+        id: this.list.length, kind, stats: K.stats, rig, alive: false, pos: new THREE.Vector3(), quat: new THREE.Quaternion(), prevPos: new THREE.Vector3(), prevQuat: new THREE.Quaternion(),
         vel: new THREE.Vector3(), speed: 0, hp: 0, state: "pursue", stateT: 0, hold: new THREE.Vector3(0, 0, 1), fireCd: 0, flinchCd: 0, side: 1, sinceHit: 99, mats, radius: T.enemy.radius, tgt: 0, crashCredit: false, steer: null, steerSpeed: 0,
       };
       this.list.push(e);

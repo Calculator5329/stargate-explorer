@@ -1,13 +1,20 @@
 import * as THREE from "three";
 import type { Flight } from "@/sim/flight";
-import type { Enemy } from "@/combat/enemies";
+import type { Enemy, RockSpheres } from "@/combat/enemies";
 import { Projectiles } from "@/combat/projectiles";
 import { T } from "@/core/tunables";
 
-/** enemy slots recorded per frame (list index); more than this many gliders are simply not replayed */
-const SLOTS = 10;
-/** floats per frame: t + player (3 pos, 4 quat) + SLOTS × (alive, 3 pos, 4 quat) */
-const STRIDE = 8 + SLOTS * 8;
+/**
+ * enemy slots recorded per frame. Slots hold whichever enemies are alive that tick, by id, so a sortie that
+ * spawns thirty over its life still replays every one that mattered; more than SLOTS alive at once and the
+ * rest are not replayed (the old list-index scheme lost every enemy past the tenth spawned, so a late kill
+ * played as a bare explosion; Ethan, 2026-09-06: "making sure they show everything, including the kill")
+ */
+const SLOTS = 16;
+/** floats per slot: alive, id, 3 pos, 4 quat */
+const SS = 9;
+/** floats per frame: t + player (3 pos, 4 quat) + SLOTS × SS */
+const STRIDE = 8 + SLOTS * SS;
 /** seconds of history kept (at the 60 Hz sim step) */
 const KEEP = 12;
 const FRAMES = KEEP * 60;
@@ -28,6 +35,8 @@ interface Burst {
   pos: THREE.Vector3;
   vel: THREE.Vector3;
   scale: number;
+  /** an enemy death (a rock break otherwise); only these can be the scored kill */
+  kill: boolean;
 }
 
 interface Highlight {
@@ -39,9 +48,9 @@ interface Highlight {
   /** where and when the scored kill happened; the second camera is parked beside it */
   kill: THREE.Vector3;
   killT: number;
-  /** the ship's starboard axis and heading at the kill: the parked camera sits ahead of the kill and off to that side, clear of the path */
-  killSide: THREE.Vector3;
-  killFwd: THREE.Vector3;
+  /** the two parked cameras, chosen at the cut from a list of candidates: clear of every rock, with a sight line to the kill */
+  camA: THREE.Vector3;
+  camB: THREE.Vector3;
   score: number;
 }
 
@@ -55,6 +64,17 @@ const _side = new THREE.Vector3();
 const Y = new THREE.Vector3(0, 1, 0);
 const _look = new THREE.Vector3();
 const _v = new THREE.Vector3();
+const _sd = new THREE.Vector3();
+
+/** squared distance from point `c` to segment ab */
+function segDist2(a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3): number {
+  _sd.subVectors(b, a);
+  const l2 = _sd.lengthSq();
+  let t = l2 > 0 ? ((c.x - a.x) * _sd.x + (c.y - a.y) * _sd.y + (c.z - a.z) * _sd.z) / l2 : 0;
+  t = t < 0 ? 0 : t > 1 ? 1 : t;
+  const dx = a.x + _sd.x * t - c.x, dy = a.y + _sd.y * t - c.y, dz = a.z + _sd.z * t - c.z;
+  return dx * dx + dy * dy + dz * dz;
+}
 
 /**
  * Kill replay. Every sim tick records the player's and each glider's pose into
@@ -85,12 +105,21 @@ export class Replay {
   private savedFov = 60;
   /** seconds since the last barrel roll, for the style score */
   sinceBarrel = 99;
+  /** the belt, for parking the cameras somewhere they can see from (game.ts sets it) */
+  rocks: RockSpheres | null = null;
 
   get hasHighlight(): boolean {
     return this.highlight !== null;
   }
   get playing(): boolean {
     return this.clip !== null;
+  }
+  /** playback position as a fraction of the clip (0 before, 1 after); the headless replay test times its probes on it */
+  get progress(): number {
+    const c = this.clip;
+    if (!c) return this.highlight ? 0 : 2;
+    const t0 = c.frames[0]!, t1 = c.frames[(c.count - 1) * STRIDE]!;
+    return (this.clipT - t0) / (t1 - t0);
   }
 
   record(dt: number, flight: Flight, enemies: Enemy[]): void {
@@ -100,13 +129,16 @@ export class Replay {
     r[o] = this.t;
     r[o + 1] = flight.pos.x; r[o + 2] = flight.pos.y; r[o + 3] = flight.pos.z;
     r[o + 4] = flight.quat.x; r[o + 5] = flight.quat.y; r[o + 6] = flight.quat.z; r[o + 7] = flight.quat.w;
-    for (let s = 0; s < SLOTS; s++) {
-      const e = enemies[s], b = o + 8 + s * 8;
-      if (!e || !e.alive) { r[b] = 0; continue; }
-      r[b] = 1;
-      r[b + 1] = e.pos.x; r[b + 2] = e.pos.y; r[b + 3] = e.pos.z;
-      r[b + 4] = e.quat.x; r[b + 5] = e.quat.y; r[b + 6] = e.quat.z; r[b + 7] = e.quat.w;
+    let s = 0;
+    for (const e of enemies) {
+      if (!e.alive || s >= SLOTS) continue;
+      const b = o + 8 + s * SS;
+      r[b] = 1; r[b + 1] = e.id;
+      r[b + 2] = e.pos.x; r[b + 3] = e.pos.y; r[b + 4] = e.pos.z;
+      r[b + 5] = e.quat.x; r[b + 6] = e.quat.y; r[b + 7] = e.quat.z; r[b + 8] = e.quat.w;
+      s++;
     }
+    for (; s < SLOTS; s++) r[o + 8 + s * SS] = 0;
     this.head = (this.head + 1) % FRAMES;
     if (this.count < FRAMES) this.count++;
     // bursts older than the buffer fall off
@@ -124,9 +156,14 @@ export class Replay {
     if (this.shotCount < SHOTS) this.shotCount++;
   }
 
+  /** A rock broke (combat's rock burst): the clip re-emits it, so an asteroid kill shows the rock going too. */
+  markBurst(pos: THREE.Vector3, scale: number): void {
+    this.bursts.push({ t: this.t, pos: pos.clone(), vel: new THREE.Vector3(), scale, kill: false });
+  }
+
   /** A glider went down: score the moment and schedule the cut. */
   markKill(pos: THREE.Vector3, vel: THREE.Vector3, flight: Flight, stick: { x: number; y: number }, scale = 5): void {
-    this.bursts.push({ t: this.t, pos: pos.clone(), vel: vel.clone(), scale });
+    this.bursts.push({ t: this.t, pos: pos.clone(), vel: vel.clone(), scale, kill: true });
     let score = 1 + Math.min(1, Math.hypot(stick.x, stick.y)) + Math.min(1, flight.speed / 300);
     if (this.sinceBarrel < 3) score += 2.5;
     if (flight.boosting) score += 0.5;
@@ -150,9 +187,9 @@ export class Replay {
     }
     if (k < 30) return;
     const bursts = this.bursts.filter((b) => b.t >= from && b.t <= to);
-    // the scored kill is the burst nearest the mark
-    let kill = bursts[0];
-    for (const b of bursts) if (!kill || Math.abs(b.t - P.at) < Math.abs(kill.t - P.at)) kill = b;
+    // the scored kill is the enemy death nearest the mark
+    let kill: Burst | undefined;
+    for (const b of bursts) if (b.kill && (!kill || Math.abs(b.t - P.at) < Math.abs(kill.t - P.at))) kill = b;
     const shots = new Float32Array(this.shotCount * SSTRIDE);
     let m = 0;
     for (let i = 0; i < this.shotCount; i++) {
@@ -168,9 +205,51 @@ export class Replay {
     for (let i = 0; i < k; i++) if (Math.abs(frames[i * STRIDE]! - killT) < Math.abs(frames[kf * STRIDE]! - killT)) kf = i;
     const ko = kf * STRIDE;
     _q.set(frames[ko + 4]!, frames[ko + 5]!, frames[ko + 6]!, frames[ko + 7]!);
-    const killSide = new THREE.Vector3(-1, 0, 0).applyQuaternion(_q);
-    const killFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(_q);
-    this.highlight = { frames, count: k, bursts, shots: shots.subarray(0, m * SSTRIDE), kill: kill ? kill.pos.clone() : new THREE.Vector3(frames[k * STRIDE - STRIDE + 1], frames[k * STRIDE - STRIDE + 2], frames[k * STRIDE - STRIDE + 3]), killT, killSide, killFwd, score: P.score };
+    const killSide = _side.set(-1, 0, 0).applyQuaternion(_q);
+    const killFwd = _fwd.set(0, 0, 1).applyQuaternion(_q);
+    const killPos = kill ? kill.pos.clone() : new THREE.Vector3(frames[k * STRIDE - STRIDE + 1], frames[k * STRIDE - STRIDE + 2], frames[k * STRIDE - STRIDE + 3]);
+    // Shot B: parked near the kill. The first choice sits past the kill point along the ship's heading and off to
+    // starboard, looking back down the approach; when that is inside a rock (an asteroid kill: the victim died
+    // on the rock's face, straight ahead of the ship) the next candidates swing round the kill until one is in
+    // clear space with a sight line to the kill and to the ship a couple of seconds before it.
+    const ship2 = _a.set(frames[ko + 1]!, frames[ko + 2]!, frames[ko + 3]!);
+    let kf2 = kf;
+    while (kf2 > 0 && frames[kf2 * STRIDE]! > killT - 2) kf2--;
+    _b.set(frames[kf2 * STRIDE + 1]!, frames[kf2 * STRIDE + 2]!, frames[kf2 * STRIDE + 3]!);
+    const camB = this.park(killPos, killFwd, killSide, [[40, 20, 9], [40, -20, 9], [10, 45, 12], [10, -45, 12], [-45, 15, 18], [-45, -15, 18], [0, 0, 55], [0, 0, -55]], [killPos, _b, ship2]);
+    // Shot A: beside the path a third of the way in; the mirror side or overhead when the belt is in the way
+    const oa2 = Math.floor(k * 0.3) * STRIDE;
+    const pa = new THREE.Vector3(frames[oa2 + 1]!, frames[oa2 + 2]!, frames[oa2 + 3]!);
+    _q.set(frames[oa2 + 4]!, frames[oa2 + 5]!, frames[oa2 + 6]!, frames[oa2 + 7]!);
+    const sideA = _side.set(-1, 0, 0).applyQuaternion(_q), fwdA = _fwd.set(0, 0, 1).applyQuaternion(_q);
+    const oa3 = Math.floor(k * 0.45) * STRIDE;
+    _b.set(frames[oa3 + 1]!, frames[oa3 + 2]!, frames[oa3 + 3]!);
+    const camA = this.park(pa, fwdA, sideA, [[8, 24, 7], [8, -24, 7], [-6, 0, 30], [-6, 0, -26], [8, 36, 20], [8, -36, 20]], [pa, _b]);
+    this.highlight = { frames, count: k, bursts, shots: shots.subarray(0, m * SSTRIDE), kill: killPos, killT, camA, camB, score: P.score };
+  }
+
+  /**
+   * Pick a camera spot: `base + fwd·o[0] + side·o[1] + up·o[2]` for the first offset that is outside every
+   * rock and has a clear line to each of `sees`. Falls back to the first offset when nothing is clear.
+   */
+  private park(base: THREE.Vector3, fwd: THREE.Vector3, side: THREE.Vector3, offsets: [number, number, number][], sees: THREE.Vector3[]): THREE.Vector3 {
+    const R = this.rocks;
+    const out = new THREE.Vector3();
+    for (const [f, s, u] of offsets) {
+      out.copy(base).addScaledVector(fwd, f).addScaledVector(side, s).addScaledVector(Y, u);
+      if (!R) return out;
+      let ok = true;
+      for (let i = 0; i < R.count && ok; i++) {
+        const r = R.radii[i]!;
+        if (r <= 0) continue;
+        _v.set(R.centers[i * 3]!, R.centers[i * 3 + 1]!, R.centers[i * 3 + 2]!);
+        const keep = r + 8;
+        if (_v.distanceToSquared(out) < keep * keep) ok = false;
+        for (const p of sees) if (ok && segDist2(out, p, _v) < r * r * 0.81) ok = false;
+      }
+      if (ok) return out;
+    }
+    return out.copy(base).addScaledVector(fwd, offsets[0]![0]).addScaledVector(side, offsets[0]![1]).addScaledVector(Y, offsets[0]![2]);
   }
 
   /** Cut the pending kill now instead of waiting POST seconds (V pressed mid-sortie). */
@@ -224,12 +303,22 @@ export class Replay {
     };
     pose(oa + 1, ob + 1, ship.position, ship.quaternion);
     ship.visible = true;
+    for (const e of enemies) e.rig.root.visible = false;
     for (let s = 0; s < SLOTS; s++) {
-      const e = enemies[s];
-      if (!e) break;
-      const alive = F[oa + 8 + s * 8]! > 0.5;
-      e.rig.root.visible = alive;
-      if (alive) pose(oa + 9 + s * 8, ob + 9 + s * 8, e.rig.root.position, e.rig.root.quaternion);
+      const a = oa + 8 + s * SS;
+      if (F[a]! < 0.5) break;
+      const e = enemies[F[a + 1]!];
+      if (!e) continue;
+      // the same enemy's slot in the next frame may differ once another dies; find it by id
+      let b = -1;
+      for (let s2 = 0; s2 < SLOTS; s2++) {
+        const c = ob + 8 + s2 * SS;
+        if (F[c]! < 0.5) break;
+        if (F[c + 1] === F[a + 1]) (b = c), (s2 = SLOTS);
+      }
+      e.rig.root.visible = true;
+      if (b < 0) e.rig.root.position.set(F[a + 2]!, F[a + 3]!, F[a + 4]!), e.rig.root.quaternion.set(F[a + 5]!, F[a + 6]!, F[a + 7]!, F[a + 8]!);
+      else pose(a + 2, b + 2, e.rig.root.position, e.rig.root.quaternion);
     }
     while (this.burstIdx < c.bursts.length && c.bursts[this.burstIdx]!.t <= this.clipT) {
       const b = c.bursts[this.burstIdx++]!;
@@ -251,22 +340,22 @@ export class Replay {
     // the kill goes off close, the ship passes and recedes into the debris.
     _p.copy(ship.position);
     if (this.clipT < c.killT - 3.2) {
-      const oa2 = Math.floor(n * 0.3) * STRIDE;
-      _a.set(F[oa2 + 1]!, F[oa2 + 2]!, F[oa2 + 3]!);
-      _q.set(F[oa2 + 4]!, F[oa2 + 5]!, F[oa2 + 6]!, F[oa2 + 7]!);
-      _side.set(-1, 0, 0).applyQuaternion(_q);
-      _fwd.set(0, 0, 1).applyQuaternion(_q);
-      cam.position.copy(_a).addScaledVector(_side, 24).addScaledVector(Y, 7).addScaledVector(_fwd, 8);
-      cam.fov = 55;
-      _look.copy(_p);
+      // lead room: the frame looks a little ahead of the ship along its heading, so whatever it is chasing sits
+      // in the picture with it instead of off the edge (the victim was out of frame in every shot A, 2026-09-06)
+      cam.position.copy(c.camA);
+      cam.fov = 66;
+      _fwd.set(0, 0, 1).applyQuaternion(ship.quaternion);
+      _look.copy(_p).addScaledVector(_fwd, 24);
     } else {
-      // parked past the kill point along the ship's heading and off to starboard, looking back down the approach:
-      // the victim is 40 m in front of the lens with the ship closing behind it, the burst goes off close, then the
-      // ship passes and the camera swings after it (Ethan, 2026-09-05: "showing the enemy ship getting blown up")
-      cam.position.copy(c.kill).addScaledVector(c.killFwd, 40).addScaledVector(c.killSide, 20).addScaledVector(Y, 9);
+      // parked near the kill point (see `cut` for how the spot is chosen), looking back down the approach: the
+      // victim is in front of the lens with the ship closing behind it, the burst goes off close, then the ship
+      // passes and the camera swings after it (Ethan, 2026-09-05: "showing the enemy ship getting blown up")
+      cam.position.copy(c.camB);
       cam.fov = 62;
+      // after the kill the look settles between the ship and the wreck rather than on the ship alone, so the
+      // debris (or the rock, on an asteroid kill) stays in the picture while the ship recedes
       const after = Math.min(1, Math.max(0, (this.clipT - c.killT) / 0.8));
-      _look.copy(_p).lerp(c.kill, 0.5 * (1 - after));
+      _look.copy(_p).lerp(c.kill, 0.5 - 0.2 * after);
     }
     cam.up.copy(Y);
     cam.lookAt(_look);

@@ -274,6 +274,11 @@ export class Planet {
   }
 
   /** Push the tunables in and re-bake the albedo map when they moved. `width` is the equirect width (height is half). */
+  dispose(): void {
+    this.rt?.dispose();
+    this.rt = null;
+  }
+
   update(gl: THREE.WebGLRenderer, width: number): void {
     this.atmoU.uStrength.value = T.planet.atmosphereStrength;
     this.atmoU.uRimWidth.value = T.planet.rimWidth;

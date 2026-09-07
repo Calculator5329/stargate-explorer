@@ -61,6 +61,8 @@ export class StrikeMission extends Mission {
     for (const t of this.cap.weakPoints) this.nodes.push(wrap(t, "node"));
     this.core = {
       pos: this.cap.group.position, vel: ZERO, radius: this.cap.radius * 0.72, alive: true,
+      // the hull's real shape, so rounds reach the nodes on the collar and the ring guns from any side
+      hits: (a, b) => this.cap.hitBy(a, b),
       damage(amount) {
         if (!self.cap.alive) return false;
         if (self.stage !== "hull") {
@@ -155,14 +157,8 @@ export class StrikeMission extends Mission {
       _to.add(_n.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(T.weapons.enemySpread * D.enemySpread * 2)).normalize();
       C.shots.fire("enemy", _m.copy(t.pos).addScaledVector(t.dir, 12), _to, ZERO);
     }
-    // the hull is solid: push the ship out and take the crash like a rock
-    _n.subVectors(f.pos, this.cap.group.position);
-    const d = _n.length(), R = this.core.radius + T.arena.shipRadius * f.stats.size + 4;
-    if (d < R) {
-      _n.multiplyScalar(1 / d);
-      f.pos.copy(this.cap.group.position).addScaledVector(_n, R + 0.1);
-      f.bounce(_n);
-    }
+    // the hull is solid: push the ship out along the nearest face and take the crash like a rock
+    if (this.cap.pushOut(f.pos, T.arena.shipRadius * f.stats.size + 3, _n)) f.bounce(_n);
     if (this.stage === "hull") this.line = `Hull ${Math.max(0, Math.round((100 * this.cap.hp) / 600))}%`;
     else if (this.shieldT > 0) {
       this.shieldT -= dt;

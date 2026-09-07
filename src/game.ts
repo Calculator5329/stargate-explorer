@@ -8,7 +8,8 @@ import { Combat } from "@/combat/combat";
 import type { Mission } from "@/mission/mission";
 import { createMission } from "@/mission/index";
 import type { LevelDef } from "@/mission/levels";
-import { Audio } from "@/audio/audio";
+import type { Audio } from "@/audio/audio";
+import { disposeTree } from "@/render/dispose";
 import { PALETTES } from "@/ships/palettes";
 import { T } from "@/core/tunables";
 import { writeSave, type Save } from "@/core/save";
@@ -22,7 +23,6 @@ import { Minimap } from "@/ui/minimap";
  * or a "kill" is lives here or below. Also the only writer of mission progress.
  */
 export class Game {
-  readonly audio = new Audio();
   readonly enemies: Enemies;
   readonly combat: Combat;
   readonly mission: Mission;
@@ -35,19 +35,22 @@ export class Game {
   private flight: Flight;
   private cam: THREE.PerspectiveCamera | null = null;
   private readonly map: Minimap;
+  private readonly ac = new AbortController();
 
-  constructor(scene: THREE.Scene, world: World, ship: THREE.Object3D, canvas: HTMLCanvasElement, flight: Flight, private readonly save: Save, level: LevelDef) {
+  constructor(private readonly scene: THREE.Scene, world: World, ship: THREE.Object3D, canvas: HTMLCanvasElement, flight: Flight, private readonly save: Save, level: LevelDef, readonly audio: Audio) {
     this.enemies = new Enemies(world.asteroids, world.system.faction ? PALETTES[world.system.faction] : undefined);
     this.combat = new Combat(this.enemies, world.asteroids, ship, this.audio);
     this.combat.setShip(flight);
     this.flight = flight;
+    this.replay.rocks = world.asteroids;
     this.combat.onKill = (pos, vel) => this.replay.markKill(pos, vel, this.flight, this.lastStick);
     this.combat.onFire = (pos, vel) => this.replay.markShot(pos, vel);
+    this.combat.onRockBurst = (pos, scale) => this.replay.markBurst(pos, scale);
     this.mission = createMission(level, { combat: this.combat, rocks: world.asteroids, audio: this.audio, flight });
     this.audio.setKey(level.system);
     this.map = new Minimap(document.querySelector<HTMLCanvasElement>("#hud .map")!, world.asteroids);
     scene.add(this.combat.group, this.mission.group, this.gate.group, this.replay.tracers.group);
-    canvas.addEventListener("click", () => this.audio.unlock());
+    canvas.addEventListener("click", () => this.audio.unlock(), { signal: this.ac.signal });
     window.addEventListener("keydown", (e) => {
       if (this.replay.playing) {
         if (e.code === "KeyV" || e.code === "Escape") this.replay.stop(this.cam!, this.enemies.list);
@@ -59,7 +62,16 @@ export class Game {
         this.replay.cutNow();
         this.replay.play(this.cam);
       }
-    });
+    }, { signal: this.ac.signal });
+  }
+
+  /** Gate travel swapped the system: everything this game put in the scene goes, listeners with it. */
+  dispose(): void {
+    this.ac.abort();
+    for (const g of [this.combat.group, this.mission.group, this.gate.group, this.replay.tracers.group]) {
+      this.scene.remove(g);
+      disposeTree(g);
+    }
   }
 
   /** Start the highlight replay if there is one (pause menu button, end card). */

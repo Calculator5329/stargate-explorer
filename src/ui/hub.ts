@@ -25,6 +25,13 @@ export class Hub {
     this.build();
   }
 
+  /** The page now runs a different sortie (gate travel swapped it in). */
+  setCurrent(level: LevelDef): void {
+    this.mission = level.id;
+    this.system = level.system;
+    this.ship = this.save.progress.ship;
+  }
+
   show(): void {
     this.shownSystem = "";
     this.build();

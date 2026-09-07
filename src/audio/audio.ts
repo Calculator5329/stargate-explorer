@@ -36,6 +36,8 @@ export class Audio {
   private engineFilter!: BiquadFilterNode;
   private noise!: AudioBuffer;
   private boostGain!: GainNode;
+  /** 1 in flight, ~0 during gate travel: scales the engine and boost beds so the wormhole has the room */
+  private duckLevel = 1;
   muted = false;
 
   constructor() {
@@ -185,7 +187,79 @@ export class Audio {
     this.engine.frequency.setTargetAtTime(f, t, 0.1);
     this.engine2.frequency.setTargetAtTime(f * 1.007 + 1.5, t, 0.1);
     this.engineFilter.frequency.setTargetAtTime(220 + 900 * speedFrac, t, 0.15);
-    this.boostGain.gain.setTargetAtTime(boosting ? 0.18 : 0, t, boosting ? 0.15 : 0.4);
+    this.boostGain.gain.setTargetAtTime(boosting && this.duckLevel > 0.5 ? 0.18 : 0, t, boosting ? 0.15 : 0.4);
+    this.engineGain.gain.setTargetAtTime(0.12 * this.duckLevel, t, 0.25);
+  }
+
+  /** Gate travel: the engine bed and the pad step back for the wormhole, then return on arrival. */
+  duck(on: boolean): void {
+    this.duckLevel = on ? 0.15 : 1;
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.padGain.gain.setTargetAtTime(on ? 0.03 : 0.09, t, on ? 0.6 : 2);
+    this.pulseGain.gain.setTargetAtTime(on ? 0 : this.mood === "combat" ? 0.11 : 0, t, 0.6);
+  }
+
+  /**
+   * The wormhole: a wide noise wash whose colour rises through the crossing, a sub swell under it and a
+   * slow shimmer on top, `dur` seconds long with the tail folded into the arrival fade. Replaces the
+   * missile launch sound that used to stand in for it (Ethan, 2026-09-06: "in transitions, the sound is bad").
+   */
+  wormhole(dur: number): void {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime;
+    const src = ctx.createBufferSource();
+    src.buffer = this.noise;
+    src.loop = true;
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.Q.value = 1.4;
+    lp.frequency.setValueAtTime(180, t);
+    lp.frequency.exponentialRampToValueAtTime(2600, t + dur * 0.45);
+    lp.frequency.exponentialRampToValueAtTime(320, t + dur);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.42, t + 0.35);
+    g.gain.setValueAtTime(0.42, t + dur * 0.6);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    src.connect(lp).connect(g).connect(this.master);
+    src.start(t);
+    src.stop(t + dur + 0.05);
+    // the sub: a sine that dips under the crossing and rises out of it
+    const o = ctx.createOscillator();
+    o.type = "sine";
+    o.frequency.setValueAtTime(70, t);
+    o.frequency.exponentialRampToValueAtTime(38, t + dur * 0.5);
+    o.frequency.exponentialRampToValueAtTime(64, t + dur);
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(0.0001, t);
+    og.gain.exponentialRampToValueAtTime(0.3, t + 0.5);
+    og.gain.setValueAtTime(0.3, t + dur * 0.7);
+    og.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(og).connect(this.master);
+    o.start(t);
+    o.stop(t + dur + 0.05);
+    // the shimmer: two detuned triangles a fifth apart, gliding up, quiet
+    for (const [f0, f1] of [[220, 440], [330, 660]] as const) {
+      const s = ctx.createOscillator();
+      s.type = "triangle";
+      s.frequency.setValueAtTime(f0, t);
+      s.frequency.exponentialRampToValueAtTime(f1, t + dur * 0.5);
+      s.frequency.exponentialRampToValueAtTime(f0 * 1.5, t + dur);
+      const sg = ctx.createGain();
+      sg.gain.setValueAtTime(0.0001, t);
+      sg.gain.exponentialRampToValueAtTime(0.045, t + 0.6);
+      sg.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      s.connect(sg).connect(this.master);
+      s.start(t);
+      s.stop(t + dur + 0.05);
+    }
+  }
+
+  /** The event horizon opens: a bass thump and a splash of noise. */
+  kawoosh(): void {
+    this.burst(240, 0.9, 0.5, 0.7, "lowpass");
+    this.blip(55, 0.25, 0.6, "sine");
   }
 
   private burst(freq: number, q: number, gain: number, dur: number, type: BiquadFilterType = "bandpass"): void {
@@ -289,8 +363,8 @@ export class Audio {
 
   /** Gate dial: a chevron encodes (rising click), the seventh locks (heavier). */
   chevron(index: number, last: boolean): void {
-    this.blip(500 + index * 60, 0.1, 0.1, "triangle");
-    this.burst(last ? 300 : 1600, 2, last ? 0.35 : 0.12, last ? 0.35 : 0.06, last ? "lowpass" : "bandpass");
+    this.blip(420 + index * 40, 0.06, 0.08, "triangle");
+    this.burst(last ? 260 : 1400, 2, last ? 0.3 : 0.07, last ? 0.35 : 0.05, last ? "lowpass" : "bandpass");
   }
 
   /** A held tone with a soft attack (unlike `blip`, no pitch drop). */

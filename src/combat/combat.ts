@@ -64,6 +64,8 @@ export class Combat {
   readonly fx = new Explosions();
   /** a glider the player destroyed (pos, vel); the replay hooks this */
   onKill: ((pos: THREE.Vector3, vel: THREE.Vector3) => void) | null = null;
+  /** a rock broke (the replay records it) */
+  onRockBurst: ((pos: THREE.Vector3, scale: number) => void) | null = null;
   /** a player round left the gun: world position and velocity (the replay records them) */
   onFire: ((pos: THREE.Vector3, vel: THREE.Vector3) => void) | null = null;
   readonly missiles = new Missiles();
@@ -222,7 +224,7 @@ export class Combat {
         for (const x of this.extras) {
           if (!x.alive) continue;
           const r = x.radius + M.fuse;
-          if (m.pos.distanceToSquared(x.pos) > r * r) continue;
+          if (x.hits ? !x.hits(m.pos, m.pos) : m.pos.distanceToSquared(x.pos) > r * r) continue;
           m.alive = false;
           this.fx.spawn(m.pos, ZEROV, 3);
           this.audio.explosion(0.6);
@@ -262,7 +264,7 @@ export class Combat {
       return;
     }
     for (const x of this.extras) {
-      if (!x.alive || segDist2(_prev, s.pos, x.pos) > x.radius * x.radius) continue;
+      if (!x.alive || (x.hits ? !x.hits(_prev, s.pos) : segDist2(_prev, s.pos, x.pos) > x.radius * x.radius)) continue;
       this.shots.kill(s);
       this.player.hits++;
       this.fx.spark(s.pos);
@@ -344,6 +346,7 @@ export class Combat {
   /** A rock of `radius` breaking at `pos`: debris burst plus the crunch, both scaled by size. */
   private rockBurst(pos: THREE.Vector3, radius: number): void {
     this.fx.spawn(pos, ZEROV, 1.5 + radius * 0.12);
+    this.onRockBurst?.(pos, 1.5 + radius * 0.12);
     this.audio.crunch(radius / 10);
   }
 

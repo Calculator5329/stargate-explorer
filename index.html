@@ -145,7 +145,7 @@
       #hub .go:hover:not(:disabled) { background: #cfe9ff; }
       #dial { position: fixed; inset: 0; display: none; color: #cfe9ff; pointer-events: none; text-align: center; }
       #dial.on { display: block; }
-      body:has(#dial.on) #hud { visibility: hidden; }
+      #hud.travel > *:not(.perf) { visibility: hidden; }
       #dial .dest { position: absolute; top: 7%; left: 10%; right: 10%; color: #ffd9a8; font-size: 16px; letter-spacing: .25em; }
       #dial .old-script { margin: 0 auto 8px; height: 40px; }
       #dial .dial-console { position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%); width: min(480px, 90vw); padding: 14px 18px; box-sizing: border-box; background: #0c1020; border: 1px solid #59616a; }

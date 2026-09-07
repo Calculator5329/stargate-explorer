@@ -67,6 +67,13 @@ export class Sun {
     this.glare.renderOrder = -0.5;
   }
 
+  /** Take the lights out of the scene (system swap); the glare sprite goes with the world root. */
+  dispose(scene: THREE.Scene): void {
+    scene.remove(this.light, this.light.target, this.fill);
+    this.light.dispose();
+    this.fill.dispose();
+  }
+
   /** The shadow frustum follows this object (the player ship). */
   follow(obj: THREE.Object3D): void {
     this.focus = obj;

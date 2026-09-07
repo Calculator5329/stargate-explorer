@@ -60,6 +60,26 @@ export class Flight {
   /** per-hull multipliers on the shared T.flight numbers (ships/registry.ts) */
   stats: ShipStats = { speed: 1, agility: 1, hull: 1, guns: 1, missiles: 6, size: 1 };
 
+  /** Back to the launch state at the origin: the gate swap reuses one Flight across systems. */
+  reset(): void {
+    this.pos.set(0, 0, 0);
+    this.quat.identity();
+    this.prevPos.set(0, 0, 0);
+    this.prevQuat.identity();
+    this.velDir.set(0, 0, 1);
+    this.vel.set(0, 0, T.flight.minSpeed);
+    this.speed = T.flight.minSpeed;
+    this.lastImpact = 0;
+    this.throttle = 0.5;
+    this.boosting = false;
+    this.boostEnergy = 1;
+    this.drifting = this.braking = false;
+    this.strafeV = 0;
+    this.barrelLeft = 0;
+    this.sinceHit = 99;
+    this.dead = false;
+  }
+
   /** top speed this hull can hold (boost) */
   get topSpeed(): number {
     return T.flight.boostSpeed * this.stats.speed;

@@ -577,6 +577,76 @@ export class Capital {
     return false;
   }
 
+  /**
+   * Signed clearance (local metres, negative inside) of a local point from the solid hull: the pyramid,
+   * its inverted underside and the ring band. Sets `n` to the outward normal of the nearest face.
+   */
+  private clearance(p: THREE.Vector3, n: THREE.Vector3): number {
+    const ax = Math.abs(p.x), az = Math.abs(p.z);
+    let d: number;
+    if (p.y >= 0) {
+      // faces x + k y = BASE (and z), normal (1, k, 0) / |.|
+      const k = BASE / HEIGHT, inv = 1 / Math.hypot(1, k);
+      const dx = (ax + k * p.y - BASE) * inv, dz = (az + k * p.y - BASE) * inv;
+      if (dx > dz) (d = dx), n.set(Math.sign(p.x) || 1, k, 0).multiplyScalar(inv);
+      else (d = dz), n.set(0, k, Math.sign(p.z) || 1).multiplyScalar(inv);
+      const top = p.y - HEIGHT;
+      if (top > d) (d = top), n.set(0, 1, 0);
+    } else {
+      const k = BASE / UNDER, inv = 1 / Math.hypot(1, k);
+      const dx = (ax - k * p.y - BASE) * inv, dz = (az - k * p.y - BASE) * inv;
+      if (dx > dz) (d = dx), n.set(Math.sign(p.x) || 1, -k, 0).multiplyScalar(inv);
+      else (d = dz), n.set(0, -k, Math.sign(p.z) || 1).multiplyScalar(inv);
+      const bottom = -UNDER - p.y;
+      if (bottom > d) (d = bottom), n.set(0, -1, 0);
+    }
+    // the ring band: an annulus RING_IN..LOBE_OUT between RING_Y0 and RING_Y1
+    const rr = Math.hypot(p.x, p.z);
+    const ry = Math.max(RING_Y0 - p.y, p.y - RING_Y1), rrad = Math.max(RING_IN - rr, rr - LOBE_OUT);
+    const dr = Math.max(ry, rrad);
+    if (dr < d) {
+      d = dr;
+      if (ry > rrad) n.set(0, p.y > (RING_Y0 + RING_Y1) / 2 ? 1 : -1, 0);
+      else n.set(p.x, 0, p.z).multiplyScalar((rr < (RING_IN + LOBE_OUT) / 2 ? -1 : 1) / (rr || 1));
+    }
+    return d;
+  }
+
+  /** True when the world point is inside the solid hull (pyramid, underside or ring band). */
+  contains(world: THREE.Vector3): boolean {
+    _v.copy(world);
+    this.group.worldToLocal(_v);
+    return this.clearance(_v, _p) < 0;
+  }
+
+  /** A round travelled a→b this tick: sample the segment against the solid. */
+  hitBy(a: THREE.Vector3, b: THREE.Vector3): boolean {
+    for (let i = 0; i <= 4; i++) {
+      _v.copy(a).lerp(b, i / 4);
+      this.group.worldToLocal(_v);
+      if (this.clearance(_v, _p) < 0) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Keep a sphere of `margin` (world metres) around `pos` out of the hull: moves `pos` along the nearest
+   * face and returns that normal in `n`, or null when clear. Replaces the one big bounding sphere that
+   * kept the player 30 m away from the shield nodes.
+   */
+  pushOut(pos: THREE.Vector3, margin: number, n: THREE.Vector3): boolean {
+    _v.copy(pos);
+    this.group.worldToLocal(_v);
+    const m = margin / this.scale;
+    const d = this.clearance(_v, n);
+    if (d >= m) return false;
+    _v.addScaledVector(n, m - d);
+    this.group.localToWorld(_v);
+    pos.copy(_v);
+    n.applyQuaternion(this.group.quaternion).normalize();
+    return true;
+  }
+
   /** Debug: dump the hp / alive state of every part. */
   describe(): string {
     return `capital hp=${this.hp} alive=${this.alive} turrets=${this.turrets.filter((t) => t.alive).length}/${this.turrets.length} nodes=${this.weakPoints.filter((t) => t.alive).length}/3 tris=${this.triangles}`;

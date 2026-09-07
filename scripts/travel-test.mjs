@@ -1,4 +1,5 @@
 // Headless: win the mission, confirm the gate opens and is the HUD marker, fly through it, watch the dial + tunnel + reload into the hub, then the arrive fade.
+const BASE = (process.env.STARGATE_TEST_URL ?? "http://localhost:5187/").replace(/\/?$/, "/");
 import { chromium } from "playwright-core";
 // Hardware GL by default: under swiftshader a frame with the gate's burst and tunnel takes longer than playwright's
 // screenshot timeout (the game itself holds 6..12 fps there, same as its baseline). SOFT_GL=1 keeps the software path.
@@ -6,7 +7,7 @@ const GL = process.env.SOFT_GL ? ["--use-gl=angle", "--use-angle=swiftshader", "
 const browser = await chromium.launch({ args: [...GL, "--ignore-gpu-blocklist"] });
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 page.on("pageerror", (e) => console.error("page error:", e.message));
-await page.goto("http://localhost:5187/?lock=free&quality=low&mission=belt-clear", { waitUntil: "load" });
+await page.goto(BASE + "?lock=free&quality=low&mission=belt-clear", { waitUntil: "load" });
 await page.waitForTimeout(6500);
 const r1 = await page.evaluate(async () => {
   const g = window.__game, f = window.__flight;
@@ -59,7 +60,7 @@ await page.evaluate(() => {
   j.progress = { ...(j.progress ?? {}), missions: { ...(j.progress?.missions ?? {}), "belt-clear": { completions: 1 }, gauntlet: { completions: 1 }, "ring-race": { completions: 1 }, "shard-run": { completions: 1 } } };
   localStorage.setItem(KEY, JSON.stringify(j));
 });
-await page.goto("http://localhost:5187/?lock=free&quality=low&hub=1", { waitUntil: "load" });
+await page.goto(BASE + "?lock=free&quality=low&hub=1", { waitUntil: "load" });
 await page.waitForTimeout(2500);
 const r5 = await page.evaluate(async () => {
   const h = window.__hub; h.mission = "escort"; h.build();

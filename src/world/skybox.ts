@@ -193,6 +193,11 @@ export class Skybox {
   }
 
   /** Push the tunables into the procedure and re-bake if they moved. `size` is the cube face size. */
+  dispose(): void {
+    this.rt?.dispose();
+    this.rt = null;
+  }
+
   update(gl: THREE.WebGLRenderer, size: number): void {
     this.u.uNebula.value = this.nebulaBase * T.sky.nebulaStrength;
     this.u.uStars.value = T.sky.starDensity;

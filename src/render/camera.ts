@@ -33,6 +33,12 @@ export class ChaseCamera {
 
   constructor(readonly cam: PerspectiveCamera) {}
 
+  /** Snap to the ship on the next update (the ship was moved to a new system). */
+  reset(): void {
+    this.initialised = false;
+    this.vel.set(0, 0, 0);
+  }
+
   update(frameDt: number, shipPos: Vector3, shipQuat: Quaternion, speed: number, stick: { x: number; y: number }, boost: boolean, sinceHit: number, size = 1, rolling = false): void {
     const c = T.camera;
     const dt = Math.min(frameDt, 1 / 30); // keep the spring stable on hitches

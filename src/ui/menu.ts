@@ -19,9 +19,12 @@ export interface MenuHooks {
 }
 
 /**
- * Start / pause overlay. Opens whenever the pointer is not locked (so Esc pauses
- * by itself, the browser does that part), closes when the player clicks FLY and
- * the canvas takes the pointer again. Edits `save.settings` in place, persists
+ * Start / pause overlay. The full start screen shows once, on the first ever
+ * load; after that a page opens straight to the HUD's "click to fly" line and
+ * the menu is Esc (Ethan, 2026-09-06: "once I've picked some settings I should
+ * be able to just load into things normally"). Losing the pointer lock opens
+ * the pause screen (the browser does the Esc part); FLY or a click on the canvas
+ * takes the pointer again and closes it. Edits `save.settings` in place, persists
  * on every change and hands the result to `hooks.apply`. Disabled entirely for
  * `?lock=free` (headless) and inspect views.
  */
@@ -34,7 +37,7 @@ export class Menu {
   private readonly replayBtn: HTMLElement;
   private readonly hasReplay: () => boolean;
 
-  constructor(root: HTMLElement, canvas: HTMLElement, save: Save, hooks: MenuHooks, enabled = true, private readonly missionTitle = "") {
+  constructor(root: HTMLElement, canvas: HTMLElement, save: Save, hooks: MenuHooks, enabled = true, private missionTitle = "") {
     this.el = root;
     this.title = q(root, ".title");
     this.sub = q(root, ".sub");
@@ -100,7 +103,14 @@ export class Menu {
       location.href = u.toString();
     });
     this.buildBinds(root, save, hooks);
-    q(root, ".fly").addEventListener("click", () => lockPointer(canvas));
+    const fly = () => {
+      if (!s.onboarded) {
+        s.onboarded = true;
+        writeSave(save);
+      }
+      lockPointer(canvas);
+    };
+    q(root, ".fly").addEventListener("click", fly);
     q(root, ".restart").addEventListener("click", () => hooks.restart());
     const hub = q(root, ".hub");
     if (hooks.hub) hub.addEventListener("click", () => hooks.hub?.());
@@ -109,10 +119,23 @@ export class Menu {
     document.addEventListener("pointerlockchange", () => this.set(document.pointerLockElement !== canvas));
     // the overlay swallows keys meant for the game; only Esc/Enter matter here
     root.addEventListener("keydown", (e) => {
-      if (e.code === "Enter" && !(e.target instanceof HTMLSelectElement)) lockPointer(canvas);
+      if (e.code === "Enter" && !(e.target instanceof HTMLSelectElement)) fly();
+    });
+    // Esc with the pointer already free (fresh load, or after the pause screen was dismissed by a click
+    // elsewhere) toggles the menu; while locked the browser turns Esc into pointerlockchange instead
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Escape" && document.pointerLockElement !== canvas) this.set(!this.open);
+    });
+    canvas.addEventListener("click", () => {
+      if (!s.onboarded) (s.onboarded = true), writeSave(save);
     });
     hooks.apply(s);
-    this.set(true, true);
+    if (!s.onboarded) this.set(true, true);
+  }
+
+  /** The page now runs a different sortie (gate travel swapped it in). */
+  setMission(title: string): void {
+    this.missionTitle = title;
   }
 
   /** One row per action; click a key, press the new one, Esc cancels. A taken key swaps. */

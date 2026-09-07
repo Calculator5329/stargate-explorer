@@ -41,7 +41,7 @@ const probe = () => page.evaluate(() => {
   return { playing: r.playing, tracers: tr, glidersShown: shown.length, glidersOnScreen: shown.filter((e) => onScreen(e.rig.root.position)).length, killOnScreen: r.clip ? onScreen(r.clip.kill) : null, shipOnScreen: onScreen(g.combat.ship.position) };
 });
 // clip position as a fraction; the clip is short here (the kill comes a second or two in) so time by frac, not seconds
-const frac = () => page.evaluate(() => { const r = window.__game.replay, c = r.clip; if (!c) return 2; const F = c.frames, S = 8 + 10 * 8; return (r.clipT - F[0]) / (F[(c.count - 1) * S] - F[0]); });
+const frac = () => page.evaluate(() => window.__game.replay.progress);
 const until = async (f) => { for (let i = 0; i < 200 && (await frac()) < f; i++) await page.waitForTimeout(100); };
 await until(0.3);
 console.log("shotA", JSON.stringify(await probe()));

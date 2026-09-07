@@ -11,15 +11,21 @@ type Stage = "idle" | "dial" | "tunnel" | "arrive";
 
 // Local presentation constants: this lane does not own core/tunables.ts.
 const CHEVRONS = 7;
-const TUNNEL_T = 1.7;
-const ARRIVE_T = 1.1;
+const TUNNEL_T = 2.2;
+const ARRIVE_T = 1.3;
+/** into the tunnel, the world behind the wormhole is swapped at this point (fully covered) */
+const SWAP_T = 0.6;
 
 /**
  * Gate travel between systems. `depart()` runs the dial (seven chevrons light
- * in turn on the DOM overlay) then the wormhole tunnel over the scene, then
- * reloads into the destination with `arrive=1`; on that load `arrive()` plays
- * the tunnel out so the reload reads as coming through the gate. The reload is
- * the system swap: a World is built once per page, deliberately.
+ * in turn on the DOM overlay) then the wormhole tunnel over the scene; once the
+ * tunnel covers everything `onSwap(query)` rebuilds the world behind it in the
+ * same page (main.ts), the URL is rewritten to match, and the tunnel thins out
+ * over the new system. Until 2026-09-06 the swap was a page reload, which cut
+ * the audio mid-drone, dropped the pointer lock and put the start menu over the
+ * arrival (Ethan: "the sound is bad and I still have text while I'm going
+ * through the portal"). `arrive()` is still the entry for a page loaded with
+ * `arrive=1` (a bookmark, the old links).
  */
 export class Travel {
   readonly tunnel = new Tunnel();
@@ -34,6 +40,12 @@ export class Travel {
   private readonly addressEl: HTMLElement;
   private readonly lineEl: HTMLElement;
   private readonly nameEl: HTMLElement;
+  private swapped = false;
+  /** rebuild the game for `query` behind the wormhole; main.ts wires it */
+  onSwap: ((query: URLSearchParams) => void) | null = null;
+  /** the arrival fade finished */
+  onArrived: (() => void) | null = null;
+  private pendingQuery: URLSearchParams | null = null;
 
   constructor(root: HTMLElement, scene: THREE.Scene, private readonly audio: Audio) {
     this.el = root;
@@ -74,7 +86,8 @@ export class Travel {
     this.stage = "dial";
     this.t = 0;
     this.lit = 0;
-    query.set("arrive", "1");
+    this.swapped = false;
+    this.pendingQuery = query;
     this.dest = query.toString();
     this.nameEl.innerHTML = `${scriptSvg(system.name)}<span>${system.name}</span>`;
     const address = systemAddress(system.id);
@@ -87,6 +100,7 @@ export class Travel {
     for (const c of this.chevEls) c.classList.remove("on");
     this.el.classList.add("on");
     this.audio.ui();
+    this.audio.duck(true);
   }
 
   /** Call once on load when the page was reached through a gate. */
@@ -96,6 +110,8 @@ export class Travel {
     this.stage = "arrive";
     this.t = 0;
     this.tunnel.fade = 1;
+    this.audio.duck(true);
+    this.audio.wormhole(ARRIVE_T + 0.4);
   }
 
   update(dt: number, cam: THREE.PerspectiveCamera): void {
@@ -124,7 +140,8 @@ export class Travel {
       if (this.t > CHEVRONS * CHEVRON_T + BURST_T) {
         this.stage = "tunnel";
         this.t = 0;
-        this.audio.launch();
+        this.audio.kawoosh();
+        this.audio.wormhole(TUNNEL_T + ARRIVE_T);
       }
     } else if (this.stage === "tunnel") {
       this.tunnel.fade = Math.min(1, this.t / 0.35);
@@ -132,14 +149,27 @@ export class Travel {
         this.el.classList.remove("on");
         this.gate.group.visible = false;
       }
+      if (this.t > SWAP_T && !this.swapped) {
+        this.swapped = true;
+        const q = this.pendingQuery;
+        this.pendingQuery = null;
+        if (q && this.onSwap) {
+          history.replaceState(null, "", `?${this.dest}`);
+          this.onSwap(q);
+        } else location.search = this.dest; // no swap wired: the old reload path
+      }
       if (this.t > TUNNEL_T) {
-        this.stage = "idle";
-        location.search = this.dest;
+        this.stage = "arrive";
+        this.t = 0;
       }
     } else {
       // arrive: hold, then the tunnel thins out
       this.tunnel.fade = Math.max(0, 1 - Math.max(0, this.t - 0.25) / (ARRIVE_T - 0.25));
-      if (this.t > ARRIVE_T) this.stage = "idle";
+      if (this.t > ARRIVE_T) {
+        this.stage = "idle";
+        this.audio.duck(false);
+        this.onArrived?.();
+      }
     }
   }
 }

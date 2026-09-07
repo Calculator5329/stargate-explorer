@@ -6,6 +6,7 @@ import { Sun } from "@/world/sun";
 import { Asteroids } from "@/world/asteroids";
 import { Dust } from "@/fx/dust";
 import { T } from "@/core/tunables";
+import { disposeTree } from "@/render/dispose";
 
 export interface WorldOptions {
   system: SystemDef;
@@ -42,6 +43,15 @@ export class World {
 
   tick(dt: number): void {
     this.asteroids.tick(dt);
+  }
+
+  /** Gate travel swaps systems in place: drop everything this world put in the scene and on the GPU. */
+  dispose(scene: THREE.Scene): void {
+    scene.remove(this.root);
+    this.sun.dispose(scene);
+    this.sky.dispose();
+    this.planet.dispose();
+    disposeTree(this.root);
   }
 
   /** Once per render frame, before `render()`: sun glare, the sky and planet bakes (no-ops once baked), belt culling. */
