@@ -176,6 +176,8 @@ export function power(level: LevelDef, ship: PlayerShip): PowerRead {
       const dmg = dps * EXPOSURE * fightT + level.mines * 0.08 * 20;
       return { ...base, threat: dmg / p.hp, clearMin: fightT / 60, pressure: 0, enemyHp: hull + fighters, peakDps: dps, note: `${hull} hull on the ship, ${escorts.length + reinf.length} fighters over the fight, ${level.mines} mines` };
     }
+    case "sandbox":
+      return { ...base, threat: 0, clearMin: 0, enemyHp: 0, peakDps: 0, note: "nothing shoots back" };
     case "duel": {
       const roundT = kindHp(level.foe) / p.dps + 12;
       const dmg = kindDps(level.foe) * EXPOSURE * roundT;

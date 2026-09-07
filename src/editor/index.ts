@@ -1,4 +1,6 @@
 import { Content } from "@/editor/content";
+import { MovesPanel } from "@/editor/moves";
+import type { MoveDef } from "@/sim/moves";
 import { Board } from "@/editor/board";
 import { Encounter } from "@/editor/encounter";
 import { chainOrder } from "@/editor/power";
@@ -18,6 +20,8 @@ export interface EditorOpts {
   flyHere: () => void;
   /** reload into another level (and hull) with the designer parked */
   flyOther: (levelId: string, shipId: string) => void;
+  /** make `table` the live move table (unsaved) and start `id` on the level already loaded */
+  tryMove: (table: MoveDef[], id: string) => void;
 }
 
 export interface EditorHandle {
@@ -33,6 +37,7 @@ export interface EditorHandle {
 const CSS = `
 body.editing #hud,body.editing #dial,body.editing #hub,body.editing #menu{display:none!important}
 #editor{position:fixed;inset:0;z-index:40;display:grid;grid-template-rows:44px 1fr;grid-template-columns:1fr 460px;background:#0b0d16;color:#cfe9ff;font:13px/1.35 ui-monospace,Menlo,Consolas,monospace;user-select:none}
+#editor.wide{grid-template-columns:1fr}
 #editor[hidden]{display:none}
 #editor *{box-sizing:border-box}
 #editor .top{grid-column:1/3;display:flex;align-items:center;gap:14px;padding:0 14px;border-bottom:1px solid rgba(255,217,168,.25)}
@@ -50,7 +55,16 @@ body.editing #hud,body.editing #dial,body.editing #hub,body.editing #menu{displa
 #editor button.wide{display:block;width:100%;margin:10px 0}
 #editor .main{overflow:auto;position:relative}
 #editor .board-wrap{min-width:100%}
-#editor svg.board{display:block}
+#editor svg.board{display:block;width:100%;height:calc(100vh - 44px - 320px);min-height:360px;touch-action:none}
+#editor .zoombar{display:flex;gap:6px;align-items:center;padding:6px 18px;border-top:1px solid rgba(207,233,255,.12)}
+#editor .zoombar button{padding:1px 8px}
+#editor .zoombar .zv{width:44px;text-align:center;color:#8fb3d9}
+#editor .zoombar small{color:#5f7d9c;margin-left:8px}
+#editor .node .fly{opacity:0;cursor:pointer;transition:opacity .12s}
+#editor .node:hover .fly{opacity:1}
+#editor .node .fly rect{fill:#ffd9a8;stroke:none}
+#editor .node .fly text{font-size:10px;font-weight:700;fill:#0b0d16;pointer-events:none}
+#editor .node .fly:hover rect{fill:#fff}
 #editor .band rect{fill:rgba(207,233,255,.035);stroke:rgba(207,233,255,.14);stroke-dasharray:4 4}
 #editor .band-title{fill:#8fb3d9;font-size:11px;letter-spacing:.14em}
 #editor .edge{fill:none;stroke:rgba(207,233,255,.35);stroke-width:1.5}
@@ -131,6 +145,15 @@ body.editing #hud,body.editing #dial,body.editing #hub,body.editing #menu{displa
 #editor .power .grid span{color:#8fb3d9}
 #editor .power p{margin:8px 0 0;color:#cfe9ff}
 #editor .power p.dim{color:#5f7d9c;font-size:11px}
+#editor .preview{margin:10px 0 4px;border:1px solid rgba(207,233,255,.15);background:#0d1220}
+#editor .preview .pv-head{color:#5f7d9c;font-size:10px;letter-spacing:.14em;padding:6px 10px 0}
+#editor .preview .m{padding:10px 14px;border-bottom:1px solid #34404e;font:13px/1.35 system-ui,sans-serif;color:#cfe9ff}
+#editor .preview .m b{display:block;font-size:13px;font-weight:500;color:#ffd9a8}
+#editor .preview .m .old-script{display:block;width:auto;height:24px;max-width:100%;margin-bottom:6px;color:#ffd9a8}
+#editor .preview .m small{display:block;font-size:11px;line-height:1.5;margin-top:5px}
+#editor .preview .m i{display:block;font-size:10px;font-style:normal;margin-top:8px;color:#ffd9a8}
+#editor .preview .hudline{padding:12px 14px 14px;font:13px system-ui,sans-serif;letter-spacing:.12em;color:#ffd9a8;text-shadow:0 0 4px rgba(0,0,0,.8);background:radial-gradient(ellipse at 70% 30%,#141c33,#07090f)}
+#editor .preview .hudline .obj{display:block;color:#cfe9ff;letter-spacing:.04em;margin-top:4px;font-size:14px;opacity:.9}
 #editor .problems{margin-top:12px;padding:8px;border:1px solid #ff8a8a;color:#ff8a8a}
 #editor .packs{margin:14px 0 4px;border-top:1px dashed rgba(207,233,255,.2);padding-top:8px}
 #editor .packs-head{color:#5f7d9c;font-size:10px;letter-spacing:.14em;margin-bottom:4px}
@@ -171,20 +194,50 @@ body.editing #hud,body.editing #dial,body.editing #hub,body.editing #menu{displa
 #editor .acts .act{display:grid;grid-template-columns:90px 260px 1fr auto;gap:10px;align-items:center;margin:6px 0}
 #editor .acts input{font:inherit;background:rgba(0,0,0,.35);border:1px solid rgba(207,233,255,.25);color:#cfe9ff;padding:4px 6px;width:100%}
 #editor .acts .hint{color:#5f7d9c;margin:14px 0}
+#editor .moves{display:grid;grid-template-columns:230px 1fr;height:100%;min-height:0}
+#editor .moves .shelf{border-right:1px solid rgba(255,217,168,.25);padding:12px;overflow:auto}
+#editor .moves .shelf .mv{display:block;width:100%;text-align:left;margin-bottom:6px;padding:8px 10px}
+#editor .moves .shelf .mv b{display:block;letter-spacing:.1em}
+#editor .moves .shelf .mv small{color:#8fb3d9}
+#editor .moves .shelf .mv.on{border-color:#ffd9a8;color:#ffd9a8}
+#editor .moves .sheet{padding:14px 18px 40px;overflow:auto}
+#editor .moves .sheet .ttl{font-size:18px;letter-spacing:.14em;color:#ffd9a8;margin-bottom:4px}
+#editor .moves .sheet .sub{color:#5f7d9c;margin-bottom:12px}
+#editor .moves .row{display:grid;grid-template-columns:150px 1fr;gap:8px;align-items:center;margin:6px 0;max-width:560px}
+#editor .moves .row span:first-child{color:#8fb3d9}
+#editor .moves input,#editor .moves select{font:inherit;background:rgba(0,0,0,.35);border:1px solid rgba(207,233,255,.25);color:#cfe9ff;padding:4px 6px;width:100%}
+#editor .moves input[type=number]{width:90px}
+#editor .moves .actions{display:flex;gap:8px;margin:14px 0}
+#editor .moves .timeline{position:relative;height:auto;margin:14px 0 6px;max-width:700px}
+#editor .moves .timeline svg{width:100%;height:auto;display:block}
+#editor .moves .timeline rect.bar{fill:rgba(255,194,113,.35);stroke:#ffc271;stroke-width:1}
+#editor .moves .timeline text{fill:#cfe9ff;font-size:10px;letter-spacing:.06em}
+#editor .moves .timeline text.t{fill:#5f7d9c}
+#editor .moves .timeline line{stroke:rgba(207,233,255,.2)}
+#editor .moves .steps{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;max-width:980px}
+#editor .moves .step{border:1px solid rgba(207,233,255,.25);padding:10px;background:rgba(0,0,0,.25)}
+#editor .moves .step .sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+#editor .moves .step .sh b{letter-spacing:.1em}
+#editor .moves .step .sh button{padding:0 6px}
+#editor .moves .step .f{display:grid;grid-template-columns:60px 1fr;gap:6px;align-items:center;margin:4px 0}
+#editor .moves .step .f span{color:#8fb3d9;font-size:11px}
+#editor .moves .step .unit{color:#5f7d9c;font-size:11px;margin-top:4px}
+#editor .moves .help{color:#8fb3d9;max-width:700px;margin:10px 0;line-height:1.5}
+#editor .moves .problems{color:#ff8a8a;margin:10px 0}
 `;
 
 export function mountEditor(o: EditorOpts): EditorHandle {
   const content = new Content();
   let selected: string | null = content.level(o.currentLevelId) ? o.currentLevelId : null;
   let shipOverride: string | null = null;
-  let tab: "board" | "acts" | "help" = "board";
+  let tab: "board" | "moves" | "acts" | "help" = "board";
   const style = document.createElement("style");
   style.textContent = CSS;
   document.head.append(style);
 
   const root = document.createElement("div");
   root.id = "editor";
-  root.innerHTML = `<div class="top"><b>GAME DESIGNER</b><button class="tab on" data-tab="board">BOARD</button><button class="tab" data-tab="acts">ACTS</button><button class="tab" data-tab="help">HOW THIS WORKS</button><span class="spacer"></span><span class="status"></span><button class="tidy" title="lay the chain out left to right, act by act">TIDY</button><button class="undo">UNDO</button><button class="save primary">SAVE</button><button class="close">FLY (ESC)</button></div><div class="main"></div>`;
+  root.innerHTML = `<div class="top"><b>GAME DESIGNER</b><button class="tab on" data-tab="board">BOARD</button><button class="tab" data-tab="moves">MOVES</button><button class="tab" data-tab="acts">ACTS</button><button class="tab" data-tab="help">HOW THIS WORKS</button><span class="spacer"></span><span class="status"></span><button class="tidy" title="lay the chain out left to right, act by act">TIDY</button><button class="undo">UNDO</button><button class="save primary">SAVE</button><button class="close">FLY (ESC)</button></div><div class="main"></div>`;
   document.body.append(root);
   document.body.classList.add("editing");
   const main = root.querySelector<HTMLElement>(".main")!, status = root.querySelector<HTMLElement>(".status")!;
@@ -209,20 +262,27 @@ export function mountEditor(o: EditorOpts): EditorHandle {
     },
   };
 
-  const board = new Board({ content, selected: () => selected, select, deselect: () => select(null), shipOverride: () => shipOverride });
-  const inspector = new Encounter({
+  function fly(id: string): void {
+    const ship = shipOverride ?? (id === o.currentLevelId ? o.currentShipId : bestShipBefore(id));
+    if (id === o.currentLevelId && !content.dirty && ship === o.currentShipId) (handle.hide(), o.flyHere());
+    else void content.save().then((r) => (r === "invalid" ? setStatus("fix the problems listed under the level first", "err") : o.flyOther(id, ship)));
+  }
+
+  const board = new Board({ content, selected: () => selected, select, deselect: () => select(null), shipOverride: () => shipOverride, fly });
+  const inspector = new Encounter({ content, selected: () => selected, select, shipOverride: () => shipOverride, setShipOverride: (id) => ((shipOverride = id), render()), fly });
+  root.append(inspector.root);
+  const movesPanel = new MovesPanel({
     content,
-    selected: () => selected,
-    select,
-    shipOverride: () => shipOverride,
-    setShipOverride: (id) => ((shipOverride = id), render()),
-    fly: (id) => {
-      const ship = shipOverride ?? (id === o.currentLevelId ? o.currentShipId : bestShipBefore(id));
-      if (id === o.currentLevelId && !content.dirty && ship === o.currentShipId) (handle.hide(), o.flyHere());
-      else void content.save().then((r) => (r === "invalid" ? setStatus("fix the problems listed under the level first", "err") : o.flyOther(id, ship)));
+    tryMove: (id) => {
+      handle.hide();
+      o.tryMove(content.moves, id);
+    },
+    flySandbox: () => {
+      const sb = content.levels.find((l) => l.type === "sandbox");
+      if (sb) fly(sb.id);
+      else setStatus("no sandbox level in the campaign: add one with NEW LEVEL, type SANDBOX", "err");
     },
   });
-  root.append(inspector.root);
 
   function bestShipBefore(id: string): string {
     const order = chainOrder(content.levels, content.acts.map((a) => a.id));
@@ -283,7 +343,7 @@ export function mountEditor(o: EditorOpts): EditorHandle {
     g.className = "guide";
     g.innerHTML = `
 <h2>THE BOARD</h2>
-<p>Every card is one level. Drag them anywhere; the layout is saved with the campaign. The arrow into a card comes from the level that has to be won first. The dashed bands are the acts: drop a card inside another band and it moves to that act. Acts are only grouping and order, the game does not gate on them yet.</p>
+<p>Every card is one level. Drag them anywhere; the layout is saved with the campaign. The arrow into a card comes from the level that has to be won first. The dashed bands are the acts: drop a card inside another band and it moves to that act. Acts are only grouping and order, the game does not gate on them yet. Drag empty space to pan, wheel to zoom, <b>FIT</b> to see everything, <b>TIDY</b> to lay each act out as a tree. Hover a card for a <b>FLY</b> tag that runs it without opening the inspector.</p>
 <h2>THE PILLS AND THE POWER CURVE</h2>
 <p>The pill on a card is the estimated share of the hull a player loses flying that level in the ship the chain has handed over by then. <b>Green</b> under 45% is comfortable, <b>gold</b> up to 90% is a real fight, <b>red</b> above that kills anyone not flying well. The power curve under the board lists the same numbers in campaign order, so a spike or a flat stretch shows at a glance. It is a model from the game's own tables, not a measurement; trust the shape, not the decimals.</p>
 <h2>THE INSPECTOR</h2>
@@ -293,7 +353,9 @@ export function mountEditor(o: EditorOpts): EditorHandle {
 <h2>SAVING AND FLYING</h2>
 <p><b>SAVE</b> (Ctrl+S) writes the campaign file in the repo and the page reloads on it; until then nothing touches disk and <b>UNDO</b> (Ctrl+Z) steps back. <b>FLY IT</b> runs the selected level right now: the designer hides, the pointer locks, and releasing the pointer (Esc) brings the designer back. Flying a different level than the one loaded saves first and reloads into it.</p>
 <h2>WHAT IS NOT HERE YET</h2>
-<p>Ships and enemy kinds are still numbers in code (the stat sheet is next after this). Moves and combos have no editor yet. The threat model's three feel constants are guesses until a real flight calibrates them.</p>`;
+<p>Ships and enemy kinds are still numbers in code (the stat sheet is next after this). The threat model's three feel constants are guesses until a real flight calibrates them.</p>
+<h2>MOVES</h2>
+<p>The MOVES tab edits <code>content/moves.json</code>. A move is a list of steps on a timeline: each step is a primitive (brake, boost, pitch, yaw, roll, hop) with a start, a length and an amount, and the move's cost comes off the boost bar when it fires. The trigger is a chord: tap the move's key, then a direction (W S A D) inside the double-tap window, or the key alone once the window closes. Different keys can carry different families of moves. TRY IT makes the working table live without saving and fires the move on the level already loaded; PROVING GROUND flies the sandbox level, which lists every chord on the HUD.</p>`;
     main.replaceChildren(g);
   }
 
@@ -303,8 +365,13 @@ export function mountEditor(o: EditorOpts): EditorHandle {
     if (tab === "board") {
       if (board.root.parentElement !== main) main.replaceChildren(board.root);
       board.render();
+    } else if (tab === "moves") {
+      if (movesPanel.root.parentElement !== main) main.replaceChildren(movesPanel.root);
+      movesPanel.render();
     } else if (tab === "help") renderHelp();
     else renderActs();
+    inspector.root.hidden = tab === "moves";
+    root.classList.toggle("wide", tab === "moves");
     inspector.render();
     const problems = content.problems();
     if (problems.length) setStatus(`${problems.length} problem${problems.length > 1 ? "s" : ""}: ${problems[0]}`, "err");

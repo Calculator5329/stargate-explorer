@@ -675,6 +675,24 @@
         "ace"
       ],
       "mines": 22
+    },
+    {
+      "id": "proving-ground",
+      "act": "act1",
+      "board": {
+        "x": 1120,
+        "y": 40
+      },
+      "title": "PROVING GROUND",
+      "blurb": "No enemies, no clock. Try every move.",
+      "system": "abydos",
+      "intro": [
+        "Open space and a few rocks.",
+        "Tap B then a direction for a move; B alone for the Cobra."
+      ],
+      "type": "sandbox",
+      "beltScale": 0.3,
+      "restockEvery": 20
     }
   ]
 }

@@ -2,6 +2,7 @@ import { Quaternion, Vector3 } from "three";
 import { T, clamp, lerp, moveToward } from "@/core/tunables";
 import type { Input } from "@/core/input";
 import type { ShipStats } from "@/ships/registry";
+import { MOVES, findMove, type MoveDef } from "@/sim/moves";
 
 const X = new Vector3(1, 0, 0);
 const Y = new Vector3(0, 1, 0);
@@ -24,7 +25,9 @@ const _lat = new Vector3();
  * derived from `vel` every tick for consumers. Drift (classic Space) freezes
  * `vel`; collisions reflect it. Roll is
  * manual (A/D) plus bank-into-turn and a soft-horizon auto-level; a double-tap
- * on A/D fires a fast 360° barrel roll with a sideways hop.
+ * on A/D fires a fast 360° barrel roll with a sideways hop. A move (sim/moves.ts) is a scripted
+ * manoeuvre: while one runs the stick is dead, its steps drive pitch, yaw, roll, speed and a sideways
+ * slide from the table, and the boost bar has already paid for it.
  *
  * Two control schemes share this model (`input.scheme`, see core/scheme.ts):
  * classic drives speed from a W/S throttle; arcade holds `cruiseSpeed`, W/S are
@@ -53,6 +56,13 @@ export class Flight {
   strafeV = 0;
   /** remaining barrel-roll angle (signed, rad); 0 when not rolling */
   barrelLeft = 0;
+  /** the move table this hull plays from (content by default; the designer's TRY IT swaps in its working copy) */
+  moves: readonly MoveDef[] = MOVES;
+  /** the move in progress and how far into it we are (s) */
+  move: MoveDef | null = null;
+  moveT = 0;
+  /** set by TRY IT: starts on the next tick, whatever the bar holds */
+  pendingMove: string | null = null;
   /** seconds since the last collision, for camera shake / HUD flash */
   sinceHit = 99;
   /** set by combat when the hull fails: controls go dead, the ship tumbles on its last velocity */
@@ -76,8 +86,26 @@ export class Flight {
     this.drifting = this.braking = false;
     this.strafeV = 0;
     this.barrelLeft = 0;
+    this.move = null;
+    this.moveT = 0;
+    this.pendingMove = null;
     this.sinceHit = 99;
     this.dead = false;
+  }
+
+  /** Start a move by id regardless of the bar (the designer's TRY IT, the sandbox); false when unknown. */
+  startMove(id: string): boolean {
+    const m = this.moves.find((x) => x.id === id);
+    if (!m) return false;
+    this.pendingMove = id;
+    return true;
+  }
+
+  private beginMove(m: MoveDef, pay: boolean): void {
+    if (pay) this.boostEnergy = clamp(this.boostEnergy - m.cost, 0, 1);
+    this.move = m;
+    this.moveT = 0;
+    this.barrelLeft = 0;
   }
 
   /** top speed this hull can hold (boost) */
@@ -100,9 +128,26 @@ export class Flight {
     }
 
     const arcade = input.scheme.arcade;
-    if (!arcade) this.throttle = clamp(this.throttle + input.pitchKey * f.throttleRate * dt, 0, 1);
+    // moves: a chord from input pays the bar and starts one; TRY IT starts one for free; a running move
+    // owns the stick, the roll keys and the throttle until its duration is up
+    if (this.pendingMove !== null) {
+      const m = this.moves.find((x) => x.id === this.pendingMove);
+      this.pendingMove = null;
+      if (m) this.beginMove(m, false);
+    } else if (input.moveFired && this.move === null) {
+      const m = findMove(this.moves, input.move.key, input.move.dir);
+      if (m && this.boostEnergy >= m.cost) this.beginMove(m, true);
+    }
+    const mv = this.move;
+    if (mv) {
+      this.moveT += dt;
+      if (this.moveT >= mv.duration) this.move = null;
+    }
+    const stickX = mv ? 0 : input.stick.x, stickY = mv ? 0 : input.stick.y;
+    const pitchKey = mv ? 0 : input.pitchKey, rollKey = mv ? 0 : input.roll;
+    if (!arcade) this.throttle = clamp(this.throttle + pitchKey * f.throttleRate * dt, 0, 1);
     const canBoost = this.boostEnergy > 0 && (this.boosting || this.boostEnergy >= f.boostMinEngage);
-    this.boosting = input.boost && canBoost;
+    this.boosting = !mv && input.boost && canBoost;
     this.boostEnergy = clamp(this.boostEnergy + (this.boosting ? -f.boostDrain : f.boostRecharge) * dt, 0, 1);
     // Space brakes in both schemes (Ethan, 2026-09-05: "make space actually work to brake"); releasing it
     // returns to the throttle (classic) or cruise (arcade) speed
@@ -115,26 +160,59 @@ export class Flight {
     if (this.boosting) (targetSpeed = f.boostSpeed), (rate = f.boostAccel);
     targetSpeed *= S.speed;
     rate *= S.speed;
-    const snap = arcade ? input.pitchKey * f.snapPitchRate * S.agility : 0;
+    let snap = arcade ? pitchKey * f.snapPitchRate * S.agility : 0;
+    // the move's steps: each one active over [start, start + length) adds its rate or sets the speed target
+    let moveYaw = 0, moveRoll = 0, moveHop = 0, moveBrake = false, cap = this.topSpeed;
+    if (mv) {
+      const t = this.moveT;
+      for (const s of mv.steps) {
+        if (t < s.start || t >= s.start + s.length) continue;
+        switch (s.kind) {
+          case "brake":
+            targetSpeed = s.amount * S.speed;
+            rate = f.moveDecel * S.speed;
+            moveBrake = true;
+            break;
+          case "boost":
+            targetSpeed = s.amount * S.speed;
+            rate = f.moveAccel * S.speed;
+            cap = Math.max(cap, targetSpeed);
+            break;
+          case "snapPitch":
+            snap += s.amount * S.agility;
+            break;
+          case "yaw":
+            moveYaw += s.amount * S.agility;
+            break;
+          case "roll":
+            moveRoll += s.amount * S.agility;
+            break;
+          case "hop":
+            moveHop += s.amount;
+            break;
+        }
+      }
+    }
 
-    if (input.barrel !== 0 && this.barrelLeft === 0) this.barrelLeft = input.barrel * Math.PI * 2;
+    if (!mv && input.barrel !== 0 && this.barrelLeft === 0) this.barrelLeft = input.barrel * Math.PI * 2;
 
     _right.copy(RIGHT).applyQuaternion(this.quat);
     _fwd.copy(Z).applyQuaternion(this.quat);
     // Soft horizon: steer right.y toward the bank the turn asks for (right stick =
     // right wing down). Off near vertical (no horizon), while rolling by hand, and mid-barrel.
     const nearVertical = Math.abs(_fwd.y) > 0.95;
-    const targetBank = clamp(-input.stick.x * f.bankIntoTurn + input.strafe * f.strafeBank, -1, 1);
+    const targetBank = clamp(-stickX * f.bankIntoTurn + input.strafe * f.strafeBank, -1, 1);
     const assistK = input.scheme.assistStrength;
-    const levelRoll = nearVertical || input.roll !== 0 || this.barrelLeft !== 0 ? 0 : (_right.y - targetBank) * f.autoLevel * assistK;
+    const levelRoll = nearVertical || rollKey !== 0 || this.barrelLeft !== 0 || mv ? 0 : (_right.y - targetBank) * f.autoLevel * assistK;
 
     // Rotations below are about local axes; signs follow from +X being port:
     //   +X rotation drops the nose, +Y rotation yaws the nose to port, +Z rotation rolls right.
     // speed-coupled turn rate (menu toggle): nimble at low speed, stiff at boost
     const turnK = input.scheme.speedTurn ? lerp(f.turnSlowGain, f.turnFastGain, clamp((this.speed - f.minSpeed) / (f.boostSpeed - f.minSpeed), 0, 1)) : 1;
-    const pitch = -(input.stick.y * f.pitchRate * S.agility * turnK + snap) * dt;
-    const yaw = -input.stick.x * f.yawRate * S.agility * turnK * dt;
-    let roll = (input.roll * f.rollRate * S.agility + levelRoll) * dt;
+    const pitch = -(stickY * f.pitchRate * S.agility * turnK + snap) * dt;
+    const yaw = -(stickX * f.yawRate * S.agility * turnK + moveYaw) * dt;
+    let roll = (rollKey * f.rollRate * S.agility + levelRoll + moveRoll) * dt;
+    if (moveHop !== 0) this.pos.addScaledVector(_right, moveHop * dt);
     if (this.barrelLeft !== 0) {
       const step = clamp(this.barrelLeft, -f.barrelRate * dt, f.barrelRate * dt);
       this.barrelLeft -= step;
@@ -156,7 +234,7 @@ export class Flight {
       _lat.copy(this.vel).addScaledVector(_fwd, -vf);
       if (assist) {
         // coasting down (boost released, brake off) is slower than accelerating: momentum
-        const decel = vf > targetSpeed && !this.braking && !this.drifting ? f.coastDecel : rate;
+        const decel = vf > targetSpeed && !this.braking && !moveBrake && !this.drifting ? f.coastDecel : rate;
         vf = moveToward(vf, targetSpeed, (vf > targetSpeed ? decel : rate) * dt);
         // a hard pull leaves the velocity behind for a moment, so the ship visibly slides through the turn
         _lat.multiplyScalar(Math.exp(-f.latDamp * assistK * (snap !== 0 ? f.snapSlide : 1) * dt));
@@ -164,7 +242,7 @@ export class Flight {
         // drift mode: the nose is free, velocity only changes by thrust
         if (input.boost && this.boostEnergy > 0) vf += f.thrust * 2 * dt;
         else if (input.space) vf = moveToward(vf, 0, f.thrust * dt), _lat.multiplyScalar(Math.exp(-f.thrust * 0.02 * dt));
-        else if (!arcade) vf += input.pitchKey * f.thrust * dt;
+        else if (!arcade) vf += pitchKey * f.thrust * dt;
         vf = clamp(vf, -f.maxSpeed * 0.5, this.topSpeed);
         _lat.multiplyScalar(Math.exp(-f.latDampOff * dt));
       }
@@ -178,7 +256,7 @@ export class Flight {
       }
       this.vel.copy(_fwd).multiplyScalar(vf).add(_lat);
       const total = this.vel.length();
-      if (total > this.topSpeed) this.vel.multiplyScalar(this.topSpeed / total);
+      if (total > cap) this.vel.multiplyScalar(cap / total);
     }
     this.speed = this.vel.length();
     if (this.speed > 1e-3) this.velDir.copy(this.vel).divideScalar(this.speed);

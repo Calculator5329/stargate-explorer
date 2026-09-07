@@ -24,6 +24,8 @@ export class Hud {
   private readonly speedEl: HTMLElement;
   private readonly barEl: HTMLElement;
   private readonly hintEl: HTMLElement;
+  private readonly moveEl: HTMLElement;
+  private lastMove = "";
   private readonly warnEl: HTMLElement;
   private readonly flashEl: HTMLElement;
   private readonly schemeEl: HTMLElement;
@@ -64,6 +66,7 @@ export class Hud {
     this.flashEl = must(root.querySelector<HTMLElement>(".flash"));
     this.schemeEl = must(root.querySelector<HTMLElement>(".scheme"));
     this.boostEl = must(root.querySelector<HTMLElement>(".boost > i"));
+    this.moveEl = must(root.querySelector<HTMLElement>(".boost .mv"));
     this.hpEl = must(root.querySelector<HTMLElement>(".hp > i"));
     this.titleEl = must(root.querySelector<HTMLElement>(".mission .title"));
     this.objEl = must(root.querySelector<HTMLElement>(".mission .obj"));
@@ -129,6 +132,13 @@ export class Hud {
     const bw = `${(flight.boostEnergy * 100).toFixed(1)}%`;
     if (bw !== this.lastBoostW) (this.lastBoostW = bw), (this.boostEl.style.width = bw);
     this.boostEl.classList.toggle("low", flight.boostEnergy < T.flight.boostMinEngage && !flight.boosting);
+    // the running move's name sits on the bar it was paid from
+    const mv = flight.move?.name.toUpperCase() ?? "";
+    if (mv !== this.lastMove) {
+      this.lastMove = mv;
+      if (mv) this.moveEl.textContent = mv;
+      this.moveEl.classList.toggle("on", mv !== "");
+    }
     this.hintEl.classList.toggle("hidden", input.locked);
     // cursor steer: the aim cursor sits where the nose is heading (invert Y flips the mouse, not the picture)
     const cursorOn = input.steer === "cursor" && input.locked && !input.padActive;

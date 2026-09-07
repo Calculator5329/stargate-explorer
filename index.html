@@ -24,6 +24,8 @@
       #hud .boost { position: absolute; left: 24px; bottom: 76px; width: 160px; height: 3px; background: rgba(255,200,120,.2); }
       #hud .boost > i { display: block; height: 100%; width: 100%; background: #ffc271; }
       #hud .boost > i.low { background: #b0653a; }
+      #hud .boost .mv { position: absolute; left: 0; bottom: 8px; font-size: 11px; letter-spacing: .16em; color: #ffc271; white-space: nowrap; opacity: 0; transition: opacity .12s; }
+      #hud .boost .mv.on { opacity: 1; }
       #hud .hint { position: absolute; left: 0; right: 0; top: 40%; text-align: center; font-size: 14px; opacity: .85; }
       #hud .hint.hidden, #hud .warn.hidden { display: none; }
       #hud .warn { position: absolute; left: 0; right: 0; top: 18%; text-align: center; font-size: 18px; letter-spacing: .2em; color: #ffb36b; animation: blink 0.8s steps(2) infinite; }
@@ -183,7 +185,7 @@
       <div class="ammo"></div>
       <div class="card"><h1></h1><p></p><div class="again">R · FLY AGAIN</div></div>
       <div class="replay"><span>REPLAY</span><small>V · skip</small></div>
-      <div class="boost"><i></i></div>
+      <div class="boost"><i></i><span class="mv"></span></div>
       <div class="throttle"><i></i></div>
       <div class="speed"><span class="v">0</span><small>m/s</small></div>
       <div class="perf"></div>

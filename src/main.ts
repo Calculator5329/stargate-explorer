@@ -29,6 +29,7 @@ import { Audio } from "@/audio/audio";
 import { parseLevel, type LevelDef } from "@/mission/levels";
 import { Travel, systemOf } from "@/travel/travel";
 import type { EditorHandle } from "@/editor/index";
+import { MOVES, moveKeys } from "@/sim/moves";
 
 const boot = new URLSearchParams(location.search);
 const save = loadSave(), S = save.settings;
@@ -39,6 +40,7 @@ const canvas = document.body.appendChild(document.createElement("canvas"));
 const r = new Renderer(canvas, quality);
 const scheme = new Scheme(boot.has("controls") ? parseScheme(boot.get("controls")) : S.scheme, S.assist);
 const input = new Input(canvas, scheme, view === null, boot.get("lock") === "free"), flight = new Flight();
+input.moveKeys = moveKeys(MOVES);
 const chase = new ChaseCamera(r.camera);
 const hud = new Hud(document.getElementById("hud")!);
 const perf = new PerfOverlay(document.querySelector<HTMLElement>("#hud .perf")!);
@@ -156,6 +158,13 @@ if (edit && sortie.game) {
       currentLevelId: sortie.level.id,
       currentShipId: parseShip(boot.get("ship") ?? save.progress.ship).id,
       flyHere: () => lockPointer(canvas),
+      tryMove: (table, id) => {
+        // the designer's working copy becomes the live table, unsaved; the move starts as soon as the sim resumes
+        flight.moves = table;
+        input.moveKeys = moveKeys(table);
+        flight.startMove(id);
+        lockPointer(canvas);
+      },
       flyOther: (levelId, shipId) => {
         const q = new URLSearchParams(location.search);
         q.set("mission", levelId);
@@ -195,7 +204,7 @@ const loop = new Loop({
       rig.root.position.copy(_p);
       rig.root.quaternion.copy(_q);
       rig.update(dt, flight.throttle, flight.boosting);
-      chase.update(dt, _p, _q, flight.speed, input.stick, flight.boosting, flight.sinceHit, flight.stats.size, flight.barrelLeft !== 0);
+      chase.update(dt, _p, _q, flight.speed, input.stick, flight.boosting, flight.sinceHit, flight.stats.size, flight.barrelLeft !== 0 || flight.move !== null);
       world.dust.update(_p, _v.copy(flight.velDir).multiplyScalar(flight.speed), flight.speed);
       hud.update(flight, input, hazards.outside);
       if (menu?.open) hud.hideHint();

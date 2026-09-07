@@ -109,6 +109,7 @@ export const TYPE_FIELDS: Record<LevelDef["type"], Field[]> = {
     { key: "reinforceKinds", label: "reinforcement kinds", kind: "kinds" },
     n("mines", "mines round the hull", 0, 60),
   ],
+  sandbox: [n("restockEvery", "missiles restock (s)", 0, 300, 5)],
   duel: [
     { key: "foe", label: "opponent", kind: "kind" },
     n("rounds", "first to", 1, 9),
@@ -127,6 +128,7 @@ export const TYPE_LABEL: Record<LevelDef["type"], string> = {
   intercept: "INTERCEPT (bombers on a line)",
   strike: "STRIKE (mothership)",
   duel: "DUEL (one on one)",
+  sandbox: "SANDBOX (proving ground)",
 };
 
 /** one plain sentence per type: what the player does, how it is won, how it is lost */
@@ -140,6 +142,7 @@ export const TYPE_HELP: Record<LevelDef["type"], string> = {
   intercept: "Bombers run a line toward a relay behind you, with escorts. Kill them before they cross; too many leaks and you lose.",
   strike: "A mothership ahead: shoot its ring guns, then the three shield nodes, then the core, with escorts and reinforcements on you.",
   duel: "One enemy, open space, best of N rounds. Hull is restored between rounds.",
+  sandbox: "No enemies, no clock, no win. The HUD lists every move and its keys; fly until you leave. For trying moves out.",
 };
 
 /** A fresh level of the given type with sensible middle-of-the-road numbers; the base fields are kept from `from`. */
@@ -165,5 +168,7 @@ export function defaultsFor(type: LevelDef["type"], from: Partial<LevelDef> & { 
       return { ...base, type, distance: 1700, escorts: 2, reinforce: 2, mines: 12 };
     case "duel":
       return { ...base, type, beltScale: 0.06, foe: "ace", rounds: 3, distance: 900, pause: 3 };
+    case "sandbox":
+      return { ...base, type, beltScale: 0.3, restockEvery: 20 };
   }
 }
