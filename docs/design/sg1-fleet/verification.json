@@ -3,7 +3,7 @@
     "All 12 entries and 6 camera controls load both embedded images",
     "Preferences and notes survive reload; review export includes selection",
     "390px mobile layout has no horizontal overflow",
-    "Both art versions boot in gameplay; original fighter restored exactly; all five enemies spawn; bomber retains its revised material",
+    "Both art versions boot in gameplay; original fighter restored exactly; all five enemies spawn; bomber retains its selected material",
     "No browser page errors"
   ],
   "gameplay": [
@@ -50,18 +50,18 @@
         },
         {
           "kind": "interceptor",
-          "color": 7632235,
-          "canopy": null
+          "color": 6317662,
+          "canopy": 0.025
         },
         {
           "kind": "gunboat",
-          "color": 6843232,
-          "canopy": 0.04
+          "color": 6910311,
+          "canopy": 0.025
         },
         {
           "kind": "bomber",
-          "color": 7961712,
-          "canopy": 0.03
+          "color": 6048304,
+          "canopy": 0.25
         },
         {
           "kind": "ace",
@@ -71,7 +71,7 @@
       ],
       "palette": 9073478,
       "originalFighter": false,
-      "bomberColor": 7961712
+      "bomberColor": 6048304
     }
   ],
   "errors": []

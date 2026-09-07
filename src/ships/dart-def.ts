@@ -1,3 +1,4 @@
+import { roleVariant } from '@/ships/sg1-geometry';
 import { selectArt } from '@/ships/art-version';
 import { auxiliaryRevision } from '@/ships/refinements';
 import type { ShipDef } from "@/ships/defs";
@@ -67,5 +68,6 @@ export const DART_ORIGINAL: ShipDef = {
   palette: { ...PALETTES.tauri, accent: 0xd8e6f2, glow: 0x9fd0ff },
 };
 
-export const DART_REVISED = auxiliaryRevision(DART_ORIGINAL, 'dart');
-export const DART = selectArt(DART_ORIGINAL, DART_REVISED);
+export const DART_PASS1 = auxiliaryRevision(DART_ORIGINAL, 'dart');
+export const DART_REVISED = roleVariant(DART_ORIGINAL, 'dart');
+export const DART = selectArt(DART_ORIGINAL, DART_REVISED, DART_PASS1);

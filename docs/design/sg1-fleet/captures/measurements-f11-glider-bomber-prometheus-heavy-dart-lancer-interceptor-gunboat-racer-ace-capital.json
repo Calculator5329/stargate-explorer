@@ -246,7 +246,7 @@
       "version": "revised",
       "view": "perspective",
       "file": "docs/design/sg1-fleet/captures/bomber-revised-perspective.png",
-      "triangles": 1708,
+      "triangles": 1976,
       "calls": 4
     },
     {
@@ -254,7 +254,7 @@
       "version": "revised",
       "view": "top",
       "file": "docs/design/sg1-fleet/captures/bomber-revised-top.png",
-      "triangles": 1708,
+      "triangles": 1976,
       "calls": 4
     },
     {
@@ -262,7 +262,7 @@
       "version": "revised",
       "view": "side",
       "file": "docs/design/sg1-fleet/captures/bomber-revised-side.png",
-      "triangles": 1708,
+      "triangles": 1976,
       "calls": 4
     },
     {
@@ -270,7 +270,7 @@
       "version": "revised",
       "view": "front",
       "file": "docs/design/sg1-fleet/captures/bomber-revised-front.png",
-      "triangles": 1708,
+      "triangles": 1976,
       "calls": 4
     },
     {
@@ -278,7 +278,7 @@
       "version": "revised",
       "view": "rear",
       "file": "docs/design/sg1-fleet/captures/bomber-revised-rear.png",
-      "triangles": 1708,
+      "triangles": 1976,
       "calls": 4
     },
     {
@@ -286,7 +286,7 @@
       "version": "revised",
       "view": "silhouette",
       "file": "docs/design/sg1-fleet/captures/bomber-revised-silhouette.png",
-      "triangles": 1708,
+      "triangles": 1976,
       "calls": 4
     },
     {
@@ -342,47 +342,47 @@
       "version": "revised",
       "view": "perspective",
       "file": "docs/design/sg1-fleet/captures/prometheus-revised-perspective.png",
-      "triangles": 5670,
-      "calls": 7
+      "triangles": 3740,
+      "calls": 4
     },
     {
       "hull": "prometheus",
       "version": "revised",
       "view": "top",
       "file": "docs/design/sg1-fleet/captures/prometheus-revised-top.png",
-      "triangles": 5670,
-      "calls": 7
+      "triangles": 3740,
+      "calls": 4
     },
     {
       "hull": "prometheus",
       "version": "revised",
       "view": "side",
       "file": "docs/design/sg1-fleet/captures/prometheus-revised-side.png",
-      "triangles": 5670,
-      "calls": 7
+      "triangles": 3740,
+      "calls": 4
     },
     {
       "hull": "prometheus",
       "version": "revised",
       "view": "front",
       "file": "docs/design/sg1-fleet/captures/prometheus-revised-front.png",
-      "triangles": 5670,
-      "calls": 7
+      "triangles": 3740,
+      "calls": 4
     },
     {
       "hull": "prometheus",
       "version": "revised",
       "view": "rear",
       "file": "docs/design/sg1-fleet/captures/prometheus-revised-rear.png",
-      "triangles": 5670,
-      "calls": 7
+      "triangles": 3740,
+      "calls": 4
     },
     {
       "hull": "prometheus",
       "version": "revised",
       "view": "silhouette",
       "file": "docs/design/sg1-fleet/captures/prometheus-revised-silhouette.png",
-      "triangles": 5664,
+      "triangles": 3740,
       "calls": 4
     },
     {
@@ -438,7 +438,7 @@
       "version": "revised",
       "view": "perspective",
       "file": "docs/design/sg1-fleet/captures/heavy-revised-perspective.png",
-      "triangles": 2616,
+      "triangles": 2520,
       "calls": 8
     },
     {
@@ -446,7 +446,7 @@
       "version": "revised",
       "view": "top",
       "file": "docs/design/sg1-fleet/captures/heavy-revised-top.png",
-      "triangles": 2616,
+      "triangles": 2520,
       "calls": 8
     },
     {
@@ -454,7 +454,7 @@
       "version": "revised",
       "view": "side",
       "file": "docs/design/sg1-fleet/captures/heavy-revised-side.png",
-      "triangles": 2616,
+      "triangles": 2520,
       "calls": 8
     },
     {
@@ -462,7 +462,7 @@
       "version": "revised",
       "view": "front",
       "file": "docs/design/sg1-fleet/captures/heavy-revised-front.png",
-      "triangles": 2616,
+      "triangles": 2520,
       "calls": 8
     },
     {
@@ -470,7 +470,7 @@
       "version": "revised",
       "view": "rear",
       "file": "docs/design/sg1-fleet/captures/heavy-revised-rear.png",
-      "triangles": 2616,
+      "triangles": 2520,
       "calls": 8
     },
     {
@@ -478,7 +478,7 @@
       "version": "revised",
       "view": "silhouette",
       "file": "docs/design/sg1-fleet/captures/heavy-revised-silhouette.png",
-      "triangles": 2608,
+      "triangles": 2512,
       "calls": 4
     },
     {
@@ -534,47 +534,47 @@
       "version": "revised",
       "view": "perspective",
       "file": "docs/design/sg1-fleet/captures/dart-revised-perspective.png",
-      "triangles": 1028,
-      "calls": 5
+      "triangles": 1992,
+      "calls": 8
     },
     {
       "hull": "dart",
       "version": "revised",
       "view": "top",
       "file": "docs/design/sg1-fleet/captures/dart-revised-top.png",
-      "triangles": 1028,
-      "calls": 5
+      "triangles": 1992,
+      "calls": 8
     },
     {
       "hull": "dart",
       "version": "revised",
       "view": "side",
       "file": "docs/design/sg1-fleet/captures/dart-revised-side.png",
-      "triangles": 1028,
-      "calls": 5
+      "triangles": 1992,
+      "calls": 8
     },
     {
       "hull": "dart",
       "version": "revised",
       "view": "front",
       "file": "docs/design/sg1-fleet/captures/dart-revised-front.png",
-      "triangles": 1028,
-      "calls": 5
+      "triangles": 1992,
+      "calls": 8
     },
     {
       "hull": "dart",
       "version": "revised",
       "view": "rear",
       "file": "docs/design/sg1-fleet/captures/dart-revised-rear.png",
-      "triangles": 1028,
-      "calls": 5
+      "triangles": 1992,
+      "calls": 8
     },
     {
       "hull": "dart",
       "version": "revised",
       "view": "silhouette",
       "file": "docs/design/sg1-fleet/captures/dart-revised-silhouette.png",
-      "triangles": 1026,
+      "triangles": 1984,
       "calls": 4
     },
     {
@@ -630,47 +630,47 @@
       "version": "revised",
       "view": "perspective",
       "file": "docs/design/sg1-fleet/captures/lancer-revised-perspective.png",
-      "triangles": 1740,
-      "calls": 6
+      "triangles": 1556,
+      "calls": 4
     },
     {
       "hull": "lancer",
       "version": "revised",
       "view": "top",
       "file": "docs/design/sg1-fleet/captures/lancer-revised-top.png",
-      "triangles": 1740,
-      "calls": 6
+      "triangles": 1556,
+      "calls": 4
     },
     {
       "hull": "lancer",
       "version": "revised",
       "view": "side",
       "file": "docs/design/sg1-fleet/captures/lancer-revised-side.png",
-      "triangles": 1740,
-      "calls": 6
+      "triangles": 1556,
+      "calls": 4
     },
     {
       "hull": "lancer",
       "version": "revised",
       "view": "front",
       "file": "docs/design/sg1-fleet/captures/lancer-revised-front.png",
-      "triangles": 1740,
-      "calls": 6
+      "triangles": 1556,
+      "calls": 4
     },
     {
       "hull": "lancer",
       "version": "revised",
       "view": "rear",
       "file": "docs/design/sg1-fleet/captures/lancer-revised-rear.png",
-      "triangles": 1740,
-      "calls": 6
+      "triangles": 1556,
+      "calls": 4
     },
     {
       "hull": "lancer",
       "version": "revised",
       "view": "silhouette",
       "file": "docs/design/sg1-fleet/captures/lancer-revised-silhouette.png",
-      "triangles": 1736,
+      "triangles": 1556,
       "calls": 4
     },
     {
@@ -726,48 +726,48 @@
       "version": "revised",
       "view": "perspective",
       "file": "docs/design/sg1-fleet/captures/interceptor-revised-perspective.png",
-      "triangles": 436,
-      "calls": 3
+      "triangles": 1236,
+      "calls": 4
     },
     {
       "hull": "interceptor",
       "version": "revised",
       "view": "top",
       "file": "docs/design/sg1-fleet/captures/interceptor-revised-top.png",
-      "triangles": 436,
-      "calls": 3
+      "triangles": 1236,
+      "calls": 4
     },
     {
       "hull": "interceptor",
       "version": "revised",
       "view": "side",
       "file": "docs/design/sg1-fleet/captures/interceptor-revised-side.png",
-      "triangles": 436,
-      "calls": 3
+      "triangles": 1236,
+      "calls": 4
     },
     {
       "hull": "interceptor",
       "version": "revised",
       "view": "front",
       "file": "docs/design/sg1-fleet/captures/interceptor-revised-front.png",
-      "triangles": 436,
-      "calls": 3
+      "triangles": 1236,
+      "calls": 4
     },
     {
       "hull": "interceptor",
       "version": "revised",
       "view": "rear",
       "file": "docs/design/sg1-fleet/captures/interceptor-revised-rear.png",
-      "triangles": 436,
-      "calls": 3
+      "triangles": 1236,
+      "calls": 4
     },
     {
       "hull": "interceptor",
       "version": "revised",
       "view": "silhouette",
       "file": "docs/design/sg1-fleet/captures/interceptor-revised-silhouette.png",
-      "triangles": 436,
-      "calls": 3
+      "triangles": 1236,
+      "calls": 4
     },
     {
       "hull": "gunboat",
@@ -822,7 +822,7 @@
       "version": "revised",
       "view": "perspective",
       "file": "docs/design/sg1-fleet/captures/gunboat-revised-perspective.png",
-      "triangles": 1768,
+      "triangles": 1976,
       "calls": 4
     },
     {
@@ -830,7 +830,7 @@
       "version": "revised",
       "view": "top",
       "file": "docs/design/sg1-fleet/captures/gunboat-revised-top.png",
-      "triangles": 1768,
+      "triangles": 1976,
       "calls": 4
     },
     {
@@ -838,7 +838,7 @@
       "version": "revised",
       "view": "side",
       "file": "docs/design/sg1-fleet/captures/gunboat-revised-side.png",
-      "triangles": 1768,
+      "triangles": 1976,
       "calls": 4
     },
     {
@@ -846,7 +846,7 @@
       "version": "revised",
       "view": "front",
       "file": "docs/design/sg1-fleet/captures/gunboat-revised-front.png",
-      "triangles": 1768,
+      "triangles": 1976,
       "calls": 4
     },
     {
@@ -854,7 +854,7 @@
       "version": "revised",
       "view": "rear",
       "file": "docs/design/sg1-fleet/captures/gunboat-revised-rear.png",
-      "triangles": 1768,
+      "triangles": 1976,
       "calls": 4
     },
     {
@@ -862,7 +862,7 @@
       "version": "revised",
       "view": "silhouette",
       "file": "docs/design/sg1-fleet/captures/gunboat-revised-silhouette.png",
-      "triangles": 1768,
+      "triangles": 1976,
       "calls": 4
     },
     {
@@ -918,47 +918,47 @@
       "version": "revised",
       "view": "perspective",
       "file": "docs/design/sg1-fleet/captures/racer-revised-perspective.png",
-      "triangles": 860,
-      "calls": 6
+      "triangles": 1556,
+      "calls": 4
     },
     {
       "hull": "racer",
       "version": "revised",
       "view": "top",
       "file": "docs/design/sg1-fleet/captures/racer-revised-top.png",
-      "triangles": 860,
-      "calls": 6
+      "triangles": 1556,
+      "calls": 4
     },
     {
       "hull": "racer",
       "version": "revised",
       "view": "side",
       "file": "docs/design/sg1-fleet/captures/racer-revised-side.png",
-      "triangles": 860,
-      "calls": 6
+      "triangles": 1556,
+      "calls": 4
     },
     {
       "hull": "racer",
       "version": "revised",
       "view": "front",
       "file": "docs/design/sg1-fleet/captures/racer-revised-front.png",
-      "triangles": 860,
-      "calls": 6
+      "triangles": 1556,
+      "calls": 4
     },
     {
       "hull": "racer",
       "version": "revised",
       "view": "rear",
       "file": "docs/design/sg1-fleet/captures/racer-revised-rear.png",
-      "triangles": 860,
-      "calls": 6
+      "triangles": 1556,
+      "calls": 4
     },
     {
       "hull": "racer",
       "version": "revised",
       "view": "silhouette",
       "file": "docs/design/sg1-fleet/captures/racer-revised-silhouette.png",
-      "triangles": 856,
+      "triangles": 1556,
       "calls": 4
     },
     {
@@ -1110,7 +1110,7 @@
       "version": "revised",
       "view": "perspective",
       "file": "docs/design/sg1-fleet/captures/capital-revised-perspective.png",
-      "triangles": 2966,
+      "triangles": 3326,
       "calls": 36
     },
     {
@@ -1118,7 +1118,7 @@
       "version": "revised",
       "view": "top",
       "file": "docs/design/sg1-fleet/captures/capital-revised-top.png",
-      "triangles": 2966,
+      "triangles": 3326,
       "calls": 36
     },
     {
@@ -1126,7 +1126,7 @@
       "version": "revised",
       "view": "side",
       "file": "docs/design/sg1-fleet/captures/capital-revised-side.png",
-      "triangles": 2966,
+      "triangles": 3326,
       "calls": 36
     },
     {
@@ -1134,7 +1134,7 @@
       "version": "revised",
       "view": "front",
       "file": "docs/design/sg1-fleet/captures/capital-revised-front.png",
-      "triangles": 2966,
+      "triangles": 3326,
       "calls": 36
     },
     {
@@ -1142,7 +1142,7 @@
       "version": "revised",
       "view": "rear",
       "file": "docs/design/sg1-fleet/captures/capital-revised-rear.png",
-      "triangles": 2966,
+      "triangles": 3326,
       "calls": 36
     },
     {
@@ -1150,7 +1150,7 @@
       "version": "revised",
       "view": "silhouette",
       "file": "docs/design/sg1-fleet/captures/capital-revised-silhouette.png",
-      "triangles": 2966,
+      "triangles": 3326,
       "calls": 36
     }
   ]

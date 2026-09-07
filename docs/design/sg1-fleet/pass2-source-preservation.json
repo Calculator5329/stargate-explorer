@@ -1,0 +1,38 @@
+[
+  {
+    "file": "src/combat/bomber-def.ts",
+    "originalDefinitionUnchanged": true
+  },
+  {
+    "file": "src/combat/glider-def.ts",
+    "originalDefinitionUnchanged": true
+  },
+  {
+    "file": "src/combat/gunboat-def.ts",
+    "originalDefinitionUnchanged": true
+  },
+  {
+    "file": "src/combat/interceptor-def.ts",
+    "originalDefinitionUnchanged": true
+  },
+  {
+    "file": "src/ships/heavy-def.ts",
+    "originalDefinitionUnchanged": true
+  },
+  {
+    "file": "src/ships/dart-def.ts",
+    "originalDefinitionUnchanged": true
+  },
+  {
+    "file": "src/ships/lancer-def.ts",
+    "originalDefinitionUnchanged": true
+  },
+  {
+    "file": "src/ships/racer-def.ts",
+    "originalDefinitionUnchanged": true
+  },
+  {
+    "file": "src/ships/prometheus-def.ts",
+    "originalDefinitionUnchanged": true
+  }
+]

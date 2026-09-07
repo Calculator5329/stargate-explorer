@@ -1,3 +1,4 @@
+import { roleVariant } from '@/ships/sg1-geometry';
 import { selectArt } from '@/ships/art-version';
 import { auxiliaryRevision } from '@/ships/refinements';
 import type { ShipDef } from "@/ships/defs";
@@ -79,5 +80,6 @@ export const HEAVY_ORIGINAL: ShipDef = {
   palette: { ...PALETTES.tauri, accent: 0xb87543 },
 };
 
-export const HEAVY_REVISED = auxiliaryRevision(HEAVY_ORIGINAL, 'heavy');
-export const HEAVY = selectArt(HEAVY_ORIGINAL, HEAVY_REVISED);
+export const HEAVY_PASS1 = auxiliaryRevision(HEAVY_ORIGINAL, 'heavy');
+export const HEAVY_REVISED = roleVariant(HEAVY_ORIGINAL, 'heavy');
+export const HEAVY = selectArt(HEAVY_ORIGINAL, HEAVY_REVISED, HEAVY_PASS1);

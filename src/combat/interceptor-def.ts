@@ -1,3 +1,4 @@
+import { roleVariant } from '@/ships/sg1-geometry';
 import { selectArt } from '@/ships/art-version';
 import { auxiliaryRevision } from '@/ships/refinements';
 /**
@@ -43,5 +44,6 @@ export const INTERCEPTOR_ORIGINAL: ShipDef = {
   palette: { body: 0x454a52, accent: 0xe0b852, dark: 0x1e2024, glow: 0xffa040, canopy: 0x3a2a10 },
 };
 
-export const INTERCEPTOR_REVISED = auxiliaryRevision(INTERCEPTOR_ORIGINAL, 'interceptor');
-export const INTERCEPTOR = selectArt(INTERCEPTOR_ORIGINAL, INTERCEPTOR_REVISED);
+export const INTERCEPTOR_PASS1 = auxiliaryRevision(INTERCEPTOR_ORIGINAL, 'interceptor');
+export const INTERCEPTOR_REVISED = roleVariant(INTERCEPTOR_ORIGINAL, 'interceptor');
+export const INTERCEPTOR = selectArt(INTERCEPTOR_ORIGINAL, INTERCEPTOR_REVISED, INTERCEPTOR_PASS1);

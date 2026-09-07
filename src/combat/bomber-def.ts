@@ -1,3 +1,4 @@
+import { alkeshGeometry } from '@/ships/sg1-geometry';
 import { selectArt } from '@/ships/art-version';
 import { bomberRevision } from '@/ships/refinements';
 /**
@@ -68,5 +69,6 @@ export const BOMBER_ORIGINAL: ShipDef = {
   palette: { body: 0x5c4a30, accent: 0xc98a3c, dark: 0x22190f, glow: 0xffa040, canopy: 0x3a2a12 },
 };
 
-export const BOMBER_REVISED = bomberRevision(BOMBER_ORIGINAL);
-export const BOMBER = selectArt(BOMBER_ORIGINAL, BOMBER_REVISED);
+export const BOMBER_PASS1 = bomberRevision(BOMBER_ORIGINAL);
+export const BOMBER_REVISED = alkeshGeometry(BOMBER_ORIGINAL);
+export const BOMBER = selectArt(BOMBER_ORIGINAL, BOMBER_REVISED, BOMBER_PASS1, true);

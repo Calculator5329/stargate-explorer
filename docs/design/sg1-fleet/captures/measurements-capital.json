@@ -1,0 +1,101 @@
+{
+  "errors": [],
+  "records": [
+    {
+      "hull": "capital",
+      "version": "original",
+      "view": "perspective",
+      "file": "docs/design/sg1-fleet/captures/capital-original-perspective.png",
+      "triangles": 2966,
+      "calls": 36
+    },
+    {
+      "hull": "capital",
+      "version": "original",
+      "view": "top",
+      "file": "docs/design/sg1-fleet/captures/capital-original-top.png",
+      "triangles": 2966,
+      "calls": 36
+    },
+    {
+      "hull": "capital",
+      "version": "original",
+      "view": "side",
+      "file": "docs/design/sg1-fleet/captures/capital-original-side.png",
+      "triangles": 2966,
+      "calls": 36
+    },
+    {
+      "hull": "capital",
+      "version": "original",
+      "view": "front",
+      "file": "docs/design/sg1-fleet/captures/capital-original-front.png",
+      "triangles": 2966,
+      "calls": 36
+    },
+    {
+      "hull": "capital",
+      "version": "original",
+      "view": "rear",
+      "file": "docs/design/sg1-fleet/captures/capital-original-rear.png",
+      "triangles": 2966,
+      "calls": 36
+    },
+    {
+      "hull": "capital",
+      "version": "original",
+      "view": "silhouette",
+      "file": "docs/design/sg1-fleet/captures/capital-original-silhouette.png",
+      "triangles": 2966,
+      "calls": 36
+    },
+    {
+      "hull": "capital",
+      "version": "revised",
+      "view": "perspective",
+      "file": "docs/design/sg1-fleet/captures/capital-revised-perspective.png",
+      "triangles": 3326,
+      "calls": 36
+    },
+    {
+      "hull": "capital",
+      "version": "revised",
+      "view": "top",
+      "file": "docs/design/sg1-fleet/captures/capital-revised-top.png",
+      "triangles": 3326,
+      "calls": 36
+    },
+    {
+      "hull": "capital",
+      "version": "revised",
+      "view": "side",
+      "file": "docs/design/sg1-fleet/captures/capital-revised-side.png",
+      "triangles": 3326,
+      "calls": 36
+    },
+    {
+      "hull": "capital",
+      "version": "revised",
+      "view": "front",
+      "file": "docs/design/sg1-fleet/captures/capital-revised-front.png",
+      "triangles": 3326,
+      "calls": 36
+    },
+    {
+      "hull": "capital",
+      "version": "revised",
+      "view": "rear",
+      "file": "docs/design/sg1-fleet/captures/capital-revised-rear.png",
+      "triangles": 3326,
+      "calls": 36
+    },
+    {
+      "hull": "capital",
+      "version": "revised",
+      "view": "silhouette",
+      "file": "docs/design/sg1-fleet/captures/capital-revised-silhouette.png",
+      "triangles": 3326,
+      "calls": 36
+    }
+  ]
+}

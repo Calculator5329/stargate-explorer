@@ -1,19 +1,21 @@
 /** Dev-only capture stage. Uses the game's real geometry/materials and matched framing per pair. */
 import * as THREE from 'three';
 import { HULLS, ORIGINAL_HULLS } from '@/ships/hulls';
+import { BOMBER_REVISED } from '@/combat/bomber-def';
 import { buildShip } from '@/ships/builder';
 import { disposeTree } from '@/render/dispose';
 import { Capital } from '@/combat/capital';
 
 const q = new URLSearchParams(location.search);
+const candidates: typeof HULLS = {...HULLS, bomber:BOMBER_REVISED};
 const key = q.get('hull') ?? 'glider';
 const old = q.get('version') === 'original';
 const view = q.get('view') ?? 'perspective';
 const silhouette = view === 'silhouette';
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(silhouette ? 0xe9edf0 : 0x111820);
-const group = key === 'capital' ? new Capital({originalArt:old}).group : buildShip((old ? ORIGINAL_HULLS[key] : HULLS[key])!);
-const other = key === 'capital' ? new Capital({originalArt:!old}).group : buildShip((old ? HULLS[key] : ORIGINAL_HULLS[key])!);
+const group = key === 'capital' ? new Capital({originalArt:old}).group : buildShip((old ? ORIGINAL_HULLS[key] : candidates[key])!);
+const other = key === 'capital' ? new Capital({originalArt:!old}).group : buildShip((old ? candidates[key] : ORIGINAL_HULLS[key])!);
 const bounds = new THREE.Box3().setFromObject(group).union(new THREE.Box3().setFromObject(other));
 const center = bounds.getCenter(new THREE.Vector3());
 const size = bounds.getSize(new THREE.Vector3());

@@ -89,3 +89,19 @@ node scripts/hatak-probe.mjs`) reported `hatak-probe OK`: the shield node was
 killable and the player was pushed out of the hull. The six original capital
 studio images are byte-identical before and after its material change; retained
 hashes are in `capital-original-before.sha256`.
+
+## Pass two · owner feedback
+
+First-pass choices are retained verbatim in `owner-feedback.json`; the maintained direction is in `../../taste.md`. The owner chose to keep gameplay roles as SG-1 craft variants. New comparison choices use a separate browser-storage key, so previous preference does not silently approve changed geometry. Glider, F-302 and ace remain unchanged.
+
+- `?art=original`: original fleet.
+- `?art=pass1`: first revision, including the thin dark Ha’tak ring.
+- Normal / `?art=revised`: new role variants and Prometheus/Ha’tak; original Al’kesh remains selected.
+- `?art=candidate`: same new fleet with the new Al’kesh candidate.
+- `review-pass1.html` and `pass1-captures/` preserve the earlier review; `previous-capital/` preserves the dark-ring iteration.
+
+Additional references: Al’kesh rear screen still from [Stargate Project](https://www.stargate-project.de/lexikon-sg-1), ventral still from [GateWorld](https://www.gateworld.net/wiki/Al%27kesh), X-301 still from [RDA Lexicon](https://www.rdanderson.com/stargate/lexicon/entries/x301.htm), and front/side plus opposite-side licensed model photographs from [Master Replicas](https://www.masterreplicas.com/en-us/products/stargate-the-prometheus-master-replicas-edition). Licensed model photos are labeled as model photos, not screen frames or orthographic plans. They reveal a long forebody and aft pods/tower that the earlier written-reference interpretation missed.
+
+Verification: `pass2-preservation.json` records four art selections plus six original capital images matching the old hashes with the **old camera bounds**. Current paired captures recompute union bounds for the changed candidate, so the original’s framing can change despite unchanged model data. `pass2-source-preservation.json` compares nine original definition blocks to commit a147606. `verification.json` covers all six angles and twelve ships, browser choices, mobile layout, both baseline gameplay paths and enemy spawning. Ha’tak probe: shield node 80→0 HP, dead; player outside hull after push-out. Build passes with the existing large-chunk warning.
+
+The new geometry is a stylized candidate. Role scaling and loadouts are invented gameplay variants, not claims of canonical ship variants. Flight, weapon and progression parameters were not changed; visual size differences still require human flight judgment. No Blender integration or target-hardware benchmark is claimed.

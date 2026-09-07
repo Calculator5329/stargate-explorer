@@ -1,0 +1,19 @@
+{
+  "date": "2026-09-06",
+  "reviewedVersion": "pass1",
+  "direction": "Keep roles; use SG-1 craft variants",
+  "ships": {
+    "glider": {"preference":"revised","notes":"This is looking good."},
+    "f11": {"preference":"revised","notes":""},
+    "bomber": {"preference":"original","notes":"I think you need a better reference image for this."},
+    "prometheus": {"preference":"revised","notes":"Maybe you need some side reference images for this. I like revised better, but they're still not accurate to what it actually looks like."},
+    "heavy": {"preference":"revised","notes":"They are very, very, very similar."},
+    "dart": {"preference":"undecided","notes":"We don't have a reference image for this, we should. These should all be SG-1 derived fighters."},
+    "lancer": {"preference":"revised","notes":"This one's not SG1 derived either, unfortunately."},
+    "interceptor": {"preference":"undecided","notes":"Honestly, neither. These are very great."},
+    "gunboat": {"preference":"revised","notes":"Is this SG-1 from SG-1? It'd be cool if they all were..."},
+    "racer": {"preference":"revised","notes":""},
+    "ace": {"preference":"revised","notes":"Revised is way, way, way better. Great job."},
+    "capital": {"preference":"undecided","notes":"Revised is much better, but still room to improve."}
+  }
+}

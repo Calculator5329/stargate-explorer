@@ -255,4 +255,6 @@ Scope guard, Ethan 2026-09-06: "we don't necessarily want to charge forward on e
 Multiplayer, mobile/touch, VR, mod support, story/dialogue system.
 
 ## SG-1 fleet likeness, September 6
-- [x] (2026-09-06) Refine the fleet against SG-1 references, retain original designs, and deliver a captured side-by-side HTML comparison with verification. [Review and evidence](design/sg1-fleet/README.md). Twelve fleet entries revised, including a material-only Ha’tak pass. Owner visual preference remains open.
+- [x] (2026-09-06) Refine the fleet against SG-1 references, retain original designs, and deliver a captured side-by-side HTML comparison with verification. [Review and evidence](design/sg1-fleet/README.md). Twelve fleet entries revised, including a material-only Ha’tak pass. First-pass choices are recorded in `docs/taste.md`; further candidates need a fresh owner verdict.
+
+- [x] (2026-09-06) Apply the owner’s first fleet review: retain preferred gliders/F-302, preserve original bomber default, rebuild invented roles as SG-1-derived variants, improve Prometheus proportions and Ha’tak structure, and add reference views plus version-specific feedback. [Pass-two evidence](design/sg1-fleet/pass2-preservation.json).

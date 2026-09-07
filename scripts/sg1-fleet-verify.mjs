@@ -19,7 +19,7 @@ await page.getByLabel('Your preference for this ship').selectOption('revised');a
 assert.equal(await page.getByLabel('Your preference for this ship').inputValue(),'revised');assert.equal(await page.getByLabel('What would you change?').inputValue(),'Verification choice');
 await page.getByRole('button',{name:'Show my review'}).click();assert((await page.locator('#review-text').inputValue()).includes('Death glider: revised'));
 checks.push('Preferences and notes survive reload; review export includes selection');
-await page.evaluate(()=>localStorage.removeItem('sg1-fleet-review-20260906'));await page.reload();
+await page.evaluate(()=>localStorage.removeItem('sg1-fleet-review-pass2-20260906'));await page.reload();
 await page.screenshot({path:`${out}/review-desktop.png`,fullPage:true});
 await page.setViewportSize({width:390,height:844});
 assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
@@ -42,6 +42,6 @@ for(const art of ['original','revised']){
  assert.equal(sample.originalFighter,art==='original');for(const e of sample.sample)if(art==='original')assert.equal(e.color,sample.palette);else if(e.kind==='bomber')assert.equal(e.color,sample.bomberColor);
  gameplay.push({art,...sample});await page.screenshot({path:`${out}/game-${art}.png`});
 }
-checks.push('Both art versions boot in gameplay; original fighter restored exactly; all five enemies spawn; bomber retains its revised material');
+checks.push('Both art versions boot in gameplay; original fighter restored exactly; all five enemies spawn; bomber retains its selected material');
 assert.deepEqual(errors,[]);checks.push('No browser page errors');
 writeFileSync(`${out}/verification.json`,JSON.stringify({checks,gameplay,errors},null,2));await browser.close();console.log(JSON.stringify({checks,errors},null,2));

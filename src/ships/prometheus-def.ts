@@ -1,3 +1,4 @@
+import { prometheusGeometry } from '@/ships/sg1-geometry';
 import { selectArt } from '@/ships/art-version';
 import { carrierRevision } from '@/ships/refinements';
 import type { ArmorDef, EngineDef, FinDef, HatchDef, ShipDef } from "@/ships/defs";
@@ -154,5 +155,6 @@ export const PROMETHEUS_ORIGINAL: ShipDef = {
   palette: { ...PALETTES.tauri, body: 0x7f8792, accent: 0x454d57, canopy: 0x9aa2ab },
 };
 
-export const PROMETHEUS_REVISED = carrierRevision(PROMETHEUS_ORIGINAL);
-export const PROMETHEUS = selectArt(PROMETHEUS_ORIGINAL, PROMETHEUS_REVISED);
+export const PROMETHEUS_PASS1 = carrierRevision(PROMETHEUS_ORIGINAL);
+export const PROMETHEUS_REVISED = prometheusGeometry(PROMETHEUS_ORIGINAL);
+export const PROMETHEUS = selectArt(PROMETHEUS_ORIGINAL, PROMETHEUS_REVISED, PROMETHEUS_PASS1);

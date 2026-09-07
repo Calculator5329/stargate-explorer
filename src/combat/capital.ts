@@ -119,6 +119,8 @@ export class Capital {
 
   constructor(opts: { turrets?: number; scale?: number; originalArt?: boolean } = {}) {
     const turretCount = opts.turrets ?? 6;
+    const detailed = !(opts.originalArt ?? originalArt) && new URLSearchParams(location.search).get("capital") !== "pass1" &&
+      new URLSearchParams(location.search).get("art") !== "pass1";
     this.scale = opts.scale ?? 1;
     this.rnd = mulberry32(0x4a7a);
     this.group.name = "capital";
@@ -138,6 +140,7 @@ export class Capital {
     // ── pyramid + underside + collar (static) ──
     const body = new CapitalSoup();
     this.buildPyramid(body);
+    if (detailed) this.buildPyramidPanels(body);
     this.buildUnderside(body);
     this.buildCollar(body);
     this.buildHangar(body);
@@ -147,10 +150,10 @@ export class Capital {
 
     // ── ring superstructure (rotates) ──
     const ring = new CapitalSoup();
-    this.buildRing(ring);
-    this.buildLobes(ring);
+    if (detailed) this.buildArmoredRing(ring);
+    else { this.buildRing(ring); this.buildLobes(ring); }
     this.buildStruts(ring);
-    this.buildWindows(ring);
+    if (!detailed) this.buildWindows(ring);
     // The screen ship separates a gold pyramid from a dark industrial outer structure.
     // Keep the old material path exact for the original-fleet switch and paired captures.
     const ringMats = (opts.originalArt ?? originalArt) ? mats : {
@@ -314,6 +317,67 @@ export class Capital {
         const w = 0.16 * (1 - t!), h = 0.012;
         facePoint(A, face, t!, u! - w, 0.5); facePoint(B, face, t!, u! + w, 0.5); facePoint(C, face, t! + h, u! + w * 0.9, 0.5); facePoint(D, face, t! + h, u! - w * 0.9, 0.5);
         s.quad(A, B, C, D, N, "glow");
+      }
+    }
+  }
+
+  /** Three broad, angular hull assemblies replace the thin circular rail.
+   * All plates remain inside the existing outer-lobe envelope; turret seats stay clear.
+   */
+  private buildArmoredRing(s: CapitalSoup): void {
+    s.begin();
+    s.sector(RING_IN, RING_OUT, 0, 4, 0, Math.PI * 2, 18, "dark", "dark");
+    for (let i = 0; i < 3; i++) {
+      const a = Math.PI / 2 + i * Math.PI * 2 / 3;
+      s.begin();
+      s.sector(94, 122, 0, 12, a - 0.96, a + 0.96, 3, "bronze", "dark");
+      // The broad outboard shoulders give each assembly a stepped, substantial silhouette.
+      s.begin();
+      s.sector(109, 126, 2, 15, a - 0.48, a + 0.48, 2, "gold", "bronze");
+      for (const offset of [-0.73, -0.36, 0, 0.36, 0.73]) {
+        const c = a + offset;
+        s.begin();
+        s.sector(105, 119, 12.1, 13.0, c - 0.12, c + 0.12, 1, "gold", "dark");
+        // Dark service trench and restrained window banks along the outboard shoulders.
+        s.begin(false);
+        s.sector(115, 120, 13.01, 13.05, c - 0.07, c + 0.07, 1, "dark", "dark");
+      }
+      for (const offset of [-0.32, 0.32]) {
+        const c = a + offset;
+        s.begin();
+        s.sector(89.5, 105, 5, 10, c - 0.065, c + 0.065, 1, "bronze", "dark");
+      }
+      // Thin amber guide lights at the exposed ends, away from the turret positions.
+      for (const side of [-1, 1]) {
+        const c = a + side * 0.9;
+        s.begin(false);
+        s.sector(104, 114, 12.02, 12.07, c - 0.008, c + 0.008, 1, "glow", "glow");
+      }
+    }
+  }
+
+  /** Fine relief follows the existing face bulges, avoiding floating or buried panels. */
+  private buildPyramidPanels(s: CapitalSoup): void {
+    const point = (out: THREE.Vector3, face: number, t: number, u: number) => {
+      const bulge = t < 0.34 ? 1.8 * t / 0.34 : t < 0.62 ? 1.8 * (0.62 - t) / 0.28 : 0;
+      facePoint(out, face, t, u, bulge + 2.2 * (1 - t * 0.6) * (1 - Math.abs(u)) + 0.35);
+    };
+    // Each strip stays within an existing large facet band.
+    for (let f = 0; f < 4; f++) {
+      const face = f * Math.PI / 2;
+      faceNormal(N, face);
+      s.begin(false);
+      for (const t of [0.10, 0.21, 0.31, 0.43, 0.55, 0.74, 0.84]) {
+        for (let col = 0; col < 8; col++) {
+          const u0 = -0.94 + col * 0.235, u1 = u0 + 0.218;
+          if (f === 0 && t < 0.28 && u0 < 0.36 && u1 > -0.36) continue;
+          point(A, face, t, u0); point(B, face, t, u1);
+          point(C, face, t + 0.007, u1); point(D, face, t + 0.007, u0);
+          s.quad(A, B, C, D, N, "bronze");
+          point(A, face, t, u0); point(B, face, t, u0 + 0.012);
+          point(C, face, t + 0.07, u0 + 0.012); point(D, face, t + 0.07, u0);
+          s.quad(A, B, C, D, N, "bronze");
+        }
       }
     }
   }

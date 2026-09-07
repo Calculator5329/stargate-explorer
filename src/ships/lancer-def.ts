@@ -1,3 +1,4 @@
+import { roleVariant } from '@/ships/sg1-geometry';
 import { selectArt } from '@/ships/art-version';
 import { auxiliaryRevision } from '@/ships/refinements';
 import type { ShipDef } from "@/ships/defs";
@@ -71,5 +72,6 @@ export const LANCER_ORIGINAL: ShipDef = {
   palette: { ...PALETTES.tauri, accent: 0xd9822b },
 };
 
-export const LANCER_REVISED = auxiliaryRevision(LANCER_ORIGINAL, 'lancer');
-export const LANCER = selectArt(LANCER_ORIGINAL, LANCER_REVISED);
+export const LANCER_PASS1 = auxiliaryRevision(LANCER_ORIGINAL, 'lancer');
+export const LANCER_REVISED = roleVariant(LANCER_ORIGINAL, 'lancer');
+export const LANCER = selectArt(LANCER_ORIGINAL, LANCER_REVISED, LANCER_PASS1);
