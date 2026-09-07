@@ -37,6 +37,25 @@ await page.waitForTimeout(600);
 const t1 = await page.evaluate(() => window.__game.mission.timer);
 check(t1 === t0, `sim held while editing (intro timer ${t0} -> ${t1})`);
 
+// hover a card for the FLY tag; the story preview shows the intro as the HUD will
+const preview = await page.evaluate(() => ({ line: document.querySelector("#editor .preview .hudline .obj")?.textContent ?? "", intro: window.__editor.content.level("escort").intro[0] }));
+check(preview.line.includes(preview.intro), `story preview carries the intro line (${preview.line.slice(0, 50)})`);
+const escortRect = page.locator('#editor g.node[data-id="escort"] rect').first();
+const eb = await escortRect.boundingBox();
+await page.mouse.move(eb.x + 20, eb.y + 20);
+await page.waitForTimeout(500);
+const flyOpacity = await page.evaluate(() => getComputedStyle(document.querySelector('#editor g.node[data-id="escort"] g.fly')).opacity);
+check(flyOpacity === "1", `hovering a card shows its FLY tag (opacity ${flyOpacity})`);
+await page.mouse.click(eb.x + eb.width - 30, eb.y + eb.height - 16);
+await page.waitForTimeout(100);
+// the loaded level with a clean copy flies in place: no save, no reload, the designer just hides
+const flew = await page.evaluate(() => ({ hidden: document.getElementById("editor").hidden, active: window.__editor.active }));
+check(flew.hidden && !flew.active, `the FLY tag on the loaded level hides the designer (${JSON.stringify(flew)})`);
+// flying locks the pointer, which pins every later hit-test to the lock point: release it before going on
+await page.evaluate(() => (document.exitPointerLock(), window.__editor.show()));
+await page.waitForTimeout(100);
+await page.mouse.move(10, 10);
+
 // edit a wave count through the inspector and watch the threat move
 const before = await page.evaluate(() => document.querySelector("#editor .power .big b").textContent);
 const firstCount = page.locator("#editor .waves .wave input").first();
@@ -116,8 +135,39 @@ const tidy = await page.evaluate(() => {
 check(tidy.distinct === tidy.n, `tidy gave every card its own spot (${tidy.distinct} of ${tidy.n})`);
 await page.click("#editor .undo");
 
+// viewport: wheel zooms, dragging empty space pans without deselecting, FIT brings it back
+const vb0 = await page.getAttribute("#editor svg.board", "viewBox");
+const svgBox = await page.locator("#editor svg.board").boundingBox();
+await page.mouse.move(svgBox.x + svgBox.width / 2, svgBox.y + svgBox.height / 2);
+await page.mouse.wheel(0, -300);
+await page.waitForTimeout(50);
+const vb1 = await page.getAttribute("#editor svg.board", "viewBox");
+check(vb1 !== vb0, `wheel zoomed the board (${vb0} -> ${vb1})`);
+await page.evaluate(() => window.__editor.select("escort"));
+const emptySpot = await page.evaluate(() => {
+  // probe the svg for a screen point no card covers
+  const s = document.querySelector("#editor svg.board").getBoundingClientRect();
+  for (let y = s.bottom - 20; y > s.top; y -= 40) for (let x = s.right - 20; x > s.left; x -= 60) {
+    const el = document.elementFromPoint(x, y);
+    if (el && el.closest("svg.board") && !el.closest("g.node")) return { x, y };
+  }
+  return { x: s.left + 5, y: s.top + 5 };
+});
+await page.mouse.move(emptySpot.x, emptySpot.y);
+await page.mouse.down();
+await page.mouse.move(emptySpot.x - 150, emptySpot.y - 100, { steps: 6 });
+await page.mouse.up();
+const vb2 = await page.getAttribute("#editor svg.board", "viewBox");
+const stillSel = await page.evaluate(() => window.__editor.selected);
+check(vb2 !== vb1 && stillSel === "escort", `drag on empty space panned and kept the selection (${vb1} -> ${vb2}, ${stillSel})`);
+await page.mouse.click(emptySpot.x, emptySpot.y);
+check((await page.evaluate(() => window.__editor.selected)) === null, "a plain click on empty space deselects");
+await page.click("#editor .zoombar .fit");
+const zoomText = await page.textContent("#editor .zoombar .zv");
+check(/^\d+%$/.test(zoomText), `FIT reset the view (${zoomText})`);
+
 // save to a scratch file through the content store
-const saved = await page.evaluate((f) => window.__editor.content.save(f), testFile);
+const saved = await page.evaluate((f) => window.__editor.content.post(f, window.__editor.content.toJSON()), testFile);
 check(saved === "saved", `save endpoint answered (${saved})`);
 try {
   const j = JSON.parse(await readFile(resolve(root, testFile), "utf8"));
@@ -128,6 +178,32 @@ try {
 }
 const bad = await page.evaluate(async () => (await fetch("/__content/save", { method: "POST", body: JSON.stringify({ file: "../evil.json", data: {} }) })).status);
 check(bad === 400, `store rejects a path outside src/content (${bad})`);
+
+// moves tab: shelf lists the table, a step field edits the working copy, UNDO returns it, TRY IT hands the
+// working table to the game and fires the move where the ship is
+await page.click('#editor .tab[data-tab="moves"]');
+const mv = await page.evaluate(() => ({ shelf: document.querySelectorAll("#editor .moves .shelf .mv").length, moves: window.__editor.content.moves.length, steps: document.querySelectorAll("#editor .moves .step").length, first: window.__editor.content.moves[0].steps.length, inspectorHidden: document.querySelector("#editor .inspector").hidden, bars: document.querySelectorAll("#editor .moves .timeline rect.bar").length }));
+check(mv.shelf === mv.moves && mv.moves >= 4, `moves shelf lists every move (${mv.shelf} of ${mv.moves})`);
+check(mv.steps === mv.first && mv.bars === mv.first && mv.inspectorHidden, `one card and one timeline bar per step (${mv.steps}), inspector out of the way`);
+const amount = page.locator('#editor .moves .step[data-i="0"] input').nth(2);
+const oldAmount = Number(await amount.inputValue());
+await amount.fill(String(oldAmount + 5));
+await amount.press("Enter");
+await amount.blur();
+await page.waitForTimeout(100);
+const edited = await page.evaluate(() => ({ amount: window.__editor.content.moves[0].steps[0].amount, dirty: window.__editor.content.dirty, tab: document.querySelector("#editor .tab.on").dataset.tab }));
+check(edited.amount === oldAmount + 5 && edited.dirty && edited.tab === "moves", `step amount edit lands (${oldAmount} -> ${edited.amount}) and the tab stays`);
+await page.click("#editor .undo");
+check((await page.evaluate(() => window.__editor.content.moves[0].steps[0].amount)) === oldAmount, "UNDO returns the step amount");
+await page.evaluate(() => (window.__editor.content.moves[0].name = "Cobra test"));
+await page.click("#editor .moves .try");
+await page.waitForTimeout(150);
+const tried = await page.evaluate(() => ({ hidden: document.getElementById("editor").hidden, move: window.__flight.move?.name ?? null, live: window.__flight.moves === window.__editor.content.moves, keys: [...window.__input.moveKeys] }));
+check(tried.hidden && tried.move === "Cobra test" && tried.live, `TRY IT fires the working copy's move in the game (${tried.move}, keys ${tried.keys.join(",")})`);
+await page.evaluate(() => (document.exitPointerLock(), window.__editor.show()));
+await page.evaluate(() => (window.__editor.content.moves[0].name = "Cobra"));
+await page.mouse.move(10, 10);
+await page.click('#editor .tab[data-tab="board"]');
 
 // fly: the overlay goes away and the sim runs
 await page.evaluate(() => window.__editor.hide());

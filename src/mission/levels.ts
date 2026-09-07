@@ -167,7 +167,14 @@ export interface InterceptLevel extends BaseLevel {
   finaleLine: string;
 }
 
-export type LevelDef = ClearLevel | RunLevel | ProtectLevel | StrikeLevel | RaceLevel | HoldLevel | DuelLevel | HuntLevel | InterceptLevel;
+/** A proving ground: nothing to shoot, nothing to win, the move list on the HUD. For trying moves out. */
+export interface SandboxLevel extends BaseLevel {
+  type: "sandbox";
+  /** missiles come back this often (s), so the guns can be tried too; 0 = never */
+  restockEvery: number;
+}
+
+export type LevelDef = ClearLevel | RunLevel | ProtectLevel | StrikeLevel | RaceLevel | HoldLevel | DuelLevel | HuntLevel | InterceptLevel | SandboxLevel;
 
 /**
  * The campaign lives in `content/campaign.json` (acts + levels); the in-game editor (`?edit=1`, `src/editor/`)

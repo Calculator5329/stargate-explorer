@@ -9,6 +9,7 @@ import { HoldMission } from "@/mission/hold";
 import { DuelMission } from "@/mission/duel";
 import { HuntMission } from "@/mission/hunt";
 import { InterceptMission } from "@/mission/intercept";
+import { SandboxMission } from "@/mission/sandbox";
 
 export function createMission(def: LevelDef, ctx: MissionCtx): Mission {
   switch (def.type) {
@@ -30,5 +31,7 @@ export function createMission(def: LevelDef, ctx: MissionCtx): Mission {
       return new HuntMission(def, ctx);
     case "intercept":
       return new InterceptMission(def, ctx);
+    case "sandbox":
+      return new SandboxMission(def, ctx);
   }
 }

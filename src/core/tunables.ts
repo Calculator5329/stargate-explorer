@@ -53,6 +53,9 @@ export const T = {
     /** barrel roll rate (rad/s) and sideways hop (m/s at mid-roll) */
     barrelRate: 9.5,
     barrelHop: 28,
+    /** how hard a move's boost and brake steps push the speed toward their target (m/s²); sharper than the keys */
+    moveAccel: 800,
+    moveDecel: 400,
     /** fraction of speed kept after bouncing off a rock */
     bounceKeep: 0.45,
     /** rock impact (normal speed, m/s): below `grazeSpeed` no damage, at `killSpeed` certain death */

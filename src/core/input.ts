@@ -1,6 +1,7 @@
 import { T, clamp } from "@/core/tunables";
 import type { Scheme, SteerMode } from "@/core/scheme";
 import { DEFAULT_BINDS, type Binds } from "@/core/binds";
+import type { MoveDir } from "@/sim/moves";
 
 /** Ask for raw (unaccelerated) mouse motion when locking; a setting, so the menu can turn it off. */
 let rawMouse = true;
@@ -38,6 +39,8 @@ function shape(v: number, dead: number, curve: number): number {
  *   barrel    ±1 for one tick when A or D is double-tapped (or a bumper is hit)
  *   pitchKey  W − S: throttle delta in classic, snap pull-up/dive in arcade
  *   space     Space held: drift in classic, brake in arcade
+ *   move      the chord that landed this tick (`moveFired`): a trigger key from `moveKeys`, then a direction
+ *             (the pull-up/dive/roll binds) inside the double-tap window, or the key alone once it closes
  *
  * Which meaning applies is `scheme` (C toggles it; see core/scheme.ts). Which
  * key does what is `binds` (core/binds.ts, the menu edits it).
@@ -72,6 +75,13 @@ export class Input {
   readonly cursor = { x: 0, y: 0 };
   /** a gamepad has produced input since load (HUD swaps its hint) */
   padActive = false;
+  /** trigger keys that arm a move chord (sim/moves.ts `moveKeys`); content, so set from outside */
+  moveKeys: Set<string> = new Set();
+  /** true for the one tick a chord resolves; `move` then names it */
+  moveFired = false;
+  readonly move: { key: string; dir: MoveDir } = { key: "", dir: "none" };
+  private armed = { key: "", t: -1 };
+  private pendingMove = { key: "", dir: "none" as MoveDir, on: false };
 
   private mdx = 0;
   private mdy = 0;
@@ -124,6 +134,21 @@ export class Input {
       const b = this.binds;
       if (e.code === b.scheme) this.scheme.toggle();
       if (e.code === b.assist) this.scheme.toggleAssist();
+      if (this.moveKeys.has(e.code)) {
+        this.armed = { key: e.code, t: performance.now() };
+        this.keys.add(e.code);
+        return;
+      }
+      if (this.armed.t >= 0) {
+        // a direction inside the window completes the chord; the tap is the move's, not a roll or a pull
+        const dir: MoveDir | null = e.code === b.pullUp ? "up" : e.code === b.dive ? "down" : e.code === b.rollLeft ? "left" : e.code === b.rollRight ? "right" : null;
+        if (dir) {
+          this.fireMove(this.armed.key, dir);
+          this.armed.t = -1;
+          this.lastTap.t = -1;
+          return;
+        }
+      }
       if (e.code === b.rollLeft || e.code === b.rollRight) {
         const now = performance.now();
         if (this.lastTap.code === e.code && now - this.lastTap.t < T.flight.doubleTapMs) {
@@ -137,11 +162,28 @@ export class Input {
     window.addEventListener("blur", () => this.keys.clear());
   }
 
+  private fireMove(key: string, dir: MoveDir): void {
+    this.pendingMove.key = key;
+    this.pendingMove.dir = dir;
+    this.pendingMove.on = true;
+  }
+
   /** Once per sim tick: integrate mouse motion into the stick, decay it, read keys, poll the pad. */
   tick(dt: number): void {
     this.alt = this.altPending;
     this.altPending = false;
     const f = T.flight;
+    // a chord left open past the window is the plain move on its key; either way it lands for one tick
+    if (this.armed.t >= 0 && performance.now() - this.armed.t >= f.doubleTapMs) {
+      this.fireMove(this.armed.key, "none");
+      this.armed.t = -1;
+    }
+    this.moveFired = this.pendingMove.on;
+    if (this.pendingMove.on) {
+      this.move.key = this.pendingMove.key;
+      this.move.dir = this.pendingMove.dir;
+      this.pendingMove.on = false;
+    }
     this.scheme.sinceSwitch += dt;
     const ySign = this.invertY ? 1 : -1;
     if (this.steer === "cursor") {
@@ -171,6 +213,7 @@ export class Input {
     this.pendingBarrel = 0;
     this.pollPad();
   }
+
 
   private pollPad(): void {
     const pads = typeof navigator !== "undefined" && navigator.getGamepads ? navigator.getGamepads() : null;

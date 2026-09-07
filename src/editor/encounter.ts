@@ -175,6 +175,8 @@ export class Encounter {
         return "Escorts are up at the start; reinforcements arrive each time a shield node dies. Mines ring the hull.";
       case "duel":
         return "One opponent, first to the round count. Separation is the start distance for every round.";
+      case "sandbox":
+        return "Nothing spawns. Missiles restock on the interval so the guns can be tried alongside the moves.";
     }
   }
 
