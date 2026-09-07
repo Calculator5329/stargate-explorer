@@ -8,6 +8,7 @@ import { COMMON, KINDS, TYPE_FIELDS, TYPE_HELP, TYPE_LABEL, defaultsFor, type Fi
 import { esc, readFor, threatBand } from "@/editor/board";
 import { WAVE_PACKS } from "@/editor/packs";
 import { openWizard } from "@/editor/wizard";
+import { scriptSvg } from "@/ui/glyphs";
 
 /**
  * The encounter composer: the inspector for one level, in the order a designer thinks about it. What it is
@@ -129,6 +130,10 @@ export class Encounter {
     this.section("STORY", "The blurb sits on the mission card in the hub. The intro lines are read out one by one before the fight starts.");
     this.field(l, COMMON[1]!);
     this.field(l, COMMON[2]!);
+    this.root.append(h(`<div class="preview"><div class="pv-head">AS THE PLAYER SEES IT</div>
+      <div class="m">${scriptSvg(l.title)}<b>${esc(l.title)}</b><small>${esc(l.blurb)}</small><i>NEW${l.unlocks && SHIPS[l.unlocks] ? ` · unlocks ${esc(SHIPS[l.unlocks]!.def.name)}` : ""}</i></div>
+      <div class="hudline">${esc(l.title)}<span class="obj">${esc(l.intro.join("  "))}  ·  kills 0</span></div>
+    </div>`));
 
     this.section("HOW HARD", "An estimate from the same numbers the game runs on, not a measurement. Use it to compare levels, not to tune one to a decimal.");
     const override = this.o.shipOverride();

@@ -50,7 +50,16 @@ body.editing #hud,body.editing #dial,body.editing #hub,body.editing #menu{displa
 #editor button.wide{display:block;width:100%;margin:10px 0}
 #editor .main{overflow:auto;position:relative}
 #editor .board-wrap{min-width:100%}
-#editor svg.board{display:block}
+#editor svg.board{display:block;width:100%;height:calc(100vh - 44px - 320px);min-height:360px;touch-action:none}
+#editor .zoombar{display:flex;gap:6px;align-items:center;padding:6px 18px;border-top:1px solid rgba(207,233,255,.12)}
+#editor .zoombar button{padding:1px 8px}
+#editor .zoombar .zv{width:44px;text-align:center;color:#8fb3d9}
+#editor .zoombar small{color:#5f7d9c;margin-left:8px}
+#editor .node .fly{opacity:0;cursor:pointer;transition:opacity .12s}
+#editor .node:hover .fly{opacity:1}
+#editor .node .fly rect{fill:#ffd9a8;stroke:none}
+#editor .node .fly text{font-size:10px;font-weight:700;fill:#0b0d16;pointer-events:none}
+#editor .node .fly:hover rect{fill:#fff}
 #editor .band rect{fill:rgba(207,233,255,.035);stroke:rgba(207,233,255,.14);stroke-dasharray:4 4}
 #editor .band-title{fill:#8fb3d9;font-size:11px;letter-spacing:.14em}
 #editor .edge{fill:none;stroke:rgba(207,233,255,.35);stroke-width:1.5}
@@ -131,6 +140,15 @@ body.editing #hud,body.editing #dial,body.editing #hub,body.editing #menu{displa
 #editor .power .grid span{color:#8fb3d9}
 #editor .power p{margin:8px 0 0;color:#cfe9ff}
 #editor .power p.dim{color:#5f7d9c;font-size:11px}
+#editor .preview{margin:10px 0 4px;border:1px solid rgba(207,233,255,.15);background:#0d1220}
+#editor .preview .pv-head{color:#5f7d9c;font-size:10px;letter-spacing:.14em;padding:6px 10px 0}
+#editor .preview .m{padding:10px 14px;border-bottom:1px solid #34404e;font:13px/1.35 system-ui,sans-serif;color:#cfe9ff}
+#editor .preview .m b{display:block;font-size:13px;font-weight:500;color:#ffd9a8}
+#editor .preview .m .old-script{display:block;width:auto;height:24px;max-width:100%;margin-bottom:6px;color:#ffd9a8}
+#editor .preview .m small{display:block;font-size:11px;line-height:1.5;margin-top:5px}
+#editor .preview .m i{display:block;font-size:10px;font-style:normal;margin-top:8px;color:#ffd9a8}
+#editor .preview .hudline{padding:12px 14px 14px;font:13px system-ui,sans-serif;letter-spacing:.12em;color:#ffd9a8;text-shadow:0 0 4px rgba(0,0,0,.8);background:radial-gradient(ellipse at 70% 30%,#141c33,#07090f)}
+#editor .preview .hudline .obj{display:block;color:#cfe9ff;letter-spacing:.04em;margin-top:4px;font-size:14px;opacity:.9}
 #editor .problems{margin-top:12px;padding:8px;border:1px solid #ff8a8a;color:#ff8a8a}
 #editor .packs{margin:14px 0 4px;border-top:1px dashed rgba(207,233,255,.2);padding-top:8px}
 #editor .packs-head{color:#5f7d9c;font-size:10px;letter-spacing:.14em;margin-bottom:4px}
@@ -209,19 +227,14 @@ export function mountEditor(o: EditorOpts): EditorHandle {
     },
   };
 
-  const board = new Board({ content, selected: () => selected, select, deselect: () => select(null), shipOverride: () => shipOverride });
-  const inspector = new Encounter({
-    content,
-    selected: () => selected,
-    select,
-    shipOverride: () => shipOverride,
-    setShipOverride: (id) => ((shipOverride = id), render()),
-    fly: (id) => {
-      const ship = shipOverride ?? (id === o.currentLevelId ? o.currentShipId : bestShipBefore(id));
-      if (id === o.currentLevelId && !content.dirty && ship === o.currentShipId) (handle.hide(), o.flyHere());
-      else void content.save().then((r) => (r === "invalid" ? setStatus("fix the problems listed under the level first", "err") : o.flyOther(id, ship)));
-    },
-  });
+  function fly(id: string): void {
+    const ship = shipOverride ?? (id === o.currentLevelId ? o.currentShipId : bestShipBefore(id));
+    if (id === o.currentLevelId && !content.dirty && ship === o.currentShipId) (handle.hide(), o.flyHere());
+    else void content.save().then((r) => (r === "invalid" ? setStatus("fix the problems listed under the level first", "err") : o.flyOther(id, ship)));
+  }
+
+  const board = new Board({ content, selected: () => selected, select, deselect: () => select(null), shipOverride: () => shipOverride, fly });
+  const inspector = new Encounter({ content, selected: () => selected, select, shipOverride: () => shipOverride, setShipOverride: (id) => ((shipOverride = id), render()), fly });
   root.append(inspector.root);
 
   function bestShipBefore(id: string): string {
@@ -283,7 +296,7 @@ export function mountEditor(o: EditorOpts): EditorHandle {
     g.className = "guide";
     g.innerHTML = `
 <h2>THE BOARD</h2>
-<p>Every card is one level. Drag them anywhere; the layout is saved with the campaign. The arrow into a card comes from the level that has to be won first. The dashed bands are the acts: drop a card inside another band and it moves to that act. Acts are only grouping and order, the game does not gate on them yet.</p>
+<p>Every card is one level. Drag them anywhere; the layout is saved with the campaign. The arrow into a card comes from the level that has to be won first. The dashed bands are the acts: drop a card inside another band and it moves to that act. Acts are only grouping and order, the game does not gate on them yet. Drag empty space to pan, wheel to zoom, <b>FIT</b> to see everything, <b>TIDY</b> to lay each act out as a tree. Hover a card for a <b>FLY</b> tag that runs it without opening the inspector.</p>
 <h2>THE PILLS AND THE POWER CURVE</h2>
 <p>The pill on a card is the estimated share of the hull a player loses flying that level in the ship the chain has handed over by then. <b>Green</b> under 45% is comfortable, <b>gold</b> up to 90% is a real fight, <b>red</b> above that kills anyone not flying well. The power curve under the board lists the same numbers in campaign order, so a spike or a flat stretch shows at a glance. It is a model from the game's own tables, not a measurement; trust the shape, not the decimals.</p>
 <h2>THE INSPECTOR</h2>

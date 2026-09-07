@@ -6,7 +6,8 @@ import { SHIPS } from "@/ships/registry";
 /**
  * The campaign board: one card per level laid out on a canvas the designer drags around, an arrow from each
  * level to the one it requires, and act bands drawn round wherever the cards of each act sit. Dragging a card
- * into another act's band moves it there. Under the board, the power curve: every level in campaign order with
+ * into another act's band moves it there. The board is a viewport: drag empty space to pan, wheel to zoom about
+ * the cursor, FIT to see the whole campaign. Under the board, the power curve: every level in campaign order with
  * its estimated threat, so a spike or a flat stretch shows before anyone flies it.
  */
 const NW = 236, NH = 64, PAD = 24;
@@ -17,6 +18,8 @@ export interface BoardOpts {
   selected: () => string | null;
   select: (id: string) => void;
   deselect: () => void;
+  /** the FLY tag that shows when a card is hovered */
+  fly: (id: string) => void;
   /** null = the ship the chain would have handed over by then */
   shipOverride: () => string | null;
 }
@@ -41,11 +44,27 @@ export class Board {
   private readonly svg = el("svg", { class: "board" });
   private readonly curve = document.createElement("div");
   private drag: { id: string; dx: number; dy: number; moved: boolean } | null = null;
+  private pan: { x: number; y: number; vx: number; vy: number; moved: boolean } | null = null;
+  /** viewport: world coords of the top-left corner and the zoom */
+  private vx = 0;
+  private vy = 0;
+  private zoom = 1;
+  private fitted = false;
+  private readonly zoomBar = document.createElement("div");
 
   constructor(private readonly o: BoardOpts) {
     this.root.className = "board-wrap";
-    this.root.append(this.svg, this.curve);
+    this.root.append(this.svg, this.zoomBar, this.curve);
     this.curve.className = "curve";
+    this.zoomBar.className = "zoombar";
+    this.zoomBar.innerHTML = `<button class="zo" title="zoom out">−</button><span class="zv">100%</span><button class="zi" title="zoom in">+</button><button class="fit" title="show the whole campaign">FIT</button><small>drag empty space to pan, wheel to zoom</small>`;
+    this.zoomBar.querySelector<HTMLButtonElement>(".zo")!.onclick = () => this.zoomAt(1 / 1.25);
+    this.zoomBar.querySelector<HTMLButtonElement>(".zi")!.onclick = () => this.zoomAt(1.25);
+    this.zoomBar.querySelector<HTMLButtonElement>(".fit")!.onclick = () => this.fit();
+    this.svg.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      this.zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX, e.clientY);
+    }, { passive: false });
     this.svg.addEventListener("pointerdown", (e) => this.down(e));
     this.svg.addEventListener("pointermove", (e) => this.move(e));
     this.svg.addEventListener("pointerup", (e) => this.up(e));
@@ -91,12 +110,10 @@ export class Board {
     const svg = this.svg;
     svg.replaceChildren();
     const bands = this.bands();
-    let w = 600, h = 200;
-    for (const l of c.levels) if (l.board) (w = Math.max(w, l.board.x + NW + 60)), (h = Math.max(h, l.board.y + NH + 60));
-    for (const b of bands) h = Math.max(h, b.y1 + 40);
-    svg.setAttribute("width", String(w));
-    svg.setAttribute("height", String(h));
-    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    let w = 600;
+    for (const l of c.levels) if (l.board) w = Math.max(w, l.board.x + NW + 60);
+    if (!this.fitted) this.fit(false);
+    this.applyView();
     const defs = el("defs");
     const marker = el("marker", { id: "arrow", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 8, markerHeight: 8, orient: "auto-start-reverse" });
     marker.append(el("path", { d: "M0 0 L10 5 L0 10 z", class: "arrowhead" }));
@@ -132,6 +149,11 @@ export class Board {
       pill.append(el("rect", { width: 42, height: 16, rx: 8 }));
       pill.append(el("text", { x: 21, y: 12, "text-anchor": "middle" }, `${Math.round(r.threat * 100)}%`));
       g.append(pill);
+      const fly = el("g", { class: "fly", transform: `translate(${NW - 50} ${NH - 24})` });
+      fly.append(el("rect", { width: 42, height: 16, rx: 2 }));
+      fly.append(el("text", { x: 21, y: 12, "text-anchor": "middle" }, "FLY ▸"));
+      fly.append(el("title", {}, "fly this level now"));
+      g.append(fly);
       svg.append(g);
     }
     this.renderCurve();
@@ -160,9 +182,58 @@ export class Board {
     return g?.dataset.id ? { id: g.dataset.id, g } : null;
   }
 
-  private local(e: PointerEvent): { x: number; y: number } {
+  /** screen point to world (board) coordinates through the current viewport */
+  private local(e: { clientX: number; clientY: number }): { x: number; y: number } {
     const b = this.svg.getBoundingClientRect();
-    return { x: e.clientX - b.left, y: e.clientY - b.top };
+    return { x: this.vx + (e.clientX - b.left) / this.zoom, y: this.vy + (e.clientY - b.top) / this.zoom };
+  }
+
+  /** the bounding box of every card, with a margin */
+  private extent(): { x0: number; y0: number; x1: number; y1: number } {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const l of this.o.content.levels) {
+      if (!l.board) continue;
+      x0 = Math.min(x0, l.board.x);
+      y0 = Math.min(y0, l.board.y);
+      x1 = Math.max(x1, l.board.x + NW);
+      y1 = Math.max(y1, l.board.y + NH);
+    }
+    if (x0 === Infinity) return { x0: 0, y0: 0, x1: 600, y1: 300 };
+    return { x0: x0 - 2 * PAD, y0: y0 - 2 * PAD - 20, x1: x1 + 2 * PAD, y1: y1 + 2 * PAD };
+  }
+
+  private applyView(): void {
+    const b = this.svg.getBoundingClientRect();
+    const cw = Math.max(1, b.width), ch = Math.max(1, b.height);
+    this.svg.setAttribute("viewBox", `${this.vx} ${this.vy} ${cw / this.zoom} ${ch / this.zoom}`);
+    this.zoomBar.querySelector<HTMLElement>(".zv")!.textContent = `${Math.round(this.zoom * 100)}%`;
+  }
+
+  /** zoom in or out about a screen point (default the centre), then redraw the viewport */
+  zoomAt(factor: number, cx?: number, cy?: number): void {
+    const b = this.svg.getBoundingClientRect();
+    const sx = cx === undefined ? b.width / 2 : cx - b.left, sy = cy === undefined ? b.height / 2 : cy - b.top;
+    const wx = this.vx + sx / this.zoom, wy = this.vy + sy / this.zoom;
+    this.zoom = Math.min(2.5, Math.max(0.25, this.zoom * factor));
+    this.vx = wx - sx / this.zoom;
+    this.vy = wy - sy / this.zoom;
+    this.applyView();
+  }
+
+  /** fit every card in the viewport, never zooming past 1:1 */
+  fit(apply = true): void {
+    const b = this.svg.getBoundingClientRect();
+    const e = this.extent();
+    const bw = Math.max(1, e.x1 - e.x0), bh = Math.max(1, e.y1 - e.y0);
+    this.zoom = Math.min(1, Math.max(0.25, Math.min(b.width / bw, b.height / bh) || 1));
+    this.vx = e.x0 - (b.width / this.zoom - bw) / 2;
+    this.vy = e.y0 - (b.height / this.zoom - bh) / 2;
+    this.fitted = true;
+    if (apply) this.applyView();
+  }
+
+  get view(): { x: number; y: number; zoom: number } {
+    return { x: this.vx, y: this.vy, zoom: this.zoom };
   }
 
   /** lay every act out as a tree: depth in the requires chain is the column, siblings stack down */
@@ -185,12 +256,20 @@ export class Board {
       }
       y = bottom + 2 * PAD + 40;
     }
+    this.fitted = false;
   }
 
   private down(e: PointerEvent): void {
     const n = this.nodeAt(e);
     if (!n) {
-      if (this.o.selected()) this.o.deselect();
+      this.pan = { x: e.clientX, y: e.clientY, vx: this.vx, vy: this.vy, moved: false };
+      this.svg.setPointerCapture(e.pointerId);
+      return;
+    }
+    const tag = (e.target as Element).closest("g.fly");
+    if (tag) {
+      e.stopPropagation();
+      this.o.fly(n.id);
       return;
     }
     const l = this.o.content.level(n.id);
@@ -202,6 +281,16 @@ export class Board {
   }
 
   private move(e: PointerEvent): void {
+    const p0 = this.pan;
+    if (p0) {
+      const dx = e.clientX - p0.x, dy = e.clientY - p0.y;
+      if (!p0.moved && Math.abs(dx) + Math.abs(dy) < 4) return;
+      p0.moved = true;
+      this.vx = p0.vx - dx / this.zoom;
+      this.vy = p0.vy - dy / this.zoom;
+      this.applyView();
+      return;
+    }
     const d = this.drag;
     if (!d) return;
     const l = this.o.content.level(d.id);
@@ -219,10 +308,16 @@ export class Board {
   }
 
   private up(e: PointerEvent): void {
+    if (this.svg.hasPointerCapture(e.pointerId)) this.svg.releasePointerCapture(e.pointerId);
+    const p0 = this.pan;
+    this.pan = null;
+    if (p0) {
+      if (!p0.moved && this.o.selected()) this.o.deselect();
+      return;
+    }
     const d = this.drag;
     this.drag = null;
     if (!d) return;
-    if (this.svg.hasPointerCapture(e.pointerId)) this.svg.releasePointerCapture(e.pointerId);
     if (!d.moved) return;
     const l = this.o.content.level(d.id);
     if (!l?.board) return;
