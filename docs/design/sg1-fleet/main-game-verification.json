@@ -1,0 +1,7 @@
+{
+  "url": "http://127.0.0.1:5187/",
+  "fighter": true,
+  "originalBomber": true,
+  "gameRunning": true,
+  "blenderLoaded": false
+}

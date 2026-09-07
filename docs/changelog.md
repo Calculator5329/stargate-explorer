@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-06 — Reviewed fleet integrated into main
+
+Preserved existing designer evidence in a separate commit, retained both sides of documentation additions, and merged the selected procedural fleet through supported lane close. Blender remains separate. Combined build, fleet, moves and editor verification passed; original Al’kesh and historical art switches remain available.
+
 ## 2026-09-06 — Isolated Blender death-glider benchmark
 
 Authored an editable Blender glider and five-material GLB with engine/muzzle attachment nodes. Added a separate Three.js inspector and self-contained comparison against original/preferred procedural gliders, with game-toon and metallic treatments. Verified exported axes, all views, live orbit and review controls. No fleet, ShipRig, combat or save changes. [Evidence](design/blender-glider/README.md).
