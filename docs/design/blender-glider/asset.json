@@ -1,0 +1,8 @@
+{
+  "blender": "4.5.3 LTS",
+  "triangles": 13692,
+  "materials": 5,
+  "source": "death-glider-benchmark.blend",
+  "asset": "/benchmarks/death-glider.glb",
+  "installedInGameplay": false
+}

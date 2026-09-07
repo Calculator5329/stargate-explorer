@@ -1,0 +1,10 @@
+{
+  "errors": [],
+  "checks": [
+    "24 baseline/material/angle combinations",
+    "Five feedback choices and persistence/export",
+    "390px layout has no horizontal overflow",
+    "Self-contained file works offline",
+    "Live GLB orbit changes rendered view"
+  ]
+}

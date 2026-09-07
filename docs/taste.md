@@ -22,3 +22,6 @@
 - Ha’tak: undecided, revised much better, continue refinement.
 - Veteran glider: revised “way, way, way better”; preserve it.
 - Ethan explicitly selected: **Keep roles; use SG-1 craft variants.** Preserve role/stats/progression; make source craft recognizable and label invented loadouts as game variants. Do not reduce the roster.
+
+## Blender benchmark · 2026-09-06
+- Ethan authorized one Blender death-glider benchmark and another comparison. **Do not replace any fleet assets yet.** Keep the benchmark separate from ShipRig and the hull registry; compare it in Three.js against the preferred procedural glider before proposing adoption.

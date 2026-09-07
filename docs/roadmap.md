@@ -258,3 +258,5 @@ Multiplayer, mobile/touch, VR, mod support, story/dialogue system.
 - [x] (2026-09-06) Refine the fleet against SG-1 references, retain original designs, and deliver a captured side-by-side HTML comparison with verification. [Review and evidence](design/sg1-fleet/README.md). Twelve fleet entries revised, including a material-only Ha’tak pass. First-pass choices are recorded in `docs/taste.md`; further candidates need a fresh owner verdict.
 
 - [x] (2026-09-06) Apply the owner’s first fleet review: retain preferred gliders/F-302, preserve original bomber default, rebuild invented roles as SG-1-derived variants, improve Prometheus proportions and Ha’tak structure, and add reference views plus version-specific feedback. [Pass-two evidence](design/sg1-fleet/pass2-preservation.json).
+
+- [x] (2026-09-06) Author one editable Blender death-glider benchmark, export GLB, verify it in isolated Three.js and deliver an offline comparison without changing playable ships. [Benchmark](design/blender-glider/README.md). Adoption remains owner-directed.

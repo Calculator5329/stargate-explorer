@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-06 — Isolated Blender death-glider benchmark
+
+Authored an editable Blender glider and five-material GLB with engine/muzzle attachment nodes. Added a separate Three.js inspector and self-contained comparison against original/preferred procedural gliders, with game-toon and metallic treatments. Verified exported axes, all views, live orbit and review controls. No fleet, ShipRig, combat or save changes. [Evidence](design/blender-glider/README.md).
+
 ## 2026-09-06 — Owner-directed SG-1 variants
 
 Recorded Ethan’s twelve first-pass choices and explicit choice to keep gameplay roles with SG-1-derived variants. Broadsword/Dart now derive from F-302, Lancer/Racer from X-301, Interceptor from death glider, Gunboat from Al’kesh. Added rear/underside Al’kesh and licensed-model Prometheus reference photographs. Rebuilt Prometheus with a long forebody and aft bridge/pods, and Ha’tak with an angular outer structure and pyramid panel courses. Al’kesh original remains the default; the new candidate is opt-in. Original and first-pass models remain available. Updated the comparison and separated previous owner feedback from new candidate choices. Build, browser review, art-selection preservation and Ha’tak combat probes passed. Target-hardware performance remains unmeasured.

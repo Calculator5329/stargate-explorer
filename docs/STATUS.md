@@ -1,5 +1,9 @@
 # STATUS.md — as of 2026-09-06 (destructible rocks, mini-map, dense structured belts; seven systems, seventeen missions in nine types, six player hulls, five enemy kinds, settings + gamepad; Ethan has flown the round-4 build and nothing after it)
 
+## Blender glider benchmark · 2026-09-06
+
+Ethan authorized one Blender death-glider benchmark, **no replacement yet**. Editable source, GLB, isolated Three.js inspector and offline two-model comparison are in `docs/design/blender-glider/` and `public/benchmarks/`. Review: `http://127.0.0.1:5191/benchmarks/glider-comparison.html`. The preferred procedural glider and playable fleet are unchanged. Asset loads through the existing loader; attachment axes, 24 views, live orbit, offline/mobile review and build are checked. [Evidence and integration limits](design/blender-glider/README.md). **Return action:** compare Game toon first, then Metallic; await Ethan's direction before any ShipRig/fleet integration. This remains in the same isolated lane; do not bypass the canonical designer-work integration hold.
+
 ## Fleet art revision · 2026-09-06
 
 **Integration pending:** verified revision commit `923375b` is on `lane/sg1-ship-review` in `/home/ethan/projects/games/.agent-worktrees/stargate-explorer/lanes/sg1-ship-review`. The supported lane close refused because the canonical checkout has unrelated uncommitted designer work (`docs/changelog.md`, `docs/roadmap.md`, `scripts/editor-test.mjs`, and designer captures). Nothing in that checkout was overwritten. Review at `http://127.0.0.1:5191/fleet-review.html` or the worktree's offline `public/fleet-review.html`. Once the designer work is preserved by its writer, retry `agent lane close sg1-ship-review --repo /home/ethan/projects/games/stargate-explorer --into main --keep-worktree`; do not merge around the dirty-checkout refusal.
