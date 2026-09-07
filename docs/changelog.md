@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-06 — The game designer: campaign board, encounter composer, campaign in JSON
+
+Ethan, 2026-09-06: plan the levels, unlocks and power properly instead of "randomly did a bunch of levels", and build a game builder alongside the game so he can arrange prebuilt pieces in a UI. Agreed priorities: campaign board, encounter composer, then the move composer, then stat sheets; in-game mode with files as the store.
+
+- **Campaign in data.** `src/content/campaign.json` holds three acts and all seventeen levels; `mission/levels.ts` imports it (`resolveJsonModule`), keeps the `LevelDef` union as the contract and runs `checkLevels` in dev (duplicate ids, dangling requires, requires cycles). `LevelDef` gained `act` and `board` (the card's spot).
+- **Content store.** `vite.config.ts` adds a dev-only `POST /__content/save` that writes pretty JSON under `src/content/`; anything else is refused with a 400. Vite's reload then runs the new campaign.
+- **`?edit=1` opens the designer** (`src/editor/`, code-split so the game never loads it otherwise): board on the left (draggable cards, requires arrows, act bands, threat pills, the power curve), inspector on the right (type with templates, chain, every field the type declares in `schema.ts`, wave rows with enemy-kind chips, power readout, duplicate / delete / new / undo / save / FLY IT). The sim holds while the overlay is up; FLY IT locks the pointer and releasing it brings the designer back; flying a different level saves and reloads with `fly=1`.
+- **Power model** (`editor/power.ts`): threat (hull lost over the level as a fraction of the hull the chain has handed over by then), clear time and clock pressure per level type, from `T`, the difficulty preset and the ship stats. Three feel constants at the top; a paper estimate until a headless fight calibrates it.
+- **Draft arc:** FIRST FLIGHT (Abydos and Tollana: guns, missiles, the chain, one duel), THE FLEET (escorts, blockades, the hangar filling up), MOTHERSHIPS (two Ha'taks). The chain is unchanged; only acts and positions are new.
+- Gate: `node scripts/editor-test.mjs` (17 cards, 16 edges, 3 bands, sim held, wave edit moves the threat, undo, drag between bands, type template, new and delete, save to a scratch file and the path fence, sim runs again once hidden). Capture `docs/shots/2026-09-06-designer-board.png`.
+
 ## 2026-09-06 — Feedback round 6: in-page gate travel, Prometheus pass 6, Ha'tak fixed, replays that show the kill
 
 Ethan, 2026-09-06: transitions sound bad and HUD text shows in the wormhole; the Prometheus should look like the real one (four reference images); interceptors too hard, gunboats too easy, the Ha'tak's three nodes impossible; a more discreet settings menu; replays that show everything including asteroid kills, with good angles.

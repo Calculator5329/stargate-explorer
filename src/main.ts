@@ -28,6 +28,7 @@ import { Game } from "@/game";
 import { Audio } from "@/audio/audio";
 import { parseLevel, type LevelDef } from "@/mission/levels";
 import { Travel, systemOf } from "@/travel/travel";
+import type { EditorHandle } from "@/editor/index";
 
 const boot = new URLSearchParams(location.search);
 const save = loadSave(), S = save.settings;
@@ -93,7 +94,8 @@ function teardown(s: Sortie): void {
   s.world.dispose(r.scene);
 }
 
-let hub: Hub | null = null, menu: Menu | null = null, travel: Travel | null = null;
+let hub: Hub | null = null, menu: Menu | null = null, travel: Travel | null = null, editor: EditorHandle | null = null;
+const edit = boot.get("edit") === "1";
 let sortie = build(boot);
 travel = sortie.game ? new Travel(document.getElementById("dial")!, r.scene, audio) : null;
 if (travel) {
@@ -143,16 +145,40 @@ menu = new Menu(document.getElementById("menu")!, canvas, save, {
     if (sortie.game?.playReplay()) lockPointer(canvas);
   },
   hasReplay: () => sortie.game?.replay.hasHighlight ?? false,
-}, sortie.game !== null && !input.freeLock, sortie.level.title);
+}, sortie.game !== null && !input.freeLock && !edit, sortie.level.title);
 Object.assign(window, { __flight: flight, __input: input, __travel: travel, __hub: hub, __T: T, __renderer: r, __audio: audio });
 // headless tests (scripts/_*.mjs) drive the game through these
 createDebugPanel();
+if (edit && sortie.game) {
+  // the game designer (src/editor/): code-split, mounted over the game; the sim holds while it is up
+  void import("@/editor/index").then((m) => {
+    editor = m.mountEditor({
+      currentLevelId: sortie.level.id,
+      currentShipId: parseShip(boot.get("ship") ?? save.progress.ship).id,
+      flyHere: () => lockPointer(canvas),
+      flyOther: (levelId, shipId) => {
+        const q = new URLSearchParams(location.search);
+        q.set("mission", levelId);
+        q.set("ship", shipId);
+        q.set("fly", "1");
+        q.delete("system");
+        q.delete("hub");
+        location.search = q.toString();
+      },
+    });
+    if (boot.get("fly") === "1") editor.hide(); // parked after a "fly it": click the game to fly, release the pointer to get the designer back
+    document.addEventListener("pointerlockchange", () => {
+      if (document.pointerLockElement === null && editor && !editor.active) editor.show();
+    });
+    Object.assign(window, { __editor: editor });
+  });
+}
 
 const _p = new Vector3(), _v = new Vector3(), _q = new Quaternion();
 const loop = new Loop({
   sim(dt) {
     const { inspect, game, hazards, world } = sortie;
-    if (inspect || menu?.open || game?.replay.playing) return;
+    if (inspect || menu?.open || game?.replay.playing || editor?.active) return;
     input.tick(dt);
     if (travel?.holding) return; // dialing, in the wormhole or fading in: nothing moves yet
     flight.tick(dt, input);

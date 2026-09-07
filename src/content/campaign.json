@@ -1,0 +1,680 @@
+{
+  "acts": [
+    {
+      "id": "act1",
+      "title": "FIRST FLIGHT",
+      "blurb": "Learn the ship over Abydos and Tollana: guns, missiles, the gate chain, one duel."
+    },
+    {
+      "id": "act2",
+      "title": "THE FLEET",
+      "blurb": "Escorts, blockades and the hangar filling up: heavies, torpedo boats, a captured glider."
+    },
+    {
+      "id": "act3",
+      "title": "MOTHERSHIPS",
+      "blurb": "Two motherships and the carrier that earns the last of them."
+    }
+  ],
+  "levels": [
+    {
+      "id": "belt-clear",
+      "act": "act1",
+      "board": {
+        "x": 40,
+        "y": 40
+      },
+      "type": "clear",
+      "system": "abydos",
+      "title": "CLEAR THE FIELD",
+      "blurb": "Three waves of death gliders in the belt. Learn the guns, learn the missiles.",
+      "intro": [
+        "Gliders inbound through the belt.",
+        "Clear them before they reach the gate."
+      ],
+      "waves": [
+        {
+          "count": 2,
+          "delay": 4,
+          "near": 700,
+          "far": 900
+        },
+        {
+          "count": 3,
+          "delay": 5,
+          "near": 800,
+          "far": 1000
+        },
+        {
+          "count": 5,
+          "delay": 5,
+          "near": 800,
+          "far": 1100,
+          "kinds": [
+            "glider",
+            "interceptor",
+            "glider",
+            "interceptor",
+            "glider"
+          ]
+        }
+      ],
+      "finaleLine": "Last wave. Interceptors with them, the quick ones."
+    },
+    {
+      "id": "duel",
+      "act": "act1",
+      "board": {
+        "x": 310,
+        "y": 40
+      },
+      "type": "duel",
+      "system": "tollana",
+      "title": "THE DUEL",
+      "blurb": "Free play. One ace, open space over the gas giant, nose to nose at 900 m, first to three. Add ?foe=glider|interceptor|gunboat|bomber to the address for a different opponent.",
+      "intro": [
+        "One ship, one pilot, nothing in the way.",
+        "First to three. Do not take the head-on pass."
+      ],
+      "requires": "belt-clear",
+      "beltScale": 0.06,
+      "foe": "ace",
+      "rounds": 3,
+      "distance": 900,
+      "pause": 3
+    },
+    {
+      "id": "gauntlet",
+      "act": "act1",
+      "board": {
+        "x": 310,
+        "y": 132
+      },
+      "type": "run",
+      "system": "abydos",
+      "title": "THE GAUNTLET",
+      "blurb": "Ten gates threaded through the thickest rock in the belt, either way through. Mines on the rims; interceptors join the chase halfway.",
+      "intro": [
+        "The window closes in two minutes.",
+        "The gates sit in the rock. Fly them, either way through."
+      ],
+      "requires": "belt-clear",
+      "rings": 10,
+      "spacing": 620,
+      "wander": 380,
+      "ringRadius": 34,
+      "timeLimit": 120,
+      "harassAt": 4,
+      "harass": 2,
+      "harassKinds": [
+        "interceptor"
+      ],
+      "minesPerGate": 2
+    },
+    {
+      "id": "hunt",
+      "act": "act1",
+      "board": {
+        "x": 580,
+        "y": 40
+      },
+      "type": "hunt",
+      "system": "chulak",
+      "title": "RUN IT DOWN",
+      "blurb": "An ace is running the gate chain out of Chulak and will escape through the last gate. Catch it before then; it only turns to fight when you are close.",
+      "intro": [
+        "Courier glider on the chain, running for the far gate.",
+        "It is faster than your cruise and it knows the rock. Boost is how you catch it."
+      ],
+      "requires": "gauntlet",
+      "rings": 9,
+      "spacing": 640,
+      "wander": 360,
+      "ringRadius": 40,
+      "timeLimit": 170,
+      "harassAt": 0,
+      "harass": 0,
+      "minesPerGate": 0,
+      "quarry": "ace",
+      "quarrySpeed": 168,
+      "fightDist": 260,
+      "fightT": 7,
+      "fightCd": 6
+    },
+    {
+      "id": "ring-race",
+      "act": "act1",
+      "board": {
+        "x": 580,
+        "y": 132
+      },
+      "type": "race",
+      "system": "tollana",
+      "title": "THE TOLLAN RING",
+      "blurb": "Eight gates around a gas giant against four racers. Any finish counts; the podium is the point.",
+      "intro": [
+        "Grid is set. Eight gates, four rivals, no guns.",
+        "Boost is your only edge. Spend it where the rock is thin."
+      ],
+      "requires": "gauntlet",
+      "rings": 8,
+      "spacing": 700,
+      "wander": 420,
+      "ringRadius": 38,
+      "timeLimit": 900,
+      "harassAt": 0,
+      "harass": 0,
+      "minesPerGate": 0,
+      "racers": 4,
+      "racerSpeed": 165,
+      "racerVar": 0.08,
+      "racerAccel": 60,
+      "racerTurn": 2
+    },
+    {
+      "id": "shard-run",
+      "act": "act1",
+      "board": {
+        "x": 850,
+        "y": 132
+      },
+      "type": "run",
+      "title": "THE SHARD RUN",
+      "blurb": "Twelve tight gates through the Kheb ice field. No mines, no escorts, nothing to shoot. Just the gaps.",
+      "system": "kheb",
+      "intro": [
+        "Kheb. Ice, all of it long and sharp.",
+        "Twelve gates, close together, in the thick of the shards.",
+        "Nothing is shooting at you. The field is the enemy."
+      ],
+      "requires": "ring-race",
+      "rings": 12,
+      "spacing": 460,
+      "wander": 300,
+      "ringRadius": 30,
+      "timeLimit": 110,
+      "harassAt": 99,
+      "harass": 0,
+      "minesPerGate": 0
+    },
+    {
+      "id": "escort",
+      "act": "act2",
+      "board": {
+        "x": 580,
+        "y": 300
+      },
+      "type": "protect",
+      "system": "chulak",
+      "title": "COVER THE PROMETHEUS",
+      "blurb": "The Prometheus is limping to the gate with her shields down. Keep the gliders off her hull; gunboats come for the engines.",
+      "intro": [
+        "Prometheus reports shields down, sublight only.",
+        "Nothing reaches her. Nothing."
+      ],
+      "requires": "gauntlet",
+      "waves": [
+        {
+          "count": 3,
+          "delay": 5,
+          "near": 900,
+          "far": 1100
+        },
+        {
+          "count": 4,
+          "delay": 6,
+          "near": 900,
+          "far": 1200,
+          "kinds": [
+            "gunboat",
+            "glider",
+            "glider",
+            "glider"
+          ]
+        },
+        {
+          "count": 6,
+          "delay": 6,
+          "near": 1000,
+          "far": 1300,
+          "kinds": [
+            "gunboat",
+            "glider",
+            "interceptor",
+            "gunboat",
+            "glider",
+            "interceptor"
+          ]
+        }
+      ],
+      "finaleLine": "Last wave. Two gunboats, and they are going for the engines.",
+      "escortHp": 600,
+      "escortSpeed": 26
+    },
+    {
+      "id": "blockade",
+      "act": "act2",
+      "board": {
+        "x": 850,
+        "y": 300
+      },
+      "type": "clear",
+      "system": "netu",
+      "title": "BREAK THE BLOCKADE",
+      "blurb": "Gunboats hold the lane out of Netu's belt with interceptors screening. Kill the heavies; the screen dies with them.",
+      "intro": [
+        "Blockade line ahead, gunboats anchoring it.",
+        "Missiles for the heavies. Guns for the rest."
+      ],
+      "requires": "escort",
+      "waves": [
+        {
+          "count": 4,
+          "delay": 4,
+          "near": 900,
+          "far": 1100,
+          "kinds": [
+            "gunboat",
+            "interceptor",
+            "interceptor",
+            "glider"
+          ]
+        },
+        {
+          "count": 5,
+          "delay": 6,
+          "near": 900,
+          "far": 1200,
+          "kinds": [
+            "gunboat",
+            "gunboat",
+            "interceptor",
+            "glider",
+            "interceptor"
+          ]
+        },
+        {
+          "count": 6,
+          "delay": 6,
+          "near": 1000,
+          "far": 1300,
+          "kinds": [
+            "gunboat",
+            "gunboat",
+            "gunboat",
+            "interceptor",
+            "interceptor",
+            "glider"
+          ]
+        }
+      ],
+      "finaleLine": "Three gunboats. Missiles first, then get behind them.",
+      "unlocks": "heavy"
+    },
+    {
+      "id": "bomber-line",
+      "act": "act2",
+      "board": {
+        "x": 850,
+        "y": 392
+      },
+      "type": "intercept",
+      "system": "p3x774",
+      "title": "THE BOMBER LINE",
+      "blurb": "Bombers on a straight line to the relay behind you, gliders riding with them. Every bomber that reaches the relay is a leak; three leaks and it is gone. Two and a half minutes.",
+      "intro": [
+        "Bombers inbound on the relay, and they will not turn for you.",
+        "Kill the bombers. The gliders are there to make you forget that."
+      ],
+      "requires": "escort",
+      "duration": 150,
+      "firstDelay": 4,
+      "interval": 16,
+      "groupStart": 1,
+      "groupGrow": 1,
+      "maxAlive": 6,
+      "runner": "bomber",
+      "runnerSpeed": 105,
+      "escortsPer": 2,
+      "escortKinds": [
+        "glider",
+        "interceptor"
+      ],
+      "near": 1100,
+      "far": 1400,
+      "lineBehind": 1300,
+      "maxLeaks": 3,
+      "restockEvery": 30,
+      "finaleLine": "Last bombers on the line. Nothing reaches the relay."
+    },
+    {
+      "id": "wreck-race",
+      "act": "act2",
+      "board": {
+        "x": 850,
+        "y": 484
+      },
+      "type": "race",
+      "system": "graveyard",
+      "title": "RACE THROUGH THE WRECKS",
+      "blurb": "Ten gates threaded through the hulks against six racers who know the field. Tight, dark, and the walls are ships.",
+      "intro": [
+        "Grid is set inside the Graveyard. Ten gates, six rivals.",
+        "They know where the gaps are. Learn fast."
+      ],
+      "requires": "ring-race",
+      "rings": 10,
+      "spacing": 560,
+      "wander": 360,
+      "ringRadius": 34,
+      "timeLimit": 900,
+      "harassAt": 0,
+      "harass": 0,
+      "minesPerGate": 0,
+      "racers": 6,
+      "racerSpeed": 178,
+      "racerVar": 0.1,
+      "racerAccel": 66,
+      "racerTurn": 2.2
+    },
+    {
+      "id": "netu-convoy",
+      "act": "act2",
+      "board": {
+        "x": 1120,
+        "y": 300
+      },
+      "type": "protect",
+      "system": "netu",
+      "title": "BRING THE TENDER HOME",
+      "blurb": "A captured tender is crawling out of Netu with a Lancer in its hold. Bombers want it. Bombers are slow, so kill them early or lose the ship.",
+      "intro": [
+        "Tender is under way, thirty metres a second and no faster.",
+        "Bombers inbound. They do not turn, they do not stop. Meet them out front."
+      ],
+      "requires": "blockade",
+      "unlocks": "lancer",
+      "waves": [
+        {
+          "count": 3,
+          "delay": 5,
+          "near": 1000,
+          "far": 1200,
+          "kinds": [
+            "bomber",
+            "glider",
+            "glider"
+          ]
+        },
+        {
+          "count": 5,
+          "delay": 6,
+          "near": 1000,
+          "far": 1300,
+          "kinds": [
+            "bomber",
+            "bomber",
+            "interceptor",
+            "glider",
+            "interceptor"
+          ]
+        },
+        {
+          "count": 6,
+          "delay": 6,
+          "near": 1100,
+          "far": 1400,
+          "kinds": [
+            "bomber",
+            "bomber",
+            "bomber",
+            "ace",
+            "interceptor",
+            "glider"
+          ]
+        }
+      ],
+      "finaleLine": "Three bombers, and they are lined up on the tender. Torpedoes on the bombers; the rest can wait.",
+      "escortHp": 420,
+      "escortSpeed": 30,
+      "escortHull": "gunboat",
+      "escortName": "Tender",
+      "escortPalette": "tauri",
+      "escortRadius": 16
+    },
+    {
+      "id": "hold-the-gate",
+      "act": "act2",
+      "board": {
+        "x": 1120,
+        "y": 392
+      },
+      "type": "hold",
+      "system": "abydos",
+      "title": "HOLD THE GATE",
+      "blurb": "Three minutes over the home gate against everything they have. Nothing to clear, only a clock to beat. Missiles restock every half minute.",
+      "intro": [
+        "They are coming through in numbers and they will keep coming.",
+        "Three minutes until the gate is ours again. Stay alive."
+      ],
+      "requires": "blockade",
+      "unlocks": "dart",
+      "duration": 180,
+      "firstDelay": 3,
+      "interval": 9,
+      "groupStart": 2,
+      "groupGrow": 2,
+      "maxAlive": 8,
+      "kinds": [
+        "glider",
+        "glider",
+        "interceptor",
+        "glider",
+        "gunboat",
+        "ace",
+        "interceptor",
+        "bomber"
+      ],
+      "near": 700,
+      "far": 1000,
+      "restockEvery": 30,
+      "finaleLine": "Last seconds. Whatever is left, keep it off you."
+    },
+    {
+      "id": "descent",
+      "act": "act2",
+      "board": {
+        "x": 1120,
+        "y": 484
+      },
+      "type": "run",
+      "system": "p3x774",
+      "title": "THE DESCENT",
+      "blurb": "Fourteen gates down through the belt over P3X-774 with three mines on every rim. Aces pick up the chase at gate five.",
+      "intro": [
+        "The belt tilts here; the chain goes down through it.",
+        "Fourteen gates, mines on all of them, and someone good is waiting at the fifth."
+      ],
+      "requires": "shard-run",
+      "rings": 14,
+      "spacing": 520,
+      "wander": 340,
+      "ringRadius": 32,
+      "timeLimit": 150,
+      "harassAt": 5,
+      "harass": 2,
+      "harassKinds": [
+        "ace"
+      ],
+      "minesPerGate": 3
+    },
+    {
+      "id": "graveyard-ambush",
+      "act": "act2",
+      "board": {
+        "x": 1120,
+        "y": 576
+      },
+      "type": "clear",
+      "title": "AMBUSH IN THE GRAVEYARD",
+      "blurb": "Interceptors hunting through the wreck of the last fleet. Use the hulks; they cannot turn inside them.",
+      "system": "graveyard",
+      "intro": [
+        "The Graveyard. Nothing here is whole.",
+        "Interceptors, a lot of them, using the wrecks the way you should.",
+        "Get behind a hull plate before they get behind you."
+      ],
+      "requires": "shard-run",
+      "waves": [
+        {
+          "count": 3,
+          "kinds": [
+            "interceptor"
+          ],
+          "delay": 2,
+          "near": 500,
+          "far": 750
+        },
+        {
+          "count": 5,
+          "kinds": [
+            "interceptor",
+            "interceptor",
+            "glider"
+          ],
+          "delay": 4,
+          "near": 500,
+          "far": 800
+        },
+        {
+          "count": 6,
+          "kinds": [
+            "interceptor",
+            "gunboat",
+            "interceptor",
+            "interceptor"
+          ],
+          "delay": 5,
+          "near": 550,
+          "far": 850
+        }
+      ],
+      "finaleLine": "Last wave. A gunboat is in there with them. Wrecks first, then the guns."
+    },
+    {
+      "id": "chulak-aces",
+      "act": "act2",
+      "board": {
+        "x": 1390,
+        "y": 576
+      },
+      "type": "clear",
+      "system": "chulak",
+      "title": "THE ACES OF CHULAK",
+      "blurb": "Their best pilots, in gold-trimmed gliders, over their own staging belt. They will not take the head-on pass. Neither should you.",
+      "intro": [
+        "Chulak. Gold trim on the gliders coming up: aces.",
+        "They flinch early and they saddle late. Make them turn until they cannot."
+      ],
+      "requires": "graveyard-ambush",
+      "unlocks": "glider",
+      "waves": [
+        {
+          "count": 2,
+          "kinds": [
+            "ace"
+          ],
+          "delay": 3,
+          "near": 650,
+          "far": 850
+        },
+        {
+          "count": 4,
+          "kinds": [
+            "ace",
+            "glider",
+            "ace",
+            "interceptor"
+          ],
+          "delay": 5,
+          "near": 700,
+          "far": 950
+        },
+        {
+          "count": 5,
+          "kinds": [
+            "ace",
+            "ace",
+            "interceptor",
+            "ace",
+            "glider"
+          ],
+          "delay": 5,
+          "near": 750,
+          "far": 1000
+        }
+      ],
+      "finaleLine": "Last wave. Three aces. Salvage says one glider comes home in pieces if you leave one whole enough."
+    },
+    {
+      "id": "hatak",
+      "act": "act3",
+      "board": {
+        "x": 850,
+        "y": 720
+      },
+      "type": "strike",
+      "system": "p3x774",
+      "title": "BRING DOWN THE HA'TAK",
+      "blurb": "A Goa'uld mothership is parked over the belt behind a minefield. Ring guns first, then the three shield nodes, then the hull.",
+      "intro": [
+        "Ha'tak in orbit, shields up, gliders launching.",
+        "Kill the ring guns, drop the shield nodes, then burn the pyramid."
+      ],
+      "requires": "escort",
+      "unlocks": "prometheus",
+      "distance": 1700,
+      "escorts": 2,
+      "reinforce": 2,
+      "escortKinds": [
+        "interceptor"
+      ],
+      "reinforceKinds": [
+        "glider",
+        "gunboat"
+      ],
+      "mines": 14
+    },
+    {
+      "id": "tollana-siege",
+      "act": "act3",
+      "board": {
+        "x": 1120,
+        "y": 720
+      },
+      "type": "strike",
+      "system": "tollana",
+      "title": "THE SECOND MOTHERSHIP",
+      "blurb": "Another Ha'tak, over Tollana this time, with aces on the ring and bombers in the hangar. Twice the mines. Same pyramid, same order: guns, nodes, hull.",
+      "intro": [
+        "Second Ha'tak, and this one launched its best when we came through.",
+        "Same drill. Ring guns, shield nodes, hull. Watch the bombers when a node goes."
+      ],
+      "requires": "hatak",
+      "distance": 2100,
+      "escorts": 3,
+      "reinforce": 3,
+      "escortKinds": [
+        "ace",
+        "interceptor",
+        "ace"
+      ],
+      "reinforceKinds": [
+        "bomber",
+        "glider",
+        "ace"
+      ],
+      "mines": 22
+    }
+  ]
+}
