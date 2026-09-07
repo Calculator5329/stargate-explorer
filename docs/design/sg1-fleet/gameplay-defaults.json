@@ -1,0 +1,66 @@
+{
+  "artOverride": false,
+  "selections": [
+    {
+      "id": "f11",
+      "expected": "PLAYER_REVISED",
+      "active": true,
+      "playerRegistry": true
+    },
+    {
+      "id": "glider",
+      "expected": "GLIDER_REVISED",
+      "active": true,
+      "playerRegistry": true
+    },
+    {
+      "id": "bomber",
+      "expected": "BOMBER_ORIGINAL",
+      "active": true,
+      "playerRegistry": null
+    },
+    {
+      "id": "prometheus",
+      "expected": "PROMETHEUS_REVISED",
+      "active": true,
+      "playerRegistry": true
+    },
+    {
+      "id": "heavy",
+      "expected": "HEAVY_REVISED",
+      "active": true,
+      "playerRegistry": true
+    },
+    {
+      "id": "dart",
+      "expected": "DART_REVISED",
+      "active": true,
+      "playerRegistry": true
+    },
+    {
+      "id": "lancer",
+      "expected": "LANCER_REVISED",
+      "active": true,
+      "playerRegistry": true
+    },
+    {
+      "id": "interceptor",
+      "expected": "INTERCEPTOR_REVISED",
+      "active": true,
+      "playerRegistry": null
+    },
+    {
+      "id": "gunboat",
+      "expected": "GUNBOAT_REVISED",
+      "active": true,
+      "playerRegistry": null
+    },
+    {
+      "id": "racer",
+      "expected": "RACER_REVISED",
+      "active": true,
+      "playerRegistry": null
+    }
+  ],
+  "blenderRequested": false
+}

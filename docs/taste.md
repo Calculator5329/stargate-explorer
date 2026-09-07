@@ -28,3 +28,6 @@
 
 ### Blender benchmark verdict · 2026-09-06
 Ethan: “Blender is slightly better, but I don't know if it's enough that we would actually want to switch to it, since we already have things working in Three.js.” Record as a modest visual preference, **not approval to adopt the asset or change the pipeline**. Keep the procedural glider active and preserve the Blender source/GLB/comparison. Agent recommendation: the modest gain does not currently justify integration and maintenance; Blender would remain an authoring tool feeding Three.js, not replace Three.js. Revisit only with a clearer quality benefit or fresh owner direction.
+
+## Apply review choices · 2026-09-06
+Ethan explicitly requested keeping the current procedural approach and implementing the comparison feedback into the game. Use the selected procedural fleet in normal gameplay, retain original Al’kesh, keep SG-1-derived role variants and the refined Prometheus/Ha’tak, and leave Blender separate. Preserve earlier models via art switches.
