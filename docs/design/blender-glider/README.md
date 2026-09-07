@@ -27,3 +27,7 @@ The separate `src/ships/blender-benchmark.ts` entry imports the app's existing `
 The Blender → glTF axis conversion was checked through the exported nodes: engines point aft (negative Z), muzzles forward (positive Z), port positive X, vertical position Y. Units are game-space metres. A later playable integration would still need asynchronous preloading, ShipRig attachment-driven plumes/muzzles, faction materials, collision/scale judgment, disposal and replay checks. None is silently installed by this benchmark.
 
 The mesh is a stylized reference-based interpretation, not a measured production replica. Reference: [Richard Dean Anderson SG-1 Lexicon](https://rdanderson.com/stargate/lexicon/entries/deathglider.htm). Current source geometry has 13,692 triangles before outlines. This is a visual benchmark, not an FPS benchmark; target-hardware cost remains unmeasured. No normal maps, texture painting, animated wings or gameplay effects are claimed.
+
+## Owner verdict · September 6, 2026
+
+Ethan judged Blender slightly better but questioned whether that improvement justified switching from the working approach. This is not adoption approval. The procedural glider remains active; the benchmark stays preserved and separate. Blender would feed the existing Three.js renderer, not replace it. The agent recommends retaining the current workflow given this modest visual gain and the extra asset integration/maintenance.

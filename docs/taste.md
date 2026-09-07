@@ -25,3 +25,6 @@
 
 ## Blender benchmark · 2026-09-06
 - Ethan authorized one Blender death-glider benchmark and another comparison. **Do not replace any fleet assets yet.** Keep the benchmark separate from ShipRig and the hull registry; compare it in Three.js against the preferred procedural glider before proposing adoption.
+
+### Blender benchmark verdict · 2026-09-06
+Ethan: “Blender is slightly better, but I don't know if it's enough that we would actually want to switch to it, since we already have things working in Three.js.” Record as a modest visual preference, **not approval to adopt the asset or change the pipeline**. Keep the procedural glider active and preserve the Blender source/GLB/comparison. Agent recommendation: the modest gain does not currently justify integration and maintenance; Blender would remain an authoring tool feeding Three.js, not replace Three.js. Revisit only with a clearer quality benefit or fresh owner direction.
