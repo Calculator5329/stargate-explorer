@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-09-08 — Multi-kill replay and player follow-through
+
+Replay now captures up to three recent kills within eight seconds by default, with N/X controls in evaluation. Both ships fit the kill camera in landscape and portrait, each kill receives slow motion, and the ending follows the player. Expanded bounded history preserves the full sequence plus three seconds after the latest kill. Gate travel retains Ethan’s approved behavior. Build and extended replay checks pass; paired-shot/follow-through captures are in `docs/shots/2026-09-08-replay-{pair,follow}.png`.
+
+
 ## 2026-09-08 — Coherent travel, destruction and replay
 
 Gate travel now holds gameplay and switches audio scenes through dial, opening, entry, tunnel and destination reveal. Replay owns seeded debris and tracers, aligns the kill with recorded disappearance, and frames the moving breakup. Added structural fragments, layered clouds/atmosphere and warped continents, quieter sky detail, ribbed wreck sections and convex ice prisms. Event lighting is saved and off by default. `?review=1` provides explicitly scripted freeze/play controls. [Verification and captures](evidence/2026-09-08-graphics-scenes.md).

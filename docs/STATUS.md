@@ -1,5 +1,9 @@
 # STATUS.md — as of 2026-09-06 (destructible rocks, mini-map, dense structured belts; seven systems, seventeen missions in nine types, six player hulls, five enemy kinds, settings + gamepad; Ethan has flown the round-4 build and nothing after it)
 
+## Replay owner feedback · 2026-09-08
+
+Whole gate trip approved by Ethan. Replay now fits player/victim together and follows the player after the last kill. Captures up to N kills within X seconds (default 3/8; evaluation sliders support 1–8 and 0–30). The window ends at the latest kill, with three seconds of subsequent recorded flight; forcing replay early can only include footage already recorded. CPU tests cover limits, boundaries, 8-kill history, all kill events, landscape/portrait framing and post-kill player centering. Browser checked the paired shot, follow-through and real three-kill fixture.
+
 ## Graphics scenes · 2026-09-08
 
 Implemented the authorized five-part pass and optional event lighting (default off). Build, four focused CPU checks and in-app browser scene inspection pass. Full gate trip returns to flight; scripted kill/replay can be frozen with `?review=1`. [Evidence and limitations](evidence/2026-09-08-graphics-scenes.md). Audio routing was checked programmatically, not auditioned; target-hardware performance remains unmeasured.

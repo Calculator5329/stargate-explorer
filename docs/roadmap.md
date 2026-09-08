@@ -26,6 +26,8 @@ A browser space-combat game in the *tone* of late-90s/2000s space sims (Freespac
 
 - [x] Implement the five authorized graphics improvements and an optional event-lighting setting: exclusive travel/control/audio scenes, staged seeded destruction, independent replay presentation, planet/sky layering, and distinct ice/wreck fields. Done 2026-09-08; build and focused checks pass; browser captures and verification limits in [evidence](evidence/2026-09-08-graphics-scenes.md).
 
+- [x] Replay feedback: frame player/victim together, keep a player follow-through, and capture up to N kills in X seconds. Done 2026-09-08; defaults 3/8, bounded 1–8 kills and 0–30 seconds; focused clock/framing checks and browser fixture pass.
+
 ## Milestones
 
 ### M0 — Foundation hygiene  (now → 1 session)
