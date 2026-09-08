@@ -1,13 +1,8 @@
 import { Mission } from "@/mission/mission";
 import type { MissionCtx } from "@/mission/mission";
 import type { SandboxLevel } from "@/mission/levels";
-import { chordName } from "@/sim/moves";
 
-/**
- * The proving ground (Ethan, 2026-09-06: "some type of sandbox mode where I can test all these different
- * moves out"): no enemies, no clock, no win. The HUD line lists every move with its chord, and names the
- * one running. The mission only ends if the belt kills you.
- */
+/** Free practice: no enemies, timer or win; invulnerable hull and resources between moves. */
 export class SandboxMission extends Mission {
   private restockT: number;
   private lastLine = "";
@@ -15,6 +10,8 @@ export class SandboxMission extends Mission {
   constructor(override readonly def: SandboxLevel, ctx: MissionCtx) {
     super(def, ctx);
     this.restockT = def.restockEvery;
+    ctx.combat.practice = true;
+    this.timer = 0;
   }
 
   protected begin(): void {
@@ -23,11 +20,12 @@ export class SandboxMission extends Mission {
   }
 
   private list(): string {
-    return this.ctx.flight.moves.map((m) => `${chordName(m)} ${m.name}`).join("  ·  ");
+    return "SANDBOX · Invulnerable · Bar refills between moves · Esc to customize keys";
   }
 
   protected run(dt: number): void {
     const d = this.def, f = this.ctx.flight;
+    if (!f.move) f.boostEnergy = 1;
     if (d.restockEvery > 0 && (this.restockT -= dt) <= 0) {
       this.restockT = d.restockEvery;
       this.ctx.combat.restock();
@@ -35,9 +33,5 @@ export class SandboxMission extends Mission {
     this.phase = "wait";
     const line = f.move ? `${f.move.name.toUpperCase()}  ·  ${Math.round(100 * f.boostEnergy)}% bar` : this.list();
     if (line !== this.lastLine) this.line = this.lastLine = line;
-  }
-
-  protected override deathLine(): string {
-    return "The proving ground has rocks too.";
   }
 }

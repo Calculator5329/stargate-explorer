@@ -1,10 +1,12 @@
+import { MOVES } from "@/sim/moves";
+import { mergeMoveBinds, reservedKey } from "@/core/move-binds";
 import type { Save, Settings } from "@/core/save";
 import { writeSave } from "@/core/save";
 import { parseSteer, type SchemeName } from "@/core/scheme";
 import { lockPointer } from "@/core/input";
 import { parseDifficulty } from "@/core/difficulty";
 import { parseQuality } from "@/render/renderer";
-import { ACTIONS, BIND_LABELS, DEFAULT_BINDS, keyName, type Action } from "@/core/binds";
+import { ACTIONS, BIND_LABELS, DEFAULT_BINDS, keyName } from "@/core/binds";
 
 export interface MenuHooks {
   /** push the edited settings into the live systems (scheme, input, difficulty, audio) */
@@ -49,6 +51,7 @@ export class Menu {
     this.canOpen = hooks.canOpen ?? (() => true);
     if (!enabled) {
       root.style.display = "none";
+      hooks.apply(save.settings);
       return;
     }
     const s = save.settings;
@@ -104,7 +107,7 @@ export class Menu {
       writeSave(save);
       hooks.apply(s);
     };
-    for (const c of [scheme, assist, assistK, steer, raw, sens, diff, mute, invert, dyn, lighting]) c.addEventListener("input", commit);
+    for (const c of [scheme, assist, assistK, speedTurn, steer, raw, sens, diff, mute, invert, dyn, lighting]) c.addEventListener("input", commit);
     // the renderer is built once per page, so a tier change is a reload
     qual.addEventListener("input", () => {
       s.quality = parseQuality(qual.value);
@@ -126,6 +129,11 @@ export class Menu {
     const hub = q(root, ".hub");
     if (hooks.hub) hub.addEventListener("click", () => hooks.hub?.());
     else hub.style.display = "none";
+    q(root, ".sandbox").addEventListener("click", () => {
+      const url = new URL(location.pathname, location.origin);
+      url.searchParams.set("mission", "proving-ground");
+      location.href = url.toString();
+    });
     this.replayBtn.addEventListener("click", () => hooks.replay?.());
     document.addEventListener("pointerlockchange", () => this.set(document.pointerLockElement !== canvas));
     // the overlay swallows keys meant for the game; only Esc/Enter matter here
@@ -155,53 +163,69 @@ export class Menu {
   private buildBinds(root: HTMLElement, save: Save, hooks: MenuHooks): void {
     const grid = q(root, ".binds .grid");
     const s = save.settings;
-    const buttons = new Map<Action, HTMLButtonElement>();
-    let listening: Action | null = null;
+    const entries = [
+      ...ACTIONS.map(a => ({ label: BIND_LABELS[a], get: () => s.binds[a], set: (code: string) => { s.binds[a] = code; } })),
+      ...MOVES.map(m => ({ label: `${m.name} · one key`, get: () => s.moveBinds[m.id] ?? "", set: (code: string) => { s.moveBinds[m.id] = code; } })),
+    ];
+    const buttons: HTMLButtonElement[] = [];
+    let listening = -1;
+    const message = document.createElement("p");
+    message.className = "binding-message";
+    message.setAttribute("role", "status");
+    grid.after(message);
     const refresh = () => {
-      for (const [a, b] of buttons) {
-        b.textContent = listening === a ? "PRESS A KEY" : keyName(s.binds[a]);
-        b.classList.toggle("listening", listening === a);
-      }
+      buttons.forEach((b, i) => {
+        b.textContent = listening === i ? "PRESS A KEY" : keyName(entries[i]!.get()) || "UNBOUND";
+        b.classList.toggle("listening", listening === i);
+      });
+      const b = s.binds;
+      q(root, ".keys").textContent = `Mouse steers · ${keyName(b.rollLeft)}/${keyName(b.rollRight)} roll · ${keyName(b.boost)} boost · ${keyName(b.brake)} brake · LMB cannons · RMB missile · Esc pause. Moves also use B then a direction.`;
     };
-    for (const a of ACTIONS) {
+    entries.forEach((entry, i) => {
       const label = document.createElement("span");
-      label.textContent = BIND_LABELS[a];
-      const b = document.createElement("button");
-      b.className = "bind";
-      b.addEventListener("click", (e) => {
+      label.textContent = entry.label;
+      const button = document.createElement("button");
+      button.className = "bind";
+      button.setAttribute("aria-label", `Bind ${entry.label}`);
+      button.addEventListener("click", (e) => {
         e.stopPropagation();
-        listening = listening === a ? null : a;
+        listening = listening === i ? -1 : i;
+        message.textContent = listening < 0 ? "" : "Press a key. Escape cancels. An occupied key swaps the two actions.";
         refresh();
       });
-      grid.append(label, b);
-      buttons.set(a, b);
-    }
+      grid.append(label, button);
+      buttons.push(button);
+    });
     q(root, ".binds .reset").addEventListener("click", () => {
       Object.assign(s.binds, DEFAULT_BINDS);
-      listening = null;
+      s.moveBinds = mergeMoveBinds(undefined, s.binds);
+      listening = -1;
+      message.textContent = "Default flight and move keys restored.";
       writeSave(save);
       hooks.apply(s);
       refresh();
     });
-    // capture phase so Input never sees the key being bound
-    document.addEventListener(
-      "keydown",
-      (e) => {
-        if (!listening) return;
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.code !== "Escape" && e.code !== "Backquote") {
-          const taken = ACTIONS.find((o) => o !== listening && s.binds[o] === e.code);
-          if (taken) s.binds[taken] = s.binds[listening];
-          s.binds[listening] = e.code;
-          writeSave(save);
-          hooks.apply(s);
-        }
-        listening = null;
-        refresh();
-      },
-      true,
-    );
+    document.addEventListener("keydown", (e) => {
+      if (listening < 0) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (e.code === "Escape") {
+        listening = -1;
+        message.textContent = "Binding cancelled.";
+      } else if (e.repeat || reservedKey(e.code)) {
+        message.textContent = "That key is reserved for a game command or move chord. Choose another key.";
+      } else {
+        const entry = entries[listening]!;
+        const taken = entries.find((other, i) => i !== listening && other.get() === e.code);
+        if (taken) taken.set(entry.get());
+        entry.set(e.code);
+        listening = -1;
+        message.textContent = "Saved.";
+        writeSave(save);
+        hooks.apply(s);
+      }
+      refresh();
+    }, true);
     refresh();
   }
 

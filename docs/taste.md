@@ -46,3 +46,6 @@ Ethan rejected the revised replay motion as glitchy and visually frozen. Follow-
 
 ## Replay acceptance and explosion follow-up · 2026-09-08
 Ethan reviewed the repaired preview: “all looks good” and explicitly requested push and deployment. The new explosion animation is not satisfactory; defer its refinement until after this delivery. This accepts the replay repair, not the explosion visual quality.
+
+## Sandbox and custom moves · 2026-09-08
+Ethan requested a sandbox mode and access to the new moves through custom keys so he can test them. Expose practice directly from the pause menu and gate control, reuse the existing proving-ground mission and four content-authored moves, and let each move have a saved single-key shortcut. Keep existing chords available. Practice should remove death/resource interruptions; HUD hints must follow rebound keys. Movement-feel changes remain proposals until tested/selected.

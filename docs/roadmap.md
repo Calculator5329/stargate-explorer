@@ -30,6 +30,12 @@ A browser space-combat game in the *tone* of late-90s/2000s space sims (Freespac
 
 - [x] Finish replay motion repair after owner rejection. Done 2026-09-08: implementation and CPU/control checks pass; Ethan reviewed the repair preview and approved push/deployment. See [repair evidence](evidence/2026-09-08-replay-repair.md).
 
+## Sandbox controls · 2026-09-08
+
+- [x] Expose sandbox and four moves through saved custom keys. Done 2026-09-08: direct menu/hub entry, 1–4 defaults, live practice guide, invulnerability and resource refill. Build, input/simulation checks, browser binding persistence/swap and all four move activations verified. [Evidence](evidence/2026-09-08-sandbox-controls.md).
+
+Suggestions named, not authorized for implementation: velocity-direction HUD marker, a recenter-steering action, and optional steering presets. Ethan will first test the existing movement in the sandbox.
+
 ## Milestones
 
 ### M0 — Foundation hygiene  (now → 1 session)

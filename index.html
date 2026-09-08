@@ -70,7 +70,7 @@
       #hud .card .again { margin-top: 26px; font-size: 13px; letter-spacing: .2em; opacity: .7; animation: blink 1.2s steps(2) infinite; }
       #menu { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(4,6,12,.72); color: #cfe9ff; font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; }
       #menu.on { display: flex; }
-      #menu .panel { width: 420px; padding: 28px 32px 24px; border: 1px solid rgba(255,217,168,.45); background: rgba(8,10,20,.92); box-shadow: 0 0 0 4px rgba(8,10,20,.6); }
+      #menu .panel { width: 420px; max-width: calc(100vw - 80px); max-height: calc(100dvh - 100px); overflow-y: auto; scrollbar-gutter: stable; padding: 28px 32px 24px; border: 1px solid rgba(255,217,168,.45); background: rgba(8,10,20,.92); box-shadow: 0 0 0 4px rgba(8,10,20,.6); }
       #menu .title { margin: 0; font-size: 22px; letter-spacing: .32em; font-weight: 500; color: #ffd9a8; }
       #menu .sub { margin: 6px 0 22px; font-size: 12px; letter-spacing: .08em; opacity: .75; }
       #menu label { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; letter-spacing: .06em; margin: 10px 0; }
@@ -78,13 +78,14 @@
       #menu select, #menu input[type=range] { width: 180px; accent-color: #ffb36b; background: #0c1020; color: #cfe9ff; border: 1px solid rgba(207,233,255,.3); font: inherit; padding: 3px 6px; }
       #menu input[type=checkbox] { width: 16px; height: 16px; accent-color: #ffb36b; margin: 0 82px 0 0; }
       #menu .sens-v { font-size: 11px; opacity: .7; width: 34px; text-align: right; }
-      #menu .row { display: flex; gap: 10px; margin-top: 22px; }
+      #menu .row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
       #menu .binds { margin: 12px 0 0; font-size: 12px; letter-spacing: .06em; }
       #menu .binds summary { cursor: pointer; opacity: .85; padding: 4px 0; }
       #menu .binds .grid { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; margin: 8px 0; }
       #menu .binds .grid span { opacity: .8; }
       #menu .binds .bind { flex: none; min-width: 84px; padding: 4px 10px; font-size: 12px; letter-spacing: .12em; }
       #menu .binds .bind.listening { background: #ffd9a8; color: #0c1020; }
+      #menu .binding-message { font-size: 12px; color: #ffd9a8; }
       #menu .binds .reset { flex: none; width: 100%; padding: 6px 0; font-size: 11px; opacity: .8; }
       #menu button { flex: 1; padding: 10px 0; font: inherit; font-size: 13px; letter-spacing: .22em; color: #ffd9a8; background: transparent; border: 1px solid #ffd9a8; cursor: pointer; }
       #menu button.fly { background: #ffd9a8; color: #0c1020; }
@@ -207,8 +208,8 @@
         <label><span>Quality (restarts the sortie)</span><select name="quality"><option value="low">low · no bloom, no shadows, no AA</option><option value="med">medium · 2x MSAA</option><option value="high">high · 2x pixels, 4x MSAA</option></select></label>
         <label><span>Dynamic resolution (drops pixels before frames)</span><input type="checkbox" name="dynamicRes" /></label>
         <label><span>Mute (M)</span><input type="checkbox" name="mute" /></label>
-        <details class="binds"><summary>Keys</summary><div class="grid"></div><button class="reset">DEFAULTS</button></details>
-        <div class="row"><button class="fly">FLY</button><button class="restart">RESTART</button><button class="replay">REPLAY THE KILL</button><button class="hub">MISSIONS</button></div>
+        <details class="binds"><summary>Flight &amp; move keys</summary><div class="grid"></div><button class="reset">DEFAULTS</button></details>
+        <div class="row"><button class="fly">FLY</button><button class="restart">RESTART</button><button class="replay">REPLAY THE KILL</button><button class="hub">MISSIONS</button><button class="sandbox">SANDBOX</button></div>
         <p class="keys">mouse steers · A/D roll, double-tap barrel roll · Shift boost · LMB cannons · RMB missile once locked · C scheme · X assist · Esc pause · ` tuning</p>
       </div>
     </div>
