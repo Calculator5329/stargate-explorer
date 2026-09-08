@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-08 — Tracer rounds drew a thousand metres behind themselves
+
+Ethan, on the deployed build: "it's like the blaster shoots backwards". Every cannon round was drawn back
+near the muzzle instead of where it had flown to. `Combat.tick` moved the rounds itself and kept the swept
+segment's start in a module temp, so `Shot.prevPos` never left the muzzle; when the render-rate
+interpolation landed earlier the same day, `Projectiles.update(alpha)` began lerping muzzle→current by the
+frame's alpha and drew each bolt a fraction of the way out. The hit tests were always right, which is why
+the fight still played correctly. The shot's own `prevPos` is now the one source for both the sweep and the
+draw. `scripts/tracer-render-check.mjs` measures the drawn instance against the round's true position and
+fails on the old build by 1161 m against a 17 m tick.
+
 ## 2026-09-08 — Cemented flight profile, rebuilt settings menu, powered stunts
 
 Classic throttle, cursor steering, raw mouse and flight assist at 0.9 are now fixed (`FLIGHT_PROFILE` in `core/save.ts`, applied over any old save); the C/X keys, the gamepad X/Y buttons and the `?controls=`/`?steer=` switches are retired. Sensitivity, invert Y (a switch, off by default), speed-coupled turning, difficulty, quality, dynamic resolution, event lighting, mute and the key table stay adjustable. The pause menu is rebuilt in `ui/menu.css`: profile strip, piloting and presentation columns, custom switches, the key table behind a REMAP disclosure, and it fits a 900 px window. The four B-chord moves are now staged stunts (cobra reversal, vortex drive, sidewinder left/right) with slide, lift and coast steps, an entry-attitude camera hold and two short ribbons; every amount is a guess until Ethan flies them. Gates: `scripts/settings-test.mjs`, `sandbox-controls-check.mjs`, `powered-moves-check.mjs`, plus fight, travel, rock and chain. Recovered from the lane's uncommitted tree and finished; see [evidence](evidence/2026-09-08-powered-stunts.md).
