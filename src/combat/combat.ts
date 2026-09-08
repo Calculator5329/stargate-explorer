@@ -37,7 +37,6 @@ export interface PlayerState {
 
 const _p = new THREE.Vector3();
 const _d = new THREE.Vector3();
-const _prev = new THREE.Vector3();
 const _seg = new THREE.Vector3();
 const _n = new THREE.Vector3();
 const _fwdv = new THREE.Vector3();
@@ -158,10 +157,13 @@ export class Combat {
     // every rock crash is the player's kill: chased into a rock or hit by a fragment alike (Ethan, 2026-09-05)
     for (const e of this.enemies.crashed) this.destroy(e, true);
     this.enemies.crashed.length = 0;
-    // move rounds, then test the swept segment of each against its targets
+    // move rounds, then test the swept segment of each against its targets. The segment start is the shot's
+    // own `prevPos`, which the renderer also interpolates from: a second local copy of it here is what made
+    // tracers draw back at the muzzle for a whole sortie (Ethan, 2026-09-08: "it's like the blaster shoots
+    // backwards"). One field, written once a tick, is the fix.
     for (const s of this.shots.shots) {
       if (!s.alive) continue;
-      _prev.copy(s.pos);
+      s.prevPos.copy(s.pos);
       s.ttl -= dt;
       if (s.ttl <= 0) {
         s.alive = false;
@@ -257,7 +259,7 @@ export class Combat {
 
   private hitEnemies(s: Shot): void {
     for (const e of this.enemies.list) {
-      if (!e.alive || segDist2(_prev, s.pos, e.pos) > e.radius * e.radius) continue;
+      if (!e.alive || segDist2(s.prevPos, s.pos, e.pos) > e.radius * e.radius) continue;
       this.shots.kill(s);
       this.player.hits++;
       this.fx.spark(s.pos);
@@ -266,7 +268,7 @@ export class Combat {
       return;
     }
     for (const x of this.extras) {
-      if (!x.alive || (x.hits ? !x.hits(_prev, s.pos) : segDist2(_prev, s.pos, x.pos) > x.radius * x.radius)) continue;
+      if (!x.alive || (x.hits ? !x.hits(s.prevPos, s.pos) : segDist2(s.prevPos, s.pos, x.pos) > x.radius * x.radius)) continue;
       this.shots.kill(s);
       this.player.hits++;
       this.fx.spark(s.pos);
@@ -278,14 +280,14 @@ export class Combat {
 
   private hitPlayer(s: Shot, flight: Flight): void {
     for (const x of this.friendlies) {
-      if (!x.alive || segDist2(_prev, s.pos, x.pos) > x.radius * x.radius) continue;
+      if (!x.alive || segDist2(s.prevPos, s.pos, x.pos) > x.radius * x.radius) continue;
       this.shots.kill(s);
       this.fx.spark(s.pos);
       x.damage(T.weapons.enemyDamage * s.dmg * D.enemyDamage);
       return;
     }
     const r = T.arena.shipRadius * 0.8 * flight.stats.size;
-    if (!this.player.alive || segDist2(_prev, s.pos, flight.pos) > r * r) return;
+    if (!this.player.alive || segDist2(s.prevPos, s.pos, flight.pos) > r * r) return;
     this.shots.kill(s);
     this.fx.spark(s.pos);
     flight.sinceHit = Math.max(flight.sinceHit, 0.25); // a light shake and flash, not the rock-hit slam
