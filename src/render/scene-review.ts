@@ -1,3 +1,4 @@
+import { T } from "@/core/tunables";
 import GUI from "three/examples/jsm/libs/lil-gui.module.min.js";
 import { Vector3, type PerspectiveCamera } from "three";
 import type { Game } from "@/game";
@@ -27,6 +28,8 @@ export class SceneReview {
       arrival: () => this.gate("arrive", .7),
       trip: () => { this.reset(); this.audio.unlock(); this.travel.depart(systemOf("abydos"), new URLSearchParams("review=1&mission=proving-ground&lock=free")); this.paused = false; },
       fighter: () => this.fighter(),
+      multi: () => { this.fighter(Math.max(1, Math.min(8, Math.round(T.replay.maxKills)))); this.audio.unlock(); this.paused = false; },
+      follow: () => this.replayAt(.93),
       approach: () => this.replayAt(.68),
       impact: () => this.replayAt(.73),
       aftermath: () => this.replayAt(.78),
@@ -42,6 +45,10 @@ export class SceneReview {
     kill.add(actions, "impact").name("Breakup");
     kill.add(actions, "aftermath").name("Debris");
     kill.add(actions, "replay").name("Play whole replay");
+    kill.add(actions, "follow").name("Player follow-through");
+    kill.add(actions, "multi").name("Play multi-kill encounter");
+    kill.add(T.replay, "maxKills", 1, 8, 1).name("Maximum kills");
+    kill.add(T.replay, "windowSeconds", 0, 30, 1).name("Kill window (seconds)");
     this.gui.add(this as { paused: boolean }, "paused").name("Freeze picture").listen();
     this.gui.add(actions, "step").name("Advance 0.1 seconds");
     this.gui.add(save.settings, "eventLighting").name("Event lighting").onChange(() => writeSave(save));
@@ -60,7 +67,7 @@ export class SceneReview {
 
   report(mode: string): void {
     const { game, flight } = this.getScene();
-    this.readout.textContent = `SCRIPTED EVALUATION · ${this.paused ? "frozen" : "playing"}\nScene: ${mode} · gate: ${this.travel.phase}\nMission clock: ${game.mission.clock.toFixed(3)} s · kills: ${game.combat.player.kills}\nReplay: ${game.replay.playing ? (game.replay.progress * 100).toFixed(1) + "%" : "stopped"} · rate: ${game.replay.playbackRate.toFixed(2)}\nFlight position: ${flight.pos.x.toFixed(2)}, ${flight.pos.y.toFixed(2)}, ${flight.pos.z.toFixed(2)}`;
+    this.readout.textContent = `SCRIPTED EVALUATION · ${this.paused ? "frozen" : "playing"}\nScene: ${mode} · gate: ${this.travel.phase}\nMission clock: ${game.mission.clock.toFixed(3)} s · kills: ${game.combat.player.kills}\nReplay: ${game.replay.playing ? (game.replay.progress * 100).toFixed(1) + "%" : "stopped"} · rate: ${game.replay.playbackRate.toFixed(2)} · captured kills: ${game.replay.highlightKills}\nFlight position: ${flight.pos.x.toFixed(2)}, ${flight.pos.y.toFixed(2)}, ${flight.pos.z.toFixed(2)}`;
   }
 
   private gate(phase: Travel["phase"], elapsed: number): void {
@@ -72,18 +79,26 @@ export class SceneReview {
     this.paused = true;
   }
 
-  private fighter(): void {
+  private fighter(killCount = 1): void {
     this.reset();
     this.silenceScrub();
     const { game, flight, input, camera } = this.getScene();
-    const e = game.enemies.spawn(new Vector3(0, 8000, 120), new Vector3(0, 8000, 10000));
+    let e = game.enemies.spawn(new Vector3(0, 8000, 120), new Vector3(0, 8000, 10000));
     e.hp = game.combat.gunDamage;
     e.steer = new Vector3(0, 8000, 10000);
     e.steerSpeed = 90;
     input.locked = true;
     // Predetermined flight path, real gun emission and collision. Avoid the mission runner/save entirely.
-    for (let frame = 0; frame < 690; frame++) {
+    let spawned = 1;
+    for (let frame = 0; frame < 690 + (killCount - 1) * 120; frame++) {
       const t = frame / 60;
+      if (!e.alive && spawned < killCount && t >= 7.5 + spawned * 2) {
+        e = game.enemies.spawn(new Vector3(0, 8000, t * 90 + 120), new Vector3(0, 8000, 10000));
+        e.hp = game.combat.gunDamage;
+        e.steer = new Vector3(0, 8000, 10000);
+        e.steerSpeed = 90;
+        spawned++;
+      }
       flight.pos.set(0, 8000, t * 90);
       flight.quat.identity();
       flight.velDir.set(0, 0, 1);

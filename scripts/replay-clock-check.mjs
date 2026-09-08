@@ -15,6 +15,7 @@ await build({
     contents: `
 import assert from 'node:assert/strict';
 import { Replay } from '@/replay/replay';
+import { T } from '@/core/tunables';
 import { Explosions } from '@/fx/explosion';
 import { Vector3, Quaternion, Object3D, PerspectiveCamera } from 'three';
 const replay = new Replay(), liveFX = new Explosions();
@@ -86,6 +87,60 @@ for (const step of [0.025, 0.025, 0.125]) {
 }
 assert(survivor.pos.equals(survivorPos), 'playback never writes simulation position');
 assert(survivor.quat.equals(survivorQuat), 'playback never writes simulation attitude');
+// Continuous multi-kill clips: enforce both bounds and retain the post-kill player footage.
+function sequence(times, maxKills, windowSeconds) {
+  T.replay.maxKills = maxKills; T.replay.windowSeconds = windowSeconds;
+  const r = new Replay(), es = times.map((_, i) => enemy(i));
+  const f = { ...flight, pos: new Vector3(), quat: new Quaternion() };
+  for (let tick = 1; tick <= Math.ceil((times.at(-1) + 3.1) * 60); tick++) {
+    r.beginTick(dt); f.pos.z = tick * 2;
+    for (const e of es) {
+      e.pos.set(e.id * 35, 0, f.pos.z + 120);
+      if (tick === Math.round(times[e.id] * 60)) {
+        e.alive = false;
+        r.markKill(e.pos, velocity, f, {x:0,y:0}, 7, 800+e.id, e.id);
+      }
+    }
+    r.record(dt, f, es);
+  }
+  return { r, es };
+}
+for (const [times, cap, seconds, expected] of [
+  [[8,10,12],3,8,3], [[8,10,12,14],2,8,2], [[8,10,12],8,3,2],
+  [[8,10,12],1,8,1], [[8,16],3,8,2], [[8,16.1],3,8,1],
+  [[8,12,16,20,24,28,32,36],8,30,8],
+]) {
+  const {r,es} = sequence(times,cap,seconds);
+  assert.equal(r.highlightKills,expected,'kill count and time window both constrain capture');
+  const h = r.highlight;
+  assert.equal(h.bursts.filter(b=>b.kill).length,expected,'pre-roll cannot leak excluded kills');
+  assert(h.frames[(h.count-1)*152] >= times.at(-1)+2.95,'retains three seconds after latest death');
+  assert(h.frames[0] <= times[times.length-expected]+.02,'retains first included death');
+  for (const aspect of [16/9, .7]) {
+    camera.aspect=aspect; camera.updateProjectionMatrix();
+    let bursts=0; r.onBurst=()=>bursts++;
+    assert(r.play(camera));
+    while (r.playing) {
+      r.update(dt/r.playbackRate,camera,ship,es);
+      if (!r.playing) break;
+      camera.updateMatrixWorld(true);
+      for (const {event} of h.kills) if (Math.abs(r.clipT-event.t)<.35) {
+        const pp=ship.position.clone().project(camera);
+        assert(Math.abs(pp.x)<.95 && Math.abs(pp.y)<.95 && pp.z<1,'player framed through kill');
+        const victim=es[event.victimId];
+        const target = r.clipT < event.t ? victim.rig.root.position : event.pos.clone().addScaledVector(event.vel,r.clipT-event.t);
+        const ep=target.clone().project(camera);
+        assert(Math.abs(ep.x)<.95 && Math.abs(ep.y)<.95 && ep.z<1,'victim/debris framed through kill');
+      }
+      if (r.clipT>times.at(-1)+2) {
+        const pp=ship.position.clone().project(camera);
+        assert(Math.abs(pp.x)<.05 && Math.abs(pp.y)<.05,'ending follows player');
+      }
+    }
+    assert.equal(bursts,expected,'every selected kill replays once');
+  }
+}
+console.log('PASS: N/X limits, window boundaries, long capture, each kill emitted, paired framing in landscape/portrait, player follow-through.');
 console.log('PASS: kill/death clock alignment, repeated equal-time seeded FX, enemy exhaust clock, stop pose/FOV/visibility restoration, live FX preservation.');
 `,
     resolveDir: root,

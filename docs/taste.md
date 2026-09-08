@@ -37,3 +37,6 @@ Ethan challenged the unnecessary request to approve preserving existing designer
 
 ## Graphics scene direction · 2026-09-08
 Ethan authorized recommendations 1–5: coherent transitions without mixed gameplay/audio, staged ship destruction, replay presentation, improved planets, and distinct asteroid replacements. Include optional event lighting for evaluation. Keep the procedural Three.js direction and existing fleet choices. Browser inspection is part of implementation; evaluation scenes must be labelled scripted and report actual state.
+
+## Replay feedback · 2026-09-08
+Ethan approved the whole gate trip. Replay is almost right: the kill shot must keep both player and victim in frame, then show a short player follow-through after the kill. Capture up to a configurable N kills within X seconds, not just a single scored kill. Preserve the approved gate trip.

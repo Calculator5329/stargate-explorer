@@ -4,6 +4,13 @@
  * `T` at use time so live edits take effect immediately. Units: m, s, rad.
  */
 export const T = {
+  replay: {
+    maxKills: 3,
+    windowSeconds: 8,
+    pairPadding: 22,
+    followDelay: .85,
+    followBlend: 1.15,
+  },
   travel: {
     entrySeconds: 0.8,
     tunnelSeconds: 2.2,
