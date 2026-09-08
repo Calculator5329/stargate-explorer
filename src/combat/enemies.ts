@@ -41,6 +41,8 @@ export interface Enemy {
   mats: THREE.MeshToonMaterial[];
   /** hit radius (Tracked) */
   radius: number;
+  /** the rig's interpolated position (Tracked.visPos): where the hull is drawn this frame */
+  visPos: THREE.Vector3;
   /** index into `Enemies.targets`, assigned round-robin at spawn */
   tgt: number;
   /** set when a crash was into a fragment the player made: the kill is the player's */
@@ -122,24 +124,42 @@ export class Enemies {
     return n;
   }
 
+  /**
+   * Build the level's hulls before play (2026-09-08). A hull built on the spawn tick costs the parametric
+   * build plus, for the first of a kind, a shader link that freezes the frame for up to 130 ms; built here
+   * they are in the scene (hidden) when `warmPrograms` runs. `counts` is the most of each kind alive at once.
+   */
+  prewarm(counts: ReadonlyMap<EnemyKind, number>): void {
+    for (const [kind, n] of counts) {
+      let have = 0;
+      for (const e of this.list) if (e.kind === kind) have++;
+      for (; have < n; have++) this.make(kind);
+    }
+  }
+
+  /** A dead, hidden enemy of `kind` in the pool with its own rig. */
+  private make(kind: EnemyKind): Enemy {
+    const K = ENEMY_KINDS[kind];
+    // Standard Goa'uld hulls retain their own metal and exhaust colors; special factions still recolor.
+    const palette = originalArt || this.palette !== PALETTES.goauld ? this.palette : undefined;
+    const rig = new ShipRig(palette ? { ...K.def, palette } : K.def);
+    rig.root.visible = false;
+    const mats: THREE.MeshToonMaterial[] = [];
+    rig.root.traverse((o) => {
+      if (o instanceof THREE.Mesh && o.material instanceof THREE.MeshToonMaterial && o.name !== "canopy") mats.push(o.material);
+    });
+    const e: Enemy = {
+      id: this.list.length, kind, stats: K.stats, rig, alive: false, pos: new THREE.Vector3(), quat: new THREE.Quaternion(), prevPos: new THREE.Vector3(), prevQuat: new THREE.Quaternion(),
+      vel: new THREE.Vector3(), speed: 0, hp: 0, state: "pursue", stateT: 0, hold: new THREE.Vector3(0, 0, 1), fireCd: 0, flinchCd: 0, side: 1, sinceHit: 99, mats, radius: T.enemy.radius, visPos: rig.root.position, tgt: 0, crashCredit: false, steer: null, steerSpeed: 0,
+    };
+    this.list.push(e);
+    this.group.add(rig.root);
+    return e;
+  }
+
   spawn(pos: THREE.Vector3, toward: THREE.Vector3, kind: EnemyKind = "glider"): Enemy {
     const K = ENEMY_KINDS[kind];
-    let e = this.list.find((x) => !x.alive && x.kind === kind);
-    if (!e) {
-      // Standard Goa'uld hulls retain their own metal and exhaust colors; special factions still recolor.
-      const palette = originalArt || this.palette !== PALETTES.goauld ? this.palette : undefined;
-      const rig = new ShipRig(palette ? { ...K.def, palette } : K.def);
-      const mats: THREE.MeshToonMaterial[] = [];
-      rig.root.traverse((o) => {
-        if (o instanceof THREE.Mesh && o.material instanceof THREE.MeshToonMaterial && o.name !== "canopy") mats.push(o.material);
-      });
-      e = {
-        id: this.list.length, kind, stats: K.stats, rig, alive: false, pos: new THREE.Vector3(), quat: new THREE.Quaternion(), prevPos: new THREE.Vector3(), prevQuat: new THREE.Quaternion(),
-        vel: new THREE.Vector3(), speed: 0, hp: 0, state: "pursue", stateT: 0, hold: new THREE.Vector3(0, 0, 1), fireCd: 0, flinchCd: 0, side: 1, sinceHit: 99, mats, radius: T.enemy.radius, tgt: 0, crashCredit: false, steer: null, steerSpeed: 0,
-      };
-      this.list.push(e);
-      this.group.add(rig.root);
-    }
+    const e = this.list.find((x) => !x.alive && x.kind === kind) ?? this.make(kind);
     const a = K.stats;
     e.alive = true;
     e.rig.root.visible = true;

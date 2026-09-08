@@ -9,6 +9,8 @@ export interface Shot {
   alive: boolean;
   side: Side;
   pos: THREE.Vector3;
+  /** where it was last tick; render lerps prevPos→pos so a tracer moves every frame, not every tick */
+  prevPos: THREE.Vector3;
   vel: THREE.Vector3;
   ttl: number;
   /** damage multiplier on the side's base round (enemy kinds differ) */
@@ -16,6 +18,7 @@ export interface Shot {
 }
 
 const _dir = new THREE.Vector3();
+const _pos = new THREE.Vector3();
 const _obj = new THREE.Object3D();
 const _up = new THREE.Vector3(0, 1, 0);
 const HIDDEN = new THREE.Matrix4().makeScale(0, 0, 0);
@@ -49,7 +52,7 @@ export class Projectiles {
       this.group.add(m);
     }
     for (let i = 0; i < capacity * 2; i++) {
-      this.shots.push({ alive: false, side: i < capacity ? "player" : "enemy", pos: new THREE.Vector3(), vel: new THREE.Vector3(), ttl: 0, dmg: 1 });
+      this.shots.push({ alive: false, side: i < capacity ? "player" : "enemy", pos: new THREE.Vector3(), prevPos: new THREE.Vector3(), vel: new THREE.Vector3(), ttl: 0, dmg: 1 });
     }
   }
 
@@ -67,6 +70,7 @@ export class Projectiles {
     s.alive = true;
     s.dmg = dmg;
     s.pos.copy(pos);
+    s.prevPos.copy(pos);
     s.vel.copy(vel);
     s.ttl = ttl;
     return s;
@@ -86,12 +90,15 @@ export class Projectiles {
       if (!s.alive) continue;
       s.ttl -= dt;
       if (s.ttl <= 0) s.alive = false;
-      else s.pos.addScaledVector(s.vel, dt);
+      else {
+        s.prevPos.copy(s.pos);
+        s.pos.addScaledVector(s.vel, dt);
+      }
     }
   }
 
-  /** Rebuild instance matrices: length follows speed so a tracer is a streak, not a dot. */
-  update(): void {
+  /** Rebuild instance matrices: length follows speed so a tracer is a streak, not a dot. `alpha` interpolates between ticks. */
+  update(alpha = 1): void {
     let pi = 0, ei = 0;
     const cap = this.meshes.player.count;
     for (const s of this.shots) {
@@ -100,7 +107,7 @@ export class Projectiles {
       const i = s.side === "player" ? pi++ : ei++;
       if (i >= cap) continue;
       const len = Math.max(6, s.vel.length() * T.weapons.tracerSec);
-      _obj.position.copy(s.pos).addScaledVector(_dir.copy(s.vel).normalize(), -len / 2);
+      _obj.position.copy(alpha < 1 ? _pos.lerpVectors(s.prevPos, s.pos, alpha) : s.pos).addScaledVector(_dir.copy(s.vel).normalize(), -len / 2);
       _obj.quaternion.setFromUnitVectors(_up.set(0, 0, 1), _dir);
       _obj.scale.set(1, 1, len);
       _obj.updateMatrix();

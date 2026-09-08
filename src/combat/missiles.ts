@@ -7,6 +7,8 @@ import { glowMaterial, toonMaterial } from "@/render/toon";
 export interface Missile {
   alive: boolean;
   pos: THREE.Vector3;
+  /** last tick's position, for render interpolation */
+  prevPos: THREE.Vector3;
   vel: THREE.Vector3;
   target: Tracked | null;
   ttl: number;
@@ -17,6 +19,7 @@ const HIDDEN = new THREE.Matrix4().makeScale(0, 0, 0);
 const _obj = new THREE.Object3D();
 const _want = new THREE.Vector3();
 const _dir = new THREE.Vector3();
+const _pos = new THREE.Vector3();
 const _q = new THREE.Quaternion();
 const _qw = new THREE.Quaternion();
 const _m = new THREE.Matrix4();
@@ -35,7 +38,7 @@ export class Missiles {
   private readonly flare: THREE.InstancedMesh;
 
   constructor() {
-    for (let i = 0; i < MAX; i++) this.list.push({ alive: false, pos: new THREE.Vector3(), vel: new THREE.Vector3(), target: null, ttl: 0 });
+    for (let i = 0; i < MAX; i++) this.list.push({ alive: false, pos: new THREE.Vector3(), prevPos: new THREE.Vector3(), vel: new THREE.Vector3(), target: null, ttl: 0 });
     const geo = new THREE.CylinderGeometry(0.16, 0.22, 2.2, 8);
     geo.rotateX(Math.PI / 2);
     this.body = new THREE.InstancedMesh(geo, toonMaterial(0xd8d2c0), MAX);
@@ -55,6 +58,7 @@ export class Missiles {
     if (!m) return false;
     m.alive = true;
     m.pos.copy(pos);
+    m.prevPos.copy(m.pos);
     m.vel.copy(dir).multiplyScalar(T.missile.speed * 0.5).add(shooterVel);
     m.target = target;
     m.ttl = T.missile.life;
@@ -82,25 +86,28 @@ export class Missiles {
       } else m.target = null;
       const s = Math.min(M.speed, speed + M.accel * dt);
       m.vel.copy(_dir).multiplyScalar(s);
+      m.prevPos.copy(m.pos);
       m.pos.addScaledVector(m.vel, dt);
     }
   }
 
-  update(): void {
-    this.list.forEach((m, i) => {
+  /** `alpha` interpolates between ticks so the missile moves every frame on a high-refresh display. */
+  update(alpha = 1): void {
+    for (let i = 0; i < this.list.length; i++) {
+      const m = this.list[i]!;
       if (!m.alive) {
         this.body.setMatrixAt(i, HIDDEN);
         this.flare.setMatrixAt(i, HIDDEN);
-        return;
+        continue;
       }
       _m.lookAt(m.vel, ZERO, UP);
       _obj.quaternion.setFromRotationMatrix(_m);
-      _obj.position.copy(m.pos);
+      _obj.position.copy(alpha < 1 ? _pos.lerpVectors(m.prevPos, m.pos, alpha) : m.pos);
       _obj.scale.setScalar(1);
       _obj.updateMatrix();
       this.body.setMatrixAt(i, _obj.matrix);
       this.flare.setMatrixAt(i, _obj.matrix);
-    });
+    }
     this.body.instanceMatrix.needsUpdate = true;
     this.flare.instanceMatrix.needsUpdate = true;
   }
