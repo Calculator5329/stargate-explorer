@@ -77,8 +77,8 @@ export const T = {
     barrelRate: 9.5,
     barrelHop: 28,
     /** how hard a move's boost and brake steps push the speed toward their target (m/s²); sharper than the keys */
-    moveAccel: 800,
-    moveDecel: 400,
+    moveAccel: 1800,
+    moveDecel: 1500,
     /** fraction of speed kept after bouncing off a rock */
     bounceKeep: 0.45,
     /** rock impact (normal speed, m/s): below `grazeSpeed` no damage, at `killSpeed` certain death */
@@ -98,6 +98,8 @@ export const T = {
   },
   camera: {
     distance: 16,
+    /** Keep the wide fighter visible in narrow windows. */
+    referenceAspect: 1.6,
     height: 3.4,
     lookAhead: 90,
     stiffness: 40,
@@ -118,6 +120,13 @@ export const T = {
     /** extra FOV (deg) and pull-back (m) during a barrel roll */
     barrelFov: 8,
     barrelDistance: 2.5,
+    /** Powered stunts: hold the entry view, give the hull room, then catch the exit smoothly. */
+    stuntDistance: 17,
+    stuntLookAhead: 10,
+    stuntFov: 9,
+    stuntFollow: 1.4,
+    stuntLag: 5,
+    stuntLagMax: 8,
   },
   weapons: {
     /** player cannon: rounds per second (both guns together), muzzle speed and reach (m) */
@@ -377,6 +386,9 @@ export const T = {
     midStep: 0.68,
   },
   plume: {
+    /** Powered-move ribbon lifetime (s) and half-width as a nozzle-radius fraction. */
+    stuntTrailLife: 0.75,
+    stuntTrailWidth: 0.35,
     /** metres at full throttle */
     length: 4.5,
     boostLength: 11,

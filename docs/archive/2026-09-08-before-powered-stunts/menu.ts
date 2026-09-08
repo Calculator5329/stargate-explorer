@@ -1,8 +1,8 @@
-import "./menu.css";
 import { MOVES } from "@/sim/moves";
 import { mergeMoveBinds, reservedKey } from "@/core/move-binds";
 import type { Save, Settings } from "@/core/save";
-import { FLIGHT_PROFILE, writeSave } from "@/core/save";
+import { writeSave } from "@/core/save";
+import { parseSteer, type SchemeName } from "@/core/scheme";
 import { lockPointer } from "@/core/input";
 import { parseDifficulty } from "@/core/difficulty";
 import { parseQuality } from "@/render/renderer";
@@ -11,8 +11,6 @@ import { ACTIONS, BIND_LABELS, DEFAULT_BINDS, keyName } from "@/core/binds";
 export interface MenuHooks {
   /** push the edited settings into the live systems (scheme, input, difficulty, audio) */
   apply(s: Settings): void;
-  /** unlock/resume sound from the user gesture */
-  resume?(): void;
   /** restart the current mission */
   restart(): void;
   /** back to mission select (optional until the hub exists) */
@@ -57,41 +55,59 @@ export class Menu {
       return;
     }
     const s = save.settings;
-    Object.assign(s, FLIGHT_PROFILE);
+    const scheme = q<HTMLSelectElement>(root, "[name=scheme]");
+    const assist = q<HTMLInputElement>(root, "[name=assist]");
+    const assistK = q<HTMLInputElement>(root, "[name=assistK]");
+    const assistV = q(root, ".assist-v");
     const speedTurn = q<HTMLInputElement>(root, "[name=speedTurn]");
-    const invert = q<HTMLInputElement>(root, "[name=invert]");
+    const steer = q<HTMLSelectElement>(root, "[name=steer]");
+    const raw = q<HTMLInputElement>(root, "[name=raw]");
     const sens = q<HTMLInputElement>(root, "[name=sens]");
     const sensV = q(root, ".sens-v");
     const diff = q<HTMLSelectElement>(root, "[name=difficulty]");
     const mute = q<HTMLInputElement>(root, "[name=mute]");
     this.muteControl = mute;
+    const invert = q<HTMLInputElement>(root, "[name=invert]");
     const qual = q<HTMLSelectElement>(root, "[name=quality]");
     const dyn = q<HTMLInputElement>(root, "[name=dynamicRes]");
-    const lighting = q<HTMLInputElement>(root, "[name=eventLighting]");
+    const lightingRow = document.createElement("label");
+    lightingRow.innerHTML = '<span>Event lighting (evaluation)</span><input type="checkbox" name="eventLighting" />';
+    dyn.closest("label")!.after(lightingRow);
+    const lighting = q<HTMLInputElement>(lightingRow, "input");
     lighting.checked = s.eventLighting;
     dyn.checked = s.dynamicRes;
-    qual.value = s.quality;
-    speedTurn.checked = s.speedTurn;
+    scheme.value = s.scheme;
     invert.checked = s.invertY;
+    qual.value = s.quality;
+    assist.checked = s.assist;
+    assistK.value = String(s.assistStrength);
+    assistV.textContent = s.assistStrength.toFixed(2);
+    speedTurn.checked = s.speedTurn;
+    steer.value = s.steer;
+    raw.checked = s.rawMouse;
     sens.value = String(s.sens);
     sensV.textContent = s.sens.toFixed(2);
-    sens.style.setProperty("--fill", `${(s.sens - 0.4) / 2.1 * 100}%`);
     diff.value = s.difficulty;
     mute.checked = s.mute;
     const commit = () => {
+      s.scheme = scheme.value as SchemeName;
+      s.assist = assist.checked;
+      s.assistStrength = Number(assistK.value) || 1;
+      assistV.textContent = s.assistStrength.toFixed(2);
       s.speedTurn = speedTurn.checked;
-      s.invertY = invert.checked;
+      s.steer = parseSteer(steer.value);
+      s.rawMouse = raw.checked;
       s.sens = Number(sens.value) || 1;
       sensV.textContent = s.sens.toFixed(2);
-      sens.style.setProperty("--fill", `${(s.sens - 0.4) / 2.1 * 100}%`);
       s.difficulty = parseDifficulty(diff.value);
       s.mute = mute.checked;
+      s.invertY = invert.checked;
       s.dynamicRes = dyn.checked;
       s.eventLighting = lighting.checked;
       writeSave(save);
       hooks.apply(s);
     };
-    for (const c of [speedTurn, invert, sens, diff, mute, dyn, lighting]) c.addEventListener("input", commit);
+    for (const c of [scheme, assist, assistK, speedTurn, steer, raw, sens, diff, mute, invert, dyn, lighting]) c.addEventListener("input", commit);
     // the renderer is built once per page, so a tier change is a reload
     qual.addEventListener("input", () => {
       s.quality = parseQuality(qual.value);
@@ -106,7 +122,6 @@ export class Menu {
         s.onboarded = true;
         writeSave(save);
       }
-      hooks.resume?.();
       lockPointer(canvas);
     };
     q(root, ".fly").addEventListener("click", fly);
@@ -121,6 +136,10 @@ export class Menu {
     });
     this.replayBtn.addEventListener("click", () => hooks.replay?.());
     document.addEventListener("pointerlockchange", () => this.set(document.pointerLockElement !== canvas));
+    // the overlay swallows keys meant for the game; only Esc/Enter matter here
+    root.addEventListener("keydown", (e) => {
+      if (e.code === "Enter" && !(e.target instanceof HTMLSelectElement)) fly();
+    });
     // Esc with the pointer already free (fresh load, or after the pause screen was dismissed by a click
     // elsewhere) toggles the menu; while locked the browser turns Esc into pointerlockchange instead
     document.addEventListener("keydown", (e) => {
@@ -160,7 +179,7 @@ export class Menu {
         b.classList.toggle("listening", listening === i);
       });
       const b = s.binds;
-      q(root, ".keys").textContent = `${keyName(b.pullUp)}/${keyName(b.dive)} throttle · ${keyName(b.rollLeft)}/${keyName(b.rollRight)} roll · ${keyName(b.boost)} boost · ${keyName(b.brake)} brake · Esc pause`;
+      q(root, ".keys").textContent = `Mouse steers · ${keyName(b.rollLeft)}/${keyName(b.rollRight)} roll · ${keyName(b.boost)} boost · ${keyName(b.brake)} brake · LMB cannons · RMB missile · Esc pause. Moves also use B then a direction.`;
     };
     entries.forEach((entry, i) => {
       const label = document.createElement("span");
@@ -187,7 +206,7 @@ export class Menu {
       refresh();
     });
     document.addEventListener("keydown", (e) => {
-      if (listening < 0 || !this.open) return;
+      if (listening < 0) return;
       e.preventDefault();
       e.stopImmediatePropagation();
       if (e.code === "Escape") {
@@ -222,8 +241,8 @@ export class Menu {
     this.open = open;
     this.el.classList.toggle("on", open);
     if (!open) return;
-    this.title.textContent = first ? "FLIGHT CONTROL" : "FLIGHT PAUSED";
-    this.sub.textContent = this.missionTitle;
+    this.title.textContent = first ? "STARGATE EXPLORER" : "PAUSED";
+    this.sub.textContent = first ? `${this.missionTitle}  ·  MISSIONS to pick another sortie` : "Paused. FLY to resume.";
   }
 }
 

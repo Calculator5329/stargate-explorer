@@ -1,9 +1,10 @@
+import { MoveTrails } from "@/fx/move-trails";
 import { SandboxGuide } from "@/ui/sandbox-guide";
 import { Color, Quaternion, Vector3 } from "three";
 import { Loop } from "@/core/loop";
 import { T } from "@/core/tunables";
 import { Input, lockPointer, setRawMouse } from "@/core/input";
-import { Scheme, parseScheme, parseSteer } from "@/core/scheme";
+import { Scheme } from "@/core/scheme";
 import { loadSave, writeSave } from "@/core/save";
 import { presentation } from "@/core/presentation";
 import { EventLighting } from "@/render/event-lighting";
@@ -43,7 +44,7 @@ setDifficulty(S.difficulty);
 const view = parseView(boot.get("view"));
 const canvas = document.body.appendChild(document.createElement("canvas"));
 const r = new Renderer(canvas, quality);
-const scheme = new Scheme(boot.has("controls") ? parseScheme(boot.get("controls")) : S.scheme, S.assist);
+const scheme = new Scheme(S.scheme, S.assist);
 const input = new Input(canvas, scheme, view === null, boot.get("lock") === "free"), flight = new Flight();
 input.moveKeys = moveKeys(MOVES);
 const chase = new ChaseCamera(r.camera);
@@ -60,6 +61,7 @@ interface Sortie {
   level: LevelDef;
   world: World;
   rig: ShipRig;
+  trails: MoveTrails;
   hazards: Hazards;
   game: Game | null;
   inspect: InspectView | null;
@@ -72,7 +74,10 @@ function build(params: URLSearchParams): Sortie {
   if (level.beltScale !== undefined) system.belt = { ...system.belt, count: Math.max(1, Math.round(system.belt.count * level.beltScale)) }; // the duel wants open space
   r.setGrade(SKY_PRESETS[system.sky].grade);
   const world = new World(r.scene, { system, ...(params.has("planet") ? { planet: parsePlanetPreset(params.get("planet")) } : {}), planetSegments: QUALITY[quality].planetSegments, shadowMap: r.tier.shadows });
-  const ship = parseShip(params.get("ship") ?? save.progress.ship), rig = new ShipRig(HULLS[params.get("hull") ?? ""] ?? pickVariant(ship.def, params));
+  const ship = parseShip(params.get("ship") ?? save.progress.ship);
+  const def = HULLS[params.get("hull") ?? ""] ?? pickVariant(ship.def, params);
+  const rig = new ShipRig(def), trails = new MoveTrails(def.engines);
+  r.scene.add(trails.group);
   r.scene.add(rig.root);
   world.sun.follow(rig.root);
   flight.reset();
@@ -99,12 +104,13 @@ function build(params: URLSearchParams): Sortie {
   hub?.setCurrent(level);
   menu?.setMission(level.title);
   Object.assign(window, { __game: game, __rocks: world.asteroids, __world: world });
-  return { level, world, rig, hazards: new Hazards(world.asteroids), game, inspect };
+  return { level, world, rig, trails, hazards: new Hazards(world.asteroids), game, inspect };
 }
 
 function teardown(s: Sortie): void {
   s.game?.dispose();
-  r.scene.remove(s.rig.root);
+  r.scene.remove(s.rig.root, s.trails.group);
+  s.trails.dispose();
   disposeTree(s.rig.root);
   s.world.dispose(r.scene);
 }
@@ -153,6 +159,7 @@ if (sortie.game) {
   if (boot.get("hub") === "1") hub.show();
 }
 menu = new Menu(document.getElementById("menu")!, canvas, save, {
+  resume: () => audio.unlock(),
   apply: (s) => {
     scheme.arcade = s.scheme === "arcade";
     scheme.assist = s.assist;
@@ -162,7 +169,7 @@ menu = new Menu(document.getElementById("menu")!, canvas, save, {
     input.invertY = s.invertY;
     input.binds = s.binds;
     input.moveBinds = s.moveBinds;
-    input.steer = boot.has("steer") ? parseSteer(boot.get("steer")) : s.steer;
+    input.steer = s.steer;
     setRawMouse(s.rawMouse);
     setDifficulty(s.difficulty);
     r.dynamic = s.dynamicRes;
@@ -247,7 +254,7 @@ const loop = new Loop({
     if (mode === "travel") travel?.update(dt, r.camera);
     mode = currentMode();
     audio.setScene(review?.paused ? "paused" : mode);
-    const { inspect, game, hazards, world, rig } = sortie;
+    const { inspect, game, hazards, world, rig, trails } = sortie;
     input.setEnabled(mode === "flight" && !review?.paused);
     game?.setPresentation(mode);
     r.gl.info.reset();
@@ -258,11 +265,12 @@ const loop = new Loop({
         rig.root.position.copy(_p);
         rig.root.quaternion.copy(_q);
         rig.root.visible = game?.combat.player.alive ?? true;
-        rig.update(dt, flight.throttle, flight.boosting);
-        chase.update(dt, _p, _q, flight.speed, input.stick, flight.boosting, flight.sinceHit, flight.stats.size, flight.barrelLeft !== 0 || flight.move !== null);
+        rig.update(dt, flight.moveThrust ? 1 : flight.throttle, flight.boosting || flight.moveThrust);
+        chase.update(dt, _p, _q, flight.speed, input.stick, flight.boosting, flight.sinceHit, flight.stats.size, flight.barrelLeft !== 0, flight.move ? flight.moveT / flight.move.duration : -1);
         world.dust.update(_p, _v.copy(flight.velDir).multiplyScalar(flight.speed), flight.speed);
         hud.update(flight, input, hazards.outside);
         sandboxGuide.update(flight, input);
+        trails.update(dt, flight.move !== null, _p, _q);
       } else if (mode === "travel" || mode === "hub") {
         rig.root.visible = mode === "travel" && travel?.phase === "arrive";
         if (rig.root.visible) rig.update(dt, .35, false);
@@ -273,6 +281,7 @@ const loop = new Loop({
         hud.updateCombat(game!.combat, game!.mission, r.camera, game!.combat.player.vel, game!.replay.hasHighlight, game!.gate.alive);
         if (menu?.open || editor?.active) hud.hideHint();
       }
+      if (mode !== "flight" && mode !== "paused") trails.clear();
       world.dust.lines.visible = mode === "flight";
       game?.render(alpha, dt, r.camera, hud, flight);
       if (mode === "replay" && game) rig.update(dt * game.replay.playbackRate, Math.min(1, game.replay.velocity.length() / T.flight.boostSpeed), false);

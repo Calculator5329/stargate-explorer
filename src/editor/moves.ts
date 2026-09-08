@@ -26,7 +26,10 @@ const STEP_HELP: Record<StepKind, string> = {
   snapPitch: "adds a pitch rate on top of nothing (the stick is dead): + is nose up",
   yaw: "adds a yaw rate: + is nose right",
   roll: "adds a roll rate: + is roll right; 2π over the step is one full roll",
-  hop: "slides the hull sideways: + is starboard",
+  hop: "thrust along the spinning hull’s right axis; combine with roll for a corkscrew",
+  slide: "thrust along the entry right axis; independent of the ship’s current spin",
+  lift: "thrust along the entry up axis; independent of the ship’s current spin",
+  coast: "amount above zero holds momentum while the hull rotates; boost steps resume thrust",
 };
 
 function h(html: string): HTMLElement {

@@ -49,3 +49,9 @@ Ethan reviewed the repaired preview: “all looks good” and explicitly request
 
 ## Sandbox and custom moves · 2026-09-08
 Ethan requested a sandbox mode and access to the new moves through custom keys so he can test them. Expose practice directly from the pause menu and gate control, reuse the existing proving-ground mission and four content-authored moves, and let each move have a saved single-key shortcut. Keep existing chords available. Practice should remove death/resource interruptions; HUD hints must follow rebound keys. Movement-feel changes remain proposals until tested/selected.
+
+## Powered movement correction · 2026-09-08
+Ethan rejected the modest Cobra/Lunge/Scissor set as not cool or complicated enough. Paid moves should be unmistakable, multi-stage visual stunts, including thrust/rotation combinations unavailable in normal flight. Boost energy buys exceptional movement. Preserve a readable ship silhouette and steady camera reference so the move is visible; do not count larger numbers or a passing sim test as visual acceptance.
+
+## Cemented flight choices and menu · 2026-09-08
+Ethan selected classic controls, cursor mouse steering, raw mouse on, flight assist on at 0.9. Remove their settings controls and hidden keyboard/gamepad/URL switches that contradict those fixed choices. Keep sensitivity, invert Y (a switch, off by default: "invert stays a switcher defaulting to no", later the same day), speed-coupled turning, difficulty, quality, dynamic resolution, event lighting, mute and key bindings adjustable. Slim and restyle the menu to fit the game's flight-system/gate-control visual language.

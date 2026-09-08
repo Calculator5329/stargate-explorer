@@ -3,7 +3,7 @@
  * save carries them; `Input` reads keys only through this table. Mouse buttons,
  * Esc, R/V/G on the end card and the backtick debug toggle are not rebindable.
  */
-export type Action = "pullUp" | "dive" | "rollLeft" | "rollRight" | "strafeLeft" | "strafeRight" | "boost" | "brake" | "scheme" | "assist";
+export type Action = "pullUp" | "dive" | "rollLeft" | "rollRight" | "strafeLeft" | "strafeRight" | "boost" | "brake";
 
 export type Binds = Record<Action, string>;
 
@@ -16,24 +16,20 @@ export const DEFAULT_BINDS: Binds = {
   strafeRight: "KeyE",
   boost: "ShiftLeft",
   brake: "Space",
-  scheme: "KeyC",
-  assist: "KeyX",
 };
 
 export const ACTIONS = Object.keys(DEFAULT_BINDS) as Action[];
 
 /** what the menu prints next to each key; the arcade/classic meaning is in the second half */
 export const BIND_LABELS: Record<Action, string> = {
-  pullUp: "Pull up · throttle up",
-  dive: "Dive · throttle down",
+  pullUp: "Throttle up",
+  dive: "Throttle down",
   rollLeft: "Roll left (double-tap: barrel)",
   rollRight: "Roll right (double-tap: barrel)",
   strafeLeft: "Strafe left (thrusters)",
   strafeRight: "Strafe right (thrusters)",
   boost: "Boost",
   brake: "Brake",
-  scheme: "Switch control scheme",
-  assist: "Toggle flight assist",
 };
 
 /** Merge a saved (possibly partial or stale) table onto the defaults. */

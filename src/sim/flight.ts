@@ -61,6 +61,10 @@ export class Flight {
   /** the move in progress and how far into it we are (s) */
   move: MoveDef | null = null;
   moveT = 0;
+  /** Powered move thrust, for the existing engine presentation. */
+  moveThrust = false;
+  private readonly moveFrame = new Quaternion();
+  private readonly moveOffsetVel = new Vector3();
   /** set by TRY IT: starts on the next tick, whatever the bar holds */
   pendingMove: string | null = null;
   /** seconds since the last collision, for camera shake / HUD flash */
@@ -88,6 +92,8 @@ export class Flight {
     this.barrelLeft = 0;
     this.move = null;
     this.moveT = 0;
+    this.moveThrust = false;
+    this.moveOffsetVel.set(0, 0, 0);
     this.pendingMove = null;
     this.sinceHit = 99;
     this.dead = false;
@@ -104,6 +110,7 @@ export class Flight {
   private beginMove(m: MoveDef, pay: boolean): void {
     if (pay) this.boostEnergy = clamp(this.boostEnergy - m.cost, 0, 1);
     this.move = m;
+    this.moveFrame.copy(this.quat);
     this.moveT = 0;
     this.barrelLeft = 0;
   }
@@ -127,6 +134,9 @@ export class Flight {
       return;
     }
 
+    this.vel.sub(this.moveOffsetVel);
+    this.moveOffsetVel.set(0, 0, 0);
+    this.moveThrust = false;
     const arcade = input.scheme.arcade;
     // moves: a chord from input pays the bar and starts one; TRY IT starts one for free; a running move
     // owns the stick, the roll keys and the throttle until its duration is up
@@ -140,7 +150,7 @@ export class Flight {
     }
     const mv = this.move;
     if (mv) {
-      this.moveT += dt;
+      this.moveT = Math.min(mv.duration, this.moveT + dt);
       if (this.moveT >= mv.duration) this.move = null;
     }
     const stickX = mv ? 0 : input.stick.x, stickY = mv ? 0 : input.stick.y;
@@ -148,11 +158,11 @@ export class Flight {
     if (!arcade) this.throttle = clamp(this.throttle + pitchKey * f.throttleRate * dt, 0, 1);
     const canBoost = this.boostEnergy > 0 && (this.boosting || this.boostEnergy >= f.boostMinEngage);
     this.boosting = !mv && input.boost && canBoost;
-    this.boostEnergy = clamp(this.boostEnergy + (this.boosting ? -f.boostDrain : f.boostRecharge) * dt, 0, 1);
+    this.boostEnergy = clamp(this.boostEnergy + (this.boosting ? -f.boostDrain : mv ? 0 : f.boostRecharge) * dt, 0, 1);
     // Space brakes in both schemes (Ethan, 2026-09-05: "make space actually work to brake"); releasing it
     // returns to the throttle (classic) or cruise (arcade) speed
     this.drifting = false;
-    this.braking = input.space && !this.boosting;
+    this.braking = !mv && input.space && !this.boosting;
     const S = this.stats;
     let targetSpeed = arcade ? f.cruiseSpeed : lerp(f.minSpeed, f.maxSpeed, this.throttle);
     let rate = f.accel;
@@ -162,11 +172,14 @@ export class Flight {
     rate *= S.speed;
     let snap = arcade ? pitchKey * f.snapPitchRate * S.agility : 0;
     // the move's steps: each one active over [start, start + length) adds its rate or sets the speed target
-    let moveYaw = 0, moveRoll = 0, moveHop = 0, moveBrake = false, cap = this.topSpeed;
+    // Preserve earned over-boost momentum on exit; ordinary thrust cannot raise this cap.
+    let moveYaw = 0, moveRoll = 0, moveHop = 0, moveSlide = 0, moveLift = 0, moveCoast = false, moveBrake = false, cap = Math.max(this.topSpeed, this.vel.length());
     if (mv) {
       const t = this.moveT;
       for (const s of mv.steps) {
-        if (t < s.start || t >= s.start + s.length) continue;
+        // Integrate partial steps exactly, including their first/last fixed tick.
+        const weight = Math.max(0, Math.min(t, s.start + s.length) - Math.max(t - dt, s.start)) / dt;
+        if (weight <= 0) continue;
         switch (s.kind) {
           case "brake":
             targetSpeed = s.amount * S.speed;
@@ -177,19 +190,23 @@ export class Flight {
             targetSpeed = s.amount * S.speed;
             rate = f.moveAccel * S.speed;
             cap = Math.max(cap, targetSpeed);
+            this.moveThrust = true;
             break;
           case "snapPitch":
-            snap += s.amount * S.agility;
+            snap += s.amount * weight;
             break;
           case "yaw":
-            moveYaw += s.amount * S.agility;
+            moveYaw += s.amount * weight;
             break;
           case "roll":
-            moveRoll += s.amount * S.agility;
+            moveRoll += s.amount * weight;
             break;
           case "hop":
-            moveHop += s.amount;
+            moveHop += s.amount * weight;
             break;
+          case "slide": moveSlide += s.amount * weight; break;
+          case "lift": moveLift += s.amount * weight; break;
+          case "coast": moveCoast = s.amount > 0; break;
         }
       }
     }
@@ -212,7 +229,9 @@ export class Flight {
     const pitch = -(stickY * f.pitchRate * S.agility * turnK + snap) * dt;
     const yaw = -(stickX * f.yawRate * S.agility * turnK + moveYaw) * dt;
     let roll = (rollKey * f.rollRate * S.agility + levelRoll + moveRoll) * dt;
-    if (moveHop !== 0) this.pos.addScaledVector(_right, moveHop * dt);
+    if (moveHop !== 0) this.moveOffsetVel.addScaledVector(_right, moveHop);
+    if (moveSlide !== 0) this.moveOffsetVel.addScaledVector(_n.copy(RIGHT).applyQuaternion(this.moveFrame), moveSlide);
+    if (moveLift !== 0) this.moveOffsetVel.addScaledVector(_n.copy(Y).applyQuaternion(this.moveFrame), moveLift);
     if (this.barrelLeft !== 0) {
       const step = clamp(this.barrelLeft, -f.barrelRate * dt, f.barrelRate * dt);
       this.barrelLeft -= step;
@@ -227,8 +246,8 @@ export class Flight {
     this.quat.normalize();
 
     _fwd.copy(Z).applyQuaternion(this.quat);
-    if (!this.drifting) {
-      const assist = input.scheme.assist;
+    if (!this.drifting && !moveCoast) {
+      const assist = input.scheme.assist || mv !== null;
       // split velocity into along-nose and lateral parts
       let vf = this.vel.dot(_fwd);
       _lat.copy(this.vel).addScaledVector(_fwd, -vf);
@@ -249,7 +268,7 @@ export class Flight {
       // strafe thrusters: the sideways velocity component is driven straight to the thruster speed
       // (+strafe = port = -RIGHT), and eased back to zero when released
       _right.copy(RIGHT).applyQuaternion(this.quat);
-      const strafeTo = -input.strafe * f.strafeSpeed * S.agility;
+      const strafeTo = mv ? 0 : -input.strafe * f.strafeSpeed * S.agility;
       if (this.strafeV !== 0 || strafeTo !== 0) {
         this.strafeV = moveToward(this.strafeV, strafeTo, f.strafeAccel * dt);
         _lat.addScaledVector(_right, this.strafeV - _lat.dot(_right));
@@ -258,6 +277,7 @@ export class Flight {
       const total = this.vel.length();
       if (total > cap) this.vel.multiplyScalar(cap / total);
     }
+    this.vel.add(this.moveOffsetVel);
     this.speed = this.vel.length();
     if (this.speed > 1e-3) this.velDir.copy(this.vel).divideScalar(this.speed);
     this.pos.addScaledVector(this.vel, dt);
@@ -265,6 +285,8 @@ export class Flight {
 
   /** Bounce off a surface with outward normal `n`: reflect velocity, bleed speed, nose follows. */
   bounce(n: Vector3): void {
+    // The collision reflects the complete velocity, including powered translation.
+    this.moveOffsetVel.set(0, 0, 0);
     _n.copy(n);
     const into = -this.vel.dot(_n); // normal impact speed, positive when moving into the face
     if (into >= this.lastImpact) this.lastImpactNormal.copy(_n);
