@@ -201,7 +201,7 @@ await page.waitForTimeout(150);
 const tried = await page.evaluate(() => ({ hidden: document.getElementById("editor").hidden, move: window.__flight.move?.name ?? null, live: window.__flight.moves === window.__editor.content.moves, keys: [...window.__input.moveKeys] }));
 check(tried.hidden && tried.move === "Cobra test" && tried.live, `TRY IT fires the working copy's move in the game (${tried.move}, keys ${tried.keys.join(",")})`);
 await page.evaluate(() => (document.exitPointerLock(), window.__editor.show()));
-await page.evaluate(() => (window.__editor.content.moves[0].name = "Cobra"));
+await page.evaluate(() => (window.__editor.content.moves[0].name = "Cobra reversal"));
 await page.mouse.move(10, 10);
 await page.click('#editor .tab[data-tab="board"]');
 

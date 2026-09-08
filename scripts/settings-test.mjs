@@ -1,4 +1,4 @@
-// node scripts/settings-test.mjs  → exercises the pause menu (rebind, invert Y, quality) and a fake gamepad
+// node scripts/settings-test.mjs  → exercises the pause menu (rebind, fixed flight profile, quality) and a fake gamepad
 import { chromium } from "playwright-core";
 const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
@@ -25,7 +25,7 @@ await page.locator("#menu .binds .bind").nth(1).click();
 await page.keyboard.press("ArrowUp");
 out.afterSwap = [await page.locator("#menu .binds .bind").nth(0).textContent(), await page.locator("#menu .binds .bind").nth(1).textContent()];
 out.saved = await page.evaluate(() => JSON.parse(localStorage.getItem("stargate-explorer.save.v1")).settings);
-await page.check("#menu [name=invert]");
+out.invertControlAbsent = await page.locator("#menu [name=invert]").count() === 0;
 out.invertSaved = await page.evaluate(() => JSON.parse(localStorage.getItem("stargate-explorer.save.v1")).settings.invertY);
 // reset restores W
 await page.click("#menu .binds .reset");

@@ -58,8 +58,11 @@ export interface Save {
 
 const KEY = "stargate-explorer.save.v1";
 
+/** Ethan's selected flight profile, 2026-09-08. Applied after old saved values. */
+export const FLIGHT_PROFILE = { scheme: "classic", steer: "cursor", rawMouse: true, assist: true, assistStrength: 0.9, invertY: false } as const;
+
 export const DEFAULT_SAVE: Save = {
-  settings: { scheme: "arcade", assist: true, assistStrength: 1, speedTurn: false, steer: "cursor", rawMouse: true, sens: 1, difficulty: "normal", mute: false, invertY: false, quality: "med", dynamicRes: true, eventLighting: false, binds: { ...DEFAULT_BINDS }, moveBinds: { ...DEFAULT_MOVE_BINDS }, onboarded: false },
+  settings: { ...FLIGHT_PROFILE, speedTurn: false, sens: 1, difficulty: "normal", mute: false, quality: "med", dynamicRes: true, eventLighting: false, binds: { ...DEFAULT_BINDS }, moveBinds: { ...DEFAULT_MOVE_BINDS }, onboarded: false },
   progress: { ship: "f11", unlocked: ["f11"], missions: {} },
 };
 
@@ -69,7 +72,7 @@ export function loadSave(): Save {
     if (!raw) return structuredClone(DEFAULT_SAVE);
     const j = JSON.parse(raw) as Partial<Save>;
     return {
-      settings: { ...DEFAULT_SAVE.settings, ...(j.settings ?? {}), binds: mergeBinds(j.settings?.binds), moveBinds: mergeMoveBinds(j.settings?.moveBinds, mergeBinds(j.settings?.binds)) },
+      settings: { ...DEFAULT_SAVE.settings, ...(j.settings ?? {}), ...FLIGHT_PROFILE, binds: mergeBinds(j.settings?.binds), moveBinds: mergeMoveBinds(j.settings?.moveBinds, mergeBinds(j.settings?.binds)) },
       progress: { ...structuredClone(DEFAULT_SAVE.progress), ...(j.progress ?? {}) },
     };
   } catch {

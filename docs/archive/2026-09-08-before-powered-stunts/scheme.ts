@@ -1,5 +1,12 @@
-/** Flight-model modes. The player profile is fixed to classic/cursor in core/save.ts.
- * Arcade/relative remain model options for isolated tests and authored experiments.
+/**
+ * Control scheme switch (Ethan, 2026-09-04: "have it as a switcher so we could
+ * try this mode out and then potentially go back").
+ *
+ *   arcade   constant cruise speed; W = hard pull-up, S = hard dive; Shift boost; Space brake
+ *   classic  W/S throttle; Space brake (drift lives on flight assist off, X)
+ *
+ * Mouse steering, A/D roll and the double-tap barrel roll are the same in both.
+ * `?controls=classic|arcade` picks the start scheme, C toggles live.
  */
 export type SchemeName = "arcade" | "classic";
 
@@ -10,6 +17,14 @@ export type SchemeName = "arcade" | "classic";
  *   relative  the original: mouse *speed* pumps a self-centering stick, so a still mouse flies straight.
  */
 export type SteerMode = "cursor" | "relative";
+
+export function parseSteer(v: string | null | undefined): SteerMode {
+  return v === "relative" ? "relative" : "cursor";
+}
+
+export function parseScheme(v: string | null): SchemeName {
+  return v === "classic" ? "classic" : "arcade";
+}
 
 export class Scheme {
   arcade: boolean;
@@ -25,10 +40,19 @@ export class Scheme {
     return this.arcade ? "arcade" : "classic";
   }
 
-  /** flight assist: velocity follows the nose. Off = drift mode in isolated model tests. */
+  /** flight assist: velocity follows the nose. Off = drift mode (X toggles). */
   assist: boolean;
   /** how hard assist works while on (0.2..1): scales `latDamp` and the soft-horizon `autoLevel` (Ethan, 2026-09-05: helps, "not quite as strong") */
   assistStrength = 1;
   /** speed-coupled turn rate: agile when slow, stiff when fast (menu toggle; Ethan, 2026-09-05: "two could be a switcher option") */
   speedTurn = false;
+  toggleAssist(): void {
+    this.assist = !this.assist;
+    this.sinceSwitch = 0;
+  }
+
+  toggle(): void {
+    this.arcade = !this.arcade;
+    this.sinceSwitch = 0;
+  }
 }

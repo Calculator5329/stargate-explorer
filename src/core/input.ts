@@ -44,11 +44,11 @@ function shape(v: number, dead: number, curve: number): number {
  *   move      the chord that landed this tick (`moveFired`): a trigger key from `moveKeys`, then a direction
  *             (the pull-up/dive/roll binds) inside the double-tap window, or the key alone once it closes
  *
- * Which meaning applies is `scheme` (C toggles it; see core/scheme.ts). Which
+ * The selected flight profile uses classic throttle (see core/save.ts). Which
  * key does what is `binds` (core/binds.ts, the menu edits it).
  *
  * Gamepad (standard mapping): left stick steer, right stick X roll / Y pull-dive,
- * RT fire, LT missile, A boost, B brake, X scheme, Y assist, LB/RB barrel roll.
+ * RT fire, LT missile, A boost, B brake, LB/RB barrel roll.
  */
 export class Input {
   readonly stick = { x: 0, y: 0 };
@@ -158,8 +158,6 @@ export class Input {
         return;
       }
       const b = this.binds;
-      if (e.code === b.scheme) this.scheme.toggle();
-      if (e.code === b.assist) this.scheme.toggleAssist();
       if (this.moveKeys.has(e.code)) {
         this.armed = { key: e.code, t: performance.now() };
         this.keys.add(e.code);
@@ -272,8 +270,6 @@ export class Input {
     if (rose(6)) this.alt = true;
     if (now[0]) this.boost = true;
     if (now[1]) this.space = true;
-    if (rose(2)) this.scheme.toggle();
-    if (rose(3)) this.scheme.toggleAssist();
     if (rose(4)) this.barrel = -1;
     if (rose(5)) this.barrel = 1;
   }

@@ -1,0 +1,54 @@
+{
+  "moves": [
+    {
+      "id": "cobra",
+      "name": "Cobra",
+      "trigger": { "key": "KeyB", "dir": "none" },
+      "cost": 0.35,
+      "duration": 1.1,
+      "steps": [
+        { "kind": "brake", "start": 0, "length": 0.6, "amount": 30 },
+        { "kind": "snapPitch", "start": 0.05, "length": 0.45, "amount": 3 },
+        { "kind": "snapPitch", "start": 0.55, "length": 0.45, "amount": -3 },
+        { "kind": "boost", "start": 0.7, "length": 0.4, "amount": 320 }
+      ]
+    },
+    {
+      "id": "lunge",
+      "name": "Lunge",
+      "trigger": { "key": "KeyB", "dir": "up" },
+      "cost": 0.25,
+      "duration": 0.8,
+      "steps": [
+        { "kind": "boost", "start": 0, "length": 0.55, "amount": 560 },
+        { "kind": "snapPitch", "start": 0, "length": 0.12, "amount": -1.2 }
+      ]
+    },
+    {
+      "id": "scissor-left",
+      "name": "Scissor left",
+      "trigger": { "key": "KeyB", "dir": "left" },
+      "cost": 0.3,
+      "duration": 0.9,
+      "steps": [
+        { "kind": "roll", "start": 0, "length": 0.45, "amount": -7 },
+        { "kind": "hop", "start": 0, "length": 0.6, "amount": -60 },
+        { "kind": "yaw", "start": 0.1, "length": 0.5, "amount": -1.6 },
+        { "kind": "roll", "start": 0.45, "length": 0.45, "amount": 7 }
+      ]
+    },
+    {
+      "id": "scissor-right",
+      "name": "Scissor right",
+      "trigger": { "key": "KeyB", "dir": "right" },
+      "cost": 0.3,
+      "duration": 0.9,
+      "steps": [
+        { "kind": "roll", "start": 0, "length": 0.45, "amount": 7 },
+        { "kind": "hop", "start": 0, "length": 0.6, "amount": 60 },
+        { "kind": "yaw", "start": 0.1, "length": 0.5, "amount": 1.6 },
+        { "kind": "roll", "start": 0.45, "length": 0.45, "amount": -7 }
+      ]
+    }
+  ]
+}

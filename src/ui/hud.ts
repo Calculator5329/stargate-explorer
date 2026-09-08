@@ -9,14 +9,14 @@ import type { Tracked } from "@/combat/targets";
 import { keyName, type Binds } from "@/core/binds";
 import type { SchemeName } from "@/core/scheme";
 
-const PAD_HINT = "gamepad · left stick steers · right stick roll, pull up/dive · RT fire · LT missile · A boost · B brake · X scheme · Y assist · bumpers barrel roll";
+const PAD_HINT = "gamepad · left stick steers · right stick roll / throttle · RT fire · LT missile · A boost · B brake · bumpers barrel roll";
 
 function hint(name: SchemeName, b: Binds): string {
   const k = keyName;
   const roll = `${k(b.rollLeft)}/${k(b.rollRight)} roll (double-tap: barrel roll) · ${k(b.strafeLeft)}/${k(b.strafeRight)} strafe`;
   return name === "arcade"
-    ? `click to fly · mouse steers · ${k(b.pullUp)} pull up / ${k(b.dive)} dive · ${roll} · ${k(b.boost)} boost · ${k(b.brake)} brake · LMB fire · ${k(b.scheme)} classic · ${k(b.assist)} flight assist · V last kill · Esc menu · \` tuning`
-    : `click to fly · mouse steers · ${k(b.pullUp)}/${k(b.dive)} throttle · ${roll} · ${k(b.brake)} brake · ${k(b.boost)} boost · LMB fire · ${k(b.scheme)} arcade · ${k(b.assist)} flight assist · V last kill · Esc menu · \` tuning`;
+    ? `click to fly · mouse steers · ${k(b.pullUp)} pull up / ${k(b.dive)} dive · ${roll} · ${k(b.boost)} boost · ${k(b.brake)} brake · LMB fire · V last kill · Esc menu · \` tuning`
+    : `click to fly · mouse steers · ${k(b.pullUp)}/${k(b.dive)} throttle · ${roll} · ${k(b.brake)} brake · ${k(b.boost)} boost · LMB fire · V last kill · Esc menu · \` tuning`;
 }
 
 /** DOM HUD: speed readout, throttle/speed bar, hint per control scheme, arena warning, hit flash. */

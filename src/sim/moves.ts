@@ -17,9 +17,11 @@ export type MoveDir = "none" | "up" | "down" | "left" | "right";
  * snapPitch: pitch rate, rad/s, + nose up
  * yaw: yaw rate, rad/s, + nose right
  * roll: roll rate, rad/s, + roll right
- * hop: sideways slide, m/s, + starboard
+ * hop: ship-relative sideways thrust, m/s, + starboard (roll + hop describes a helix)
+ * slide / lift: sideways/up thrust in the entry attitude, m/s (vectoring independent of nose)
+ * coast: hold the current velocity through rotation; amount > 0 enables it
  */
-export type StepKind = "brake" | "boost" | "snapPitch" | "yaw" | "roll" | "hop";
+export type StepKind = "brake" | "boost" | "snapPitch" | "yaw" | "roll" | "hop" | "slide" | "lift" | "coast";
 
 export interface MoveStep {
   kind: StepKind;
@@ -40,11 +42,11 @@ export interface MoveDef {
   steps: MoveStep[];
 }
 
-export const STEP_KINDS: StepKind[] = ["brake", "boost", "snapPitch", "yaw", "roll", "hop"];
+export const STEP_KINDS: StepKind[] = ["brake", "boost", "snapPitch", "yaw", "roll", "hop", "slide", "lift", "coast"];
 export const MOVE_DIRS: MoveDir[] = ["none", "up", "down", "left", "right"];
 
 /** what each step's `amount` means, for the composer's field label */
-export const STEP_UNIT: Record<StepKind, string> = { brake: "to m/s", boost: "to m/s", snapPitch: "rad/s (+ up)", yaw: "rad/s (+ right)", roll: "rad/s (+ right)", hop: "m/s (+ starboard)" };
+export const STEP_UNIT: Record<StepKind, string> = { brake: "to m/s", boost: "to m/s", snapPitch: "rad/s (+ up)", yaw: "rad/s (+ right)", roll: "rad/s (+ right)", hop: "m/s (+ ship starboard)", slide: "m/s (+ entry starboard)", lift: "m/s (+ entry up)", coast: "1 = hold momentum through rotation" };
 
 export const MOVES: MoveDef[] = moves.moves as MoveDef[];
 
