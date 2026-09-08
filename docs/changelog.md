@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-09-08 — Dynamic resolution rebuilt for laptops, and a cheaper first frame
+
+Ethan again, on the deployed build: "there are still drops to 30 FPS sometimes and especially on initial
+load", on a laptop in Chrome. Three separate mechanisms, all of them measured before being touched.
+
+The resolution controller judged the loop's mean frame rate, which is blind to exactly what he described.
+Frames alternating 16.7 and 33.3 ms average to a respectable 40 fps while the picture visibly hitches, and
+in the other direction a single load stall reads as a catastrophically slow machine and quietly costs
+resolution for the rest of the sortie. It now judges the window's second-worst frame time: sensitive to one
+bad frame in ten, deaf to one bad frame outright. It also takes its first reading at 0.6 s instead of three
+seconds, jumps straight to the scale the measurement implies instead of stepping 0.15 at a time, and floors
+at 0.35 instead of 0.55. On the starved proxy at low that is 27 to 38 fps steady, and the ten seconds it
+used to spend getting there are gone.
+
+The sky and planet bakes ran at the tier's full size inside the first rendered frame, before anything knew
+what the machine could afford. The first bake is now capped at 256 and the real size follows the settled
+scale. Below the resolution floor there was previously nothing left to give; the controller now drops the
+bloom pass and takes it back before it takes back any pixels, with `bloom off (perf)` in the overlay so a
+reading says so. Bloom was the right thing to give up and shadows was not: `shadowMap.enabled` is in every
+program's cache key, so toggling it mid-fight would relink the scene, the exact stall `render/warmup.ts`
+exists to prevent.
+
+Together, on the real GPU under a 4x CPU throttle, the load stall moved from 1.31 s to 0.78 s and shrank
+from 883 ms to 667 ms, which puts the whole load before the first second, and the twenty seconds after it
+hold 60 fps with four frames over 33 ms. New probe `scripts/load-probe.mjs` records from the first frame
+rather than skipping the first three seconds, which is where the complaint lives; `scripts/perf-probe.mjs`
+is rewritten for the new controller and covers all six of its behaviours. Readings and the honest limits of
+the proxies in [evidence](evidence/2026-09-perf.md).
+
 ## 2026-09-08 — Tracer rounds drew a thousand metres behind themselves
 
 Ethan, on the deployed build: "it's like the blaster shoots backwards". Every cannon round was drawn back

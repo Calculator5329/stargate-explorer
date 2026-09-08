@@ -1,4 +1,5 @@
 import { MoveTrails } from "@/fx/move-trails";
+import { timed } from "@/core/timing";
 import { SandboxGuide } from "@/ui/sandbox-guide";
 import { Color, Quaternion, Vector3 } from "three";
 import { Loop } from "@/core/loop";
@@ -44,6 +45,11 @@ setDifficulty(S.difficulty);
 const view = parseView(boot.get("view"));
 const canvas = document.body.appendChild(document.createElement("canvas"));
 const r = new Renderer(canvas, quality);
+// `?dynres=0` pins the drawing buffer at the tier's full resolution with every effect on. Capture
+// scripts need it: the controller takes its first reading at 0.6 s, well inside the settle time a
+// capture waits, so without this a slow headless run silently photographs a reduced-resolution frame,
+// or one with the bloom pass switched off, and every reference image quietly changes meaning.
+if (boot.get("dynres") === "0") r.dynamic = false;
 const scheme = new Scheme(S.scheme, S.assist);
 const input = new Input(canvas, scheme, view === null, boot.get("lock") === "free"), flight = new Flight();
 input.moveKeys = moveKeys(MOVES);
@@ -73,10 +79,10 @@ function build(params: URLSearchParams): Sortie {
   if (params.has("sky")) system.sky = parseSkyPreset(params.get("sky"));
   if (level.beltScale !== undefined) system.belt = { ...system.belt, count: Math.max(1, Math.round(system.belt.count * level.beltScale)) }; // the duel wants open space
   r.setGrade(SKY_PRESETS[system.sky].grade);
-  const world = new World(r.scene, { system, ...(params.has("planet") ? { planet: parsePlanetPreset(params.get("planet")) } : {}), planetSegments: QUALITY[quality].planetSegments, shadowMap: r.tier.shadows });
+  const world = timed("build.world", () => new World(r.scene, { system, ...(params.has("planet") ? { planet: parsePlanetPreset(params.get("planet")) } : {}), planetSegments: QUALITY[quality].planetSegments, shadowMap: r.tier.shadows }));
   const ship = parseShip(params.get("ship") ?? save.progress.ship);
   const def = HULLS[params.get("hull") ?? ""] ?? pickVariant(ship.def, params);
-  const rig = new ShipRig(def), trails = new MoveTrails(def.engines);
+  const rig = timed("build.rig", () => new ShipRig(def)), trails = new MoveTrails(def.engines);
   r.scene.add(trails.group);
   r.scene.add(rig.root);
   world.sun.follow(rig.root);
@@ -91,7 +97,7 @@ function build(params: URLSearchParams): Sortie {
   if (inspect) hud.hideAll();
   hud.reset();
   sandboxGuide.setActive(level.type === "sandbox");
-  const game = inspect ? null : new Game(r.scene, world, rig.root, canvas, flight, save, level, audio);
+  const game = inspect ? null : timed("build.game", () => new Game(r.scene, world, rig.root, canvas, flight, save, level, audio));
   if (game) {
     game.onWeapon = (pos) => eventLighting.weapon(pos);
     // the way home: through the gate that opens when a mission is won, or G on the end card
@@ -118,7 +124,7 @@ function teardown(s: Sortie): void {
 let hub: Hub | null = null, menu: Menu | null = null, travel: Travel | null = null, editor: EditorHandle | null = null;
 let review: SceneReview | null = null;
 const edit = boot.get("edit") === "1";
-let sortie = build(boot);
+let sortie = timed("boot.sortie", () => build(boot));
 travel = sortie.game ? new Travel(document.getElementById("dial")!, r.scene, audio) : null;
 if (travel) {
   travel.onDepart = () => {
@@ -139,7 +145,7 @@ if (travel) {
   };
 }
 void warmPrograms(r); // every program the sortie can show, linked before play (render/warmup.ts)
-hub = new Hub(document.getElementById("hub")!, save, sortie.level, () => undefined, (lvl, shipId) => {
+hub = timed("boot.hub", () => new Hub(document.getElementById("hub")!, save, sortie.level, () => undefined, (lvl, shipId) => {
   const q = new URLSearchParams(location.search);
   q.set("mission", lvl.id);
   q.set("ship", shipId);
@@ -150,7 +156,7 @@ hub = new Hub(document.getElementById("hub")!, save, sortie.level, () => undefin
   audio.unlock();
   lockPointer(canvas);
   travel?.depart(systemOf(lvl.system), q);
-});
+}));
 if (sortie.game) {
   window.addEventListener("keydown", (e) => {
     if (e.code === "KeyG" && !travel?.holding && sortie.game?.mission.done && !sortie.game.replay.playing) hub?.show();
@@ -304,7 +310,7 @@ const loop = new Loop({
           mode === "replay" ? game?.replay.fx ?? null : mode === "flight" ? game?.combat.fx ?? null : null, _lightPos, glow);
       }
     }
-    world.update(r.camera, r.gl, r.tier.bakeSize, alpha);
+    world.update(r.camera, r.gl, r.bakeSize(), alpha);
     r.adapt(realDt, loop.fps);
     r.render();
     perf.update(realDt, loop, r.gl.info, r);

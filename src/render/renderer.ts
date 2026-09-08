@@ -27,6 +27,9 @@ export interface QualityTier {
   bakeSize: number;
 }
 
+/** Resolution floor for the dynamic-resolution controller. Below this the picture stops being worth it. */
+const MIN_SCALE = 0.35;
+
 /** `?quality=` tiers. Low is the fallback for integrated GPUs. */
 export const QUALITY = {
   low: { dpr: 1, bloom: false, edges: false, shadows: 0, msaa: 0, planetSegments: 32, maxPixels: 2.1e6, bakeSize: 512 },
@@ -60,8 +63,16 @@ export class Renderer {
   dynamic = true;
   /** current dynamic-resolution factor on the tier's pixel ratio, 0.55..1 */
   scale = 1;
-  private adaptT = -3; // the first three seconds are load hitches, not a verdict
+  private adaptT = -1.2; // the first frames are load hitches, not a verdict
   private goodT = 0;
+  /** frame times in milliseconds since the last adaptation reading; `nearlyWorst()` judges them */
+  private readonly frameMs: number[] = [];
+  /** 0 = every effect on, 1 = bloom dropped because the resolution floor was not enough (see `adapt`) */
+  relief = 0;
+  /** how many adaptation readings have been taken; 0 means we do not yet know what this machine can afford */
+  private readings = 0;
+  /** the bake size settled on after the first reading, 0 before it (see `bakeSize`) */
+  private bakeLatch = 0;
   private readonly timerExt: { TIME_ELAPSED_EXT: number; GPU_DISJOINT_EXT: number } | null;
   private readonly queries: WebGLQuery[] = [];
 
@@ -125,7 +136,7 @@ export class Renderer {
   /** Black-on-white ship silhouette for the readability test (`&silhouette=1`). */
   setSilhouette(on: boolean): void {
     if (this.edges) this.edges.enabled = !on;
-    if (this.bloom) this.bloom.enabled = !on;
+    if (this.bloom) this.bloom.enabled = !on && this.relief === 0;
     this.grade.enabled = !on;
     this.output.enabled = !on;
     this.scene.background = on ? new THREE.Color(0xffffff) : null;
@@ -137,31 +148,142 @@ export class Renderer {
     let d = Math.min(window.devicePixelRatio || 1, q.dpr);
     const px = window.innerWidth * window.innerHeight * d * d;
     if (px > q.maxPixels) d *= Math.sqrt(q.maxPixels / px);
-    return Math.max(0.5, d * this.scale);
+    return Math.max(0.35, d * this.scale);
   }
 
   /**
-   * Once a frame: step the resolution scale on sustained frame-rate readings. Down by 0.15 per
-   * 1.5 s window under 50 fps (floor 0.55); up by 0.1 after six seconds at 58+ (ceiling 1).
-   * Hysteresis keeps it from hunting; the 60 Hz targets are deliberate (a 144 Hz display that
-   * runs at 90 is not a problem to solve by blurring the picture).
+   * Once a frame: step the resolution scale on how long recent frames actually took. Coming down is
+   * fast and proportional, going back up is slow and cautious, because a player notices ten seconds of
+   * 30 fps far more than a slightly soft picture.
+   *
+   * It judges the **95th-percentile frame time of the window, with the single worst frame discarded**,
+   * not the mean frame rate, and that choice is the point of the 2026-09-08 retune. Ethan's report was
+   * "drops to 30 FPS sometimes", and a mean hides exactly that: frames alternating 16.7 and 33.3 ms
+   * average to a respectable 40 fps while the picture visibly hitches. A mean is also wrecked from the
+   * other side by the one-off load stall, which would otherwise cost resolution for the rest of the
+   * sortie. Discarding the worst frame and reading the next worst answers the question the player is
+   * actually asking, "how bad are my bad frames", while staying deaf to any single hitch: at the roughly
+   * thirty frames in a window it catches one bad frame in ten and ignores one bad frame outright.
+   *
+   * The old controller waited three seconds, then stepped down 0.15 every 1.5 s to a floor of 0.55, so a
+   * machine that needed the floor spent about nine seconds below rate first; on a GPU-starved proxy it
+   * took ten seconds to reach 35 fps. It now takes its first reading at 0.6 s and jumps straight to the
+   * scale the measurement implies, so one bad reading is enough. `implied/target` is the right ratio
+   * because the cost this controller governs is fill, linear in pixels, while `scale` is linear in each
+   * axis: hence the square root.
+   *
+   * The floor is 0.35 rather than 0.55, since a laptop that cannot hold 60 at 0.55 was previously left at
+   * 30 with no further help. Scale is quantised to 0.05 so small corrections do not trigger a `resize()`,
+   * which reallocates the composer and every bloom mip and is itself expensive on a weak GPU.
+   *
+   * `fps` is accepted but no longer consulted; it stays in the signature because the perf overlay and the
+   * probes pass it, and because a frame-rate reading is the obvious thing for a caller to have to hand.
    */
-  adapt(dt: number, fps: number): void {
+  adapt(dt: number, _fps?: number): void {
     if (!this.dynamic) {
       if (this.scale !== 1) (this.scale = 1), this.resize();
       return;
     }
+    if (this.frameMs.length < 600) this.frameMs.push(dt * 1000);
     this.adaptT += dt;
-    if (this.adaptT < 1.5) return;
+    const cooling = this.scale < 1;
+    // react quickly while we are still above the rate we want, then settle
+    if (this.adaptT < (cooling ? 1 : 0.6)) return;
+    const window_ = this.adaptT;
     this.adaptT = 0;
-    if (fps > 0 && fps < 50 && this.scale > 0.55) {
-      this.scale = Math.max(0.55, +(this.scale - 0.15).toFixed(2));
-      this.goodT = 0;
-      this.resize();
-    } else if (fps >= 58 && this.scale < 1) {
-      this.goodT += 1.5;
-      if (this.goodT >= 6) (this.goodT = 0), (this.scale = Math.min(1, +(this.scale + 0.1).toFixed(2))), this.resize();
+    const slow = this.nearlyWorst();
+    this.frameMs.length = 0;
+    if (slow <= 0) return;
+    this.readings++;
+    const TARGET = 60;
+    const implied = 1000 / slow;
+    if (implied < 55) {
+      // aim straight at the scale this frame time can afford, with a little headroom, in one step
+      const want = this.quantise(this.scale * Math.sqrt(implied / TARGET) * 0.97);
+      if (want < this.scale) {
+        this.scale = want;
+        this.goodT = 0;
+        this.resize();
+      } else if (this.scale <= MIN_SCALE) {
+        this.goodT = 0;
+        this.setRelief(1); // out of pixels to give: drop the effect rather than sit at 30 fps
+      }
+    } else if (implied >= 58 && (this.scale < 1 || this.relief > 0)) {
+      // climb back only after a sustained good stretch, and one step at a time
+      this.goodT += window_;
+      if (this.goodT >= 4) {
+        this.goodT = 0;
+        if (this.relief > 0) this.setRelief(this.relief - 1); // effects come back first, then pixels
+        else {
+          this.scale = this.quantise(Math.min(1, this.scale + 0.05));
+          this.resize();
+        }
+      }
     } else this.goodT = 0;
+  }
+
+  /**
+   * Last resort, once the resolution floor is not enough: switch the bloom pass off, and switch it back on
+   * before any resolution is given back.
+   *
+   * Bloom is the single largest fill cost of the medium and high tiers, five mip levels of separable blur
+   * over the whole frame, and skipping the pass costs nothing to change: the pass is disabled, no scene
+   * material is touched, so nothing relinks and the switch itself does not stutter. That is what rules out
+   * the other obvious candidate, shadows, whose `shadowMap.enabled` is part of every program's cache key
+   * and would relink the whole scene mid-fight, the exact stall `render/warmup.ts` exists to prevent.
+   *
+   * A machine that needs this looks worse than one that does not, and that is the intended trade: the
+   * standing requirement for this game is a steady 60, and a plainer picture at 60 beats a pretty one at 30.
+   */
+  private setRelief(level: number): void {
+    const want = Math.max(0, Math.min(1, level));
+    if (want === this.relief) return;
+    this.relief = want;
+    if (this.bloom) this.bloom.enabled = want === 0;
+  }
+
+  /**
+   * The 95th-percentile frame time of the window, never the single worst frame. Clamping the rank to
+   * `n - 2` is what makes one load stall, one garbage collection or one alt-tab cost nothing: whatever
+   * the window's worst frame was, the controller reads the one below it. Returns 0 for a window too
+   * short to say anything.
+   */
+  private nearlyWorst(): number {
+    const n = this.frameMs.length;
+    if (n < 4) return 0;
+    const sorted = this.frameMs.slice().sort((a, b) => a - b);
+    return sorted[Math.min(n - 2, Math.ceil(0.95 * n) - 1)] ?? 0;
+  }
+
+  /**
+   * Size for the one-off sky cube and planet surface bakes, which the world re-runs whenever this changes.
+   *
+   * The first bake happens inside the first rendered frame, before anything has measured the machine, and
+   * at a tier's full size it is one of the most expensive things the game ever does: six cube faces plus an
+   * equirect surface, all procedural shaders. So the first one is deliberately small, and the real size is
+   * chosen once the resolution controller has a reading. A machine that reads low keeps a smaller sky for
+   * the rest of the sortie, which is both the cheap thing and the honest one, because it is not resolving
+   * that detail anyway.
+   *
+   * The second size is latched, not tracked. `World.update` re-bakes whenever this number changes, and the
+   * controller's 0.05 steps straddle the power-of-two boundaries: a scale drifting between 0.70 and 0.75
+   * would otherwise flip the medium tier between a 512 and a 1024 sky and re-bake six cube faces and an
+   * equirect surface on each crossing, which is far more expensive than the sharper sky is worth.
+   */
+  bakeSize(): number {
+    const full = this.tier.bakeSize;
+    if (this.readings === 0) return Math.min(256, full);
+    if (this.bakeLatch === 0) {
+      const want = full * (this.dynamic ? this.scale : 1);
+      const pow2 = 2 ** Math.round(Math.log2(Math.max(1, want)));
+      this.bakeLatch = Math.max(256, Math.min(full, pow2));
+    }
+    return this.bakeLatch;
+  }
+
+  /** 0.05 steps between the floor and 1: fewer distinct scales means fewer `resize()` reallocations. */
+  private quantise(v: number): number {
+    return Math.min(1, Math.max(MIN_SCALE, Math.round(v * 20) / 20));
   }
 
   resize(): void {
