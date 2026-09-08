@@ -96,3 +96,12 @@ Per-glider roles (held for Ethan's dogfight verdict), a real-pad check of the ga
 | draw calls | <150 (M2) | ~93 med in a fight (chase), ~40 low |
 | triangles | <300k | ~156k med (chase, 900 rocks + shells), ~5k inspect |
 | bundle size (gzipped) | <500 kB | 153 kB |
+
+## Active replay repair · 2026-09-08
+- Repeat on the same replay flow: owner rejected a second pass despite CPU checks passing; animation acceptance was missing.
+- Spine defect: capture, camera framing and evaluation controls represented different things as playback; exact camera/subject co-motion hid flight.
+- Carry actual recorded pose/time into explicit playback controls and fixed world-space camera shots; no new side-channel.
+- Verify whole temporal sequences, not just projected points or staged screenshots. No new release gate is being added.
+
+## Owner acceptance · 2026-09-08
+Ethan reviewed the repaired preview and approved pushing/deploying it. Build, replay clock and actual-control checks pass. Agent browser verification remained unavailable, so visual acceptance is the owner’s observation. Explosion animation quality remains an explicit follow-up.

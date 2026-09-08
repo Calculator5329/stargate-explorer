@@ -40,3 +40,9 @@ Ethan authorized recommendations 1–5: coherent transitions without mixed gamep
 
 ## Replay feedback · 2026-09-08
 Ethan approved the whole gate trip. Replay is almost right: the kill shot must keep both player and victim in frame, then show a short player follow-through after the kill. Capture up to a configurable N kills within X seconds, not just a single scored kill. Preserve the approved gate trip.
+
+## Replay correction · 2026-09-08, second evaluation
+Ethan rejected the revised replay motion as glitchy and visually frozen. Follow-through must play, not silently open a frozen snapshot. Whole playback must visibly move throughout the approach, kill and exit; projected in-frame tests and still captures do not establish this. Preserve the approved gate trip and remove its finished evaluation controls. Multi-kill evaluation needs continuous trajectories without enemies being teleported onto the gun line.
+
+## Replay acceptance and explosion follow-up · 2026-09-08
+Ethan reviewed the repaired preview: “all looks good” and explicitly requested push and deployment. The new explosion animation is not satisfactory; defer its refinement until after this delivery. This accepts the replay repair, not the explosion visual quality.

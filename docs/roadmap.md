@@ -28,6 +28,8 @@ A browser space-combat game in the *tone* of late-90s/2000s space sims (Freespac
 
 - [x] Replay feedback: frame player/victim together, keep a player follow-through, and capture up to N kills in X seconds. Done 2026-09-08; defaults 3/8, bounded 1–8 kills and 0–30 seconds; focused clock/framing checks and browser fixture pass.
 
+- [x] Finish replay motion repair after owner rejection. Done 2026-09-08: implementation and CPU/control checks pass; Ethan reviewed the repair preview and approved push/deployment. See [repair evidence](evidence/2026-09-08-replay-repair.md).
+
 ## Milestones
 
 ### M0 — Foundation hygiene  (now → 1 session)
@@ -269,3 +271,5 @@ Multiplayer, mobile/touch, VR, mod support, story/dialogue system.
 - [x] <!-- workspace:id=work:a0f20fc6-e7d5-509b-bb39-fa1873f11908 --> (2026-09-06) Apply the owner’s first fleet review: retain preferred gliders/F-302, preserve original bomber default, rebuild invented roles as SG-1-derived variants, improve Prometheus proportions and Ha’tak structure, and add reference views plus version-specific feedback. [Pass-two evidence](design/sg1-fleet/pass2-preservation.json).
 
 - [x] <!-- workspace:id=work:9a726fe2-0718-50ed-b968-05db03d1e217 --> (2026-09-06) Author one editable Blender death-glider benchmark, export GLB, verify it in isolated Three.js and deliver an offline comparison without changing playable ships. [Benchmark](design/blender-glider/README.md). Adoption remains owner-directed.
+
+- [ ] Refine the new explosion animation after the approved replay deployment. Ethan, 2026-09-08: the animation is not great; delivery takes priority.
