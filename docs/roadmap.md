@@ -24,15 +24,15 @@ A browser space-combat game in the *tone* of late-90s/2000s space sims (Freespac
 
 ## Graphics scene pass · 2026-09-08
 
-- [x] Implement the five authorized graphics improvements and an optional event-lighting setting: exclusive travel/control/audio scenes, staged seeded destruction, independent replay presentation, planet/sky layering, and distinct ice/wreck fields. Done 2026-09-08; build and focused checks pass; browser captures and verification limits in [evidence](evidence/2026-09-08-graphics-scenes.md).
+- [x] <!-- workspace:id=work:628219bb-c511-52e6-a81c-16938037791a --> Implement the five authorized graphics improvements and an optional event-lighting setting: exclusive travel/control/audio scenes, staged seeded destruction, independent replay presentation, planet/sky layering, and distinct ice/wreck fields. Done 2026-09-08; build and focused checks pass; browser captures and verification limits in [evidence](evidence/2026-09-08-graphics-scenes.md).
 
-- [x] Replay feedback: frame player/victim together, keep a player follow-through, and capture up to N kills in X seconds. Done 2026-09-08; defaults 3/8, bounded 1–8 kills and 0–30 seconds; focused clock/framing checks and browser fixture pass.
+- [x] <!-- workspace:id=work:ccc801f8-9869-5edf-838d-1fdbfdf8aca7 --> Replay feedback: frame player/victim together, keep a player follow-through, and capture up to N kills in X seconds. Done 2026-09-08; defaults 3/8, bounded 1–8 kills and 0–30 seconds; focused clock/framing checks and browser fixture pass.
 
-- [x] Finish replay motion repair after owner rejection. Done 2026-09-08: implementation and CPU/control checks pass; Ethan reviewed the repair preview and approved push/deployment. See [repair evidence](evidence/2026-09-08-replay-repair.md).
+- [x] <!-- workspace:id=work:95ad4821-94f2-59de-add9-bc5664573f9f --> Finish replay motion repair after owner rejection. Done 2026-09-08: implementation and CPU/control checks pass; Ethan reviewed the repair preview and approved push/deployment. See [repair evidence](evidence/2026-09-08-replay-repair.md).
 
 ## Sandbox controls · 2026-09-08
 
-- [x] Expose sandbox and four moves through saved custom keys. Done 2026-09-08: direct menu/hub entry, 1–4 defaults, live practice guide, invulnerability and resource refill. Build, input/simulation checks, browser binding persistence/swap and all four move activations verified. [Evidence](evidence/2026-09-08-sandbox-controls.md).
+- [x] <!-- workspace:id=work:92873a58-dbd4-5923-8a83-0ab194f45067 --> Expose sandbox and four moves through saved custom keys. Done 2026-09-08: direct menu/hub entry, 1–4 defaults, live practice guide, invulnerability and resource refill. Build, input/simulation checks, browser binding persistence/swap and all four move activations verified. [Evidence](evidence/2026-09-08-sandbox-controls.md).
 
 Suggestions named, not authorized for implementation: velocity-direction HUD marker, a recenter-steering action, and optional steering presets. Ethan will first test the existing movement in the sandbox.
 
@@ -186,7 +186,7 @@ Ethan: prefers classic; assist helps but may be too strong; arcade W/S up/down "
 - [x] <!-- workspace:id=work:799ad9d4-e1ef-5089-822b-a2c1bb2a374b --> GPU time in the perf overlay via `EXT_disjoint_timer_query_webgl2` where the browser exposes it. *(2026-09-06)*
 - [x] <!-- workspace:id=work:0ba776ad-6e7e-5728-bee2-7d51797f20c4 --> Shift cursor jitter: the aim cursor integrates at mouse-event rate instead of the 60 Hz tick, and the boost rumble is a sum of sines instead of per-frame white noise. *(2026-09-06, `scripts/perf-probe.mjs`; Ethan to hold Shift and confirm)*
 - [ ] <!-- workspace:id=work:7e81e9b1-3fcf-5863-82f8-c0b6b8ec07c3 --> Ethan reports what the perf overlay says on his laptop next time it drops: `fps`, `res N%`, `gpu X ms`, and whether `bloom off (perf)` is showing. Those four separate fill-bound from CPU-bound from neither, and no reading has ever come from his machine. Also whether medium at 2x MSAA still looks clean on the outlines, and whether the reduced-resolution picture is acceptable when the controller settles below full.
-- [ ] Whether the 2026-09-08 controller rebuild actually fixed what Ethan sees. The mechanisms it corrected were provably wrong (a mean frame rate cannot see one bad frame in ten; the first bake ran at full size before anything measured the machine), but every number behind it is from a desktop proxy. If he still drops to 30, the next lever is the medium tier's own cost, not the controller.
+- [ ] <!-- workspace:id=work:0dd3560a-df61-5190-82cf-8ecccdaab5b3 --> Whether the 2026-09-08 controller rebuild actually fixed what Ethan sees. The mechanisms it corrected were provably wrong (a mean frame rate cannot see one bad frame in ten; the first bake ran at full size before anything measured the machine), but every number behind it is from a desktop proxy. If he still drops to 30, the next lever is the medium tier's own cost, not the controller.
 - [ ] <!-- workspace:id=work:85d517ee-644b-5be7-9c91-dbe35fd83b16 --> A real weak device (a laptop iGPU or a phone) measured against the SwiftShader proxy; the tier thresholds are set from the proxy only.
 - [x] <!-- workspace:id=work:21281496-3f79-5592-87ff-143d1e257271 --> Ha'tak: guns damage ring guns and shield nodes from the start, shielded-pyramid cue, torpedo reload 14 s. *(2026-09-05, `scripts/chain-test.mjs`)*
 - [ ] <!-- workspace:id=work:43870e44-0060-5a71-b3cf-dfec4cdf3bdf --> Ethan flies the Ha'tak again: is the part legibility enough now (marker + line), or do the ring guns and nodes need their own HUD boxes?
@@ -279,4 +279,4 @@ Multiplayer, mobile/touch, VR, mod support, story/dialogue system.
 
 - [x] <!-- workspace:id=work:9a726fe2-0718-50ed-b968-05db03d1e217 --> (2026-09-06) Author one editable Blender death-glider benchmark, export GLB, verify it in isolated Three.js and deliver an offline comparison without changing playable ships. [Benchmark](design/blender-glider/README.md). Adoption remains owner-directed.
 
-- [ ] Refine the new explosion animation after the approved replay deployment. Ethan, 2026-09-08: the animation is not great; delivery takes priority.
+- [ ] <!-- workspace:id=work:0af31dd7-c61c-52f8-a18a-e1c934d4ff51 --> Refine the new explosion animation after the approved replay deployment. Ethan, 2026-09-08: the animation is not great; delivery takes priority.
