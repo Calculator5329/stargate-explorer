@@ -8,7 +8,7 @@ await page.addInitScript(() => {
   window.__pad = null;
   navigator.getGamepads = () => (window.__pad ? [window.__pad] : []);
 });
-await page.goto((process.env.STARGATE_TEST_URL ?? "http://localhost:5187/") + "?mission=belt-clear", { waitUntil: "load" });
+await page.goto((process.env.STARGATE_TEST_URL ?? (process.env.STARGATE_TEST_URL ?? "http://localhost:5187/") + "") + "?mission=belt-clear", { waitUntil: "load" });
 await page.waitForTimeout(2000);
 const out = {};
 out.menuOpen = await page.evaluate(() => document.getElementById("menu").classList.contains("on"));
@@ -25,7 +25,7 @@ await page.locator("#menu .binds .bind").nth(1).click();
 await page.keyboard.press("ArrowUp");
 out.afterSwap = [await page.locator("#menu .binds .bind").nth(0).textContent(), await page.locator("#menu .binds .bind").nth(1).textContent()];
 out.saved = await page.evaluate(() => JSON.parse(localStorage.getItem("stargate-explorer.save.v1")).settings);
-out.invertControlAbsent = await page.locator("#menu [name=invert]").count() === 0;
+await page.check("#menu [name=invert]");
 out.invertSaved = await page.evaluate(() => JSON.parse(localStorage.getItem("stargate-explorer.save.v1")).settings.invertY);
 // reset restores W
 await page.click("#menu .binds .reset");
@@ -46,7 +46,7 @@ await p2.addInitScript(() => {
   window.__pad = null;
   navigator.getGamepads = () => (window.__pad ? [window.__pad] : []);
 });
-await p2.goto((process.env.STARGATE_TEST_URL ?? "http://localhost:5187/") + "?lock=free&mission=belt-clear&quality=low", { waitUntil: "load" });
+await p2.goto((process.env.STARGATE_TEST_URL ?? (process.env.STARGATE_TEST_URL ?? "http://localhost:5187/") + "") + "?lock=free&mission=belt-clear&quality=low", { waitUntil: "load" });
 await p2.waitForTimeout(2000);
 const pad = (axes, pressed) => ({ connected: true, mapping: "standard", axes, buttons: Array.from({ length: 17 }, (_, i) => ({ pressed: pressed.includes(i), value: pressed.includes(i) ? 1 : 0 })) });
 await p2.evaluate((p) => (window.__pad = p), pad([0.8, -0.9, 0, 0], [7, 0]));

@@ -58,11 +58,12 @@ export interface Save {
 
 const KEY = "stargate-explorer.save.v1";
 
-/** Ethan's selected flight profile, 2026-09-08. Applied after old saved values. */
-export const FLIGHT_PROFILE = { scheme: "classic", steer: "cursor", rawMouse: true, assist: true, assistStrength: 0.9, invertY: false } as const;
+/** Ethan's selected flight profile, 2026-09-08. Applied after old saved values. Invert Y is not part of it: it
+ * stays a switch, off by default (Ethan, 2026-09-08: "invert stays a switcher defaulting to no"). */
+export const FLIGHT_PROFILE = { scheme: "classic", steer: "cursor", rawMouse: true, assist: true, assistStrength: 0.9 } as const;
 
 export const DEFAULT_SAVE: Save = {
-  settings: { ...FLIGHT_PROFILE, speedTurn: false, sens: 1, difficulty: "normal", mute: false, quality: "med", dynamicRes: true, eventLighting: false, binds: { ...DEFAULT_BINDS }, moveBinds: { ...DEFAULT_MOVE_BINDS }, onboarded: false },
+  settings: { ...FLIGHT_PROFILE, invertY: false, speedTurn: false, sens: 1, difficulty: "normal", mute: false, quality: "med", dynamicRes: true, eventLighting: false, binds: { ...DEFAULT_BINDS }, moveBinds: { ...DEFAULT_MOVE_BINDS }, onboarded: false },
   progress: { ship: "f11", unlocked: ["f11"], missions: {} },
 };
 

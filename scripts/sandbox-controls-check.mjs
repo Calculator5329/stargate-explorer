@@ -58,7 +58,7 @@ key('KeyC');key('KeyX');tick();assert.equal(input.scheme.name,'classic');assert.
 save.settings.moveBinds.cobra='KeyJ';writeSave(save);save=loadSave();assert.equal(save.settings.moveBinds.cobra,'KeyJ','custom shortcut survives save reload');
 store.set('stargate-explorer.save.v1',JSON.stringify({settings:{scheme:'arcade',steer:'relative',rawMouse:false,assist:false,assistStrength:.2,invertY:true,sens:1.7,speedTurn:true,difficulty:'hard',binds:{pullUp:'Digit1'}},progress:{missions:{sentinel:{completions:2}}}}));
 save=loadSave();for(const [k,v] of Object.entries(FLIGHT_PROFILE)) assert.equal(save.settings[k],v,'old profile adopts '+k);
-assert.equal(save.settings.sens,1.7);assert.equal(save.settings.speedTurn,true);assert.equal(save.settings.difficulty,'hard','adjustable preferences preserved');
+assert.equal(save.settings.sens,1.7);assert.equal(save.settings.invertY,true,'invert stays a preference');assert.equal(save.settings.speedTurn,true);assert.equal(save.settings.difficulty,'hard','adjustable preferences preserved');
 assert.notEqual(save.settings.moveBinds.cobra,'Digit1','old save gains nonconflicting shortcuts');assert.equal(save.progress.missions.sentinel.completions,2,'migration retains progress');
 const rocks={count:0,centers:new Float32Array(),radii:new Float32Array(),vel:new Float32Array(),tick:noop};
 const audio=new Proxy({},{get:()=>noop});

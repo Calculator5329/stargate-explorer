@@ -59,6 +59,7 @@ export class Menu {
     const s = save.settings;
     Object.assign(s, FLIGHT_PROFILE);
     const speedTurn = q<HTMLInputElement>(root, "[name=speedTurn]");
+    const invert = q<HTMLInputElement>(root, "[name=invert]");
     const sens = q<HTMLInputElement>(root, "[name=sens]");
     const sensV = q(root, ".sens-v");
     const diff = q<HTMLSelectElement>(root, "[name=difficulty]");
@@ -71,6 +72,7 @@ export class Menu {
     dyn.checked = s.dynamicRes;
     qual.value = s.quality;
     speedTurn.checked = s.speedTurn;
+    invert.checked = s.invertY;
     sens.value = String(s.sens);
     sensV.textContent = s.sens.toFixed(2);
     sens.style.setProperty("--fill", `${(s.sens - 0.4) / 2.1 * 100}%`);
@@ -78,6 +80,7 @@ export class Menu {
     mute.checked = s.mute;
     const commit = () => {
       s.speedTurn = speedTurn.checked;
+      s.invertY = invert.checked;
       s.sens = Number(sens.value) || 1;
       sensV.textContent = s.sens.toFixed(2);
       sens.style.setProperty("--fill", `${(s.sens - 0.4) / 2.1 * 100}%`);
@@ -88,7 +91,7 @@ export class Menu {
       writeSave(save);
       hooks.apply(s);
     };
-    for (const c of [speedTurn, sens, diff, mute, dyn, lighting]) c.addEventListener("input", commit);
+    for (const c of [speedTurn, invert, sens, diff, mute, dyn, lighting]) c.addEventListener("input", commit);
     // the renderer is built once per page, so a tier change is a reload
     qual.addEventListener("input", () => {
       s.quality = parseQuality(qual.value);

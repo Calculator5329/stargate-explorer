@@ -73,6 +73,7 @@ try {
       await new Promise((r) => setTimeout(r, 200));
       steps++;
       for (const e of g.enemies.list) if (e.alive) g.enemies.damage(e, 1e6);
+      g.combat.player.hp = g.combat.maxHp; // the player never flies here and turret fire landed it at 12% hull (escort) before the fixed 0.9 assist profile; completion is the subject, not survival
       if (type === "strike") for (const x of g.combat.extras) if (x.alive && x.damage) x.damage(1e6);
       if ((type === "hold" || type === "intercept") && m.phase !== "intro" && m.clock < m.def.duration - 3) m.clock = m.def.duration - 3; // outlasting the clock for real is the whole mission; the chain test only needs the win path
       if ((type === "run" || type === "race") && m.phase !== "intro" && performance.now() - lastGate > 500 && m.next < m.rings.length) {
