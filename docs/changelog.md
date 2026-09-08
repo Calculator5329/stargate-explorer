@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-08 — Coherent travel, destruction and replay
+
+Gate travel now holds gameplay and switches audio scenes through dial, opening, entry, tunnel and destination reveal. Replay owns seeded debris and tracers, aligns the kill with recorded disappearance, and frames the moving breakup. Added structural fragments, layered clouds/atmosphere and warped continents, quieter sky detail, ribbed wreck sections and convex ice prisms. Event lighting is saved and off by default. `?review=1` provides explicitly scripted freeze/play controls. [Verification and captures](evidence/2026-09-08-graphics-scenes.md).
+
 ## 2026-09-06 — Reviewed fleet integrated into main
 
 Preserved existing designer evidence in a separate commit, retained both sides of documentation additions, and merged the selected procedural fleet through supported lane close. Blender remains separate. Combined build, fleet, moves and editor verification passed; original Al’kesh and historical art switches remain available.

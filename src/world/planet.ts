@@ -101,8 +101,8 @@ void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }`;
 
-// Hard steps everywhere: land/sea, 3 land tones, 2 sea tones, 3 light steps. The albedo and the land mask
-// are baked once into an equirect texture (BAKE_FRAG); the surface shader only lights it.
+// Stepped land/sea colors and cloud coverage bake once into an equirect texture.
+// Surface and cloud shells sample the same map; neither evaluates procedural noise per frame.
 const BAKE_VERT = /* glsl */ `
 varying vec2 vUv;
 void main() {
@@ -112,18 +112,20 @@ void main() {
 
 const BAKE_FRAG = /* glsl */ `
 uniform vec3 uDeep, uShallow, uLow, uMid, uHigh, uIce;
-uniform float uSeaLevel, uTerrainLevel, uIceLine, uSeed, uBands;
+uniform float uSeaLevel, uTerrainLevel, uIceLine, uSeed, uBands, uClouds;
 varying vec2 vUv;
 ${NOISE_GLSL}
 void main() {
   float lon = (vUv.x - 0.5) * 6.2831853, lat = (vUv.y - 0.5) * 3.1415927;
   vec3 n = vec3(cos(lat) * sin(lon), sin(lat), cos(lat) * cos(lon));
-  float h = fbm(n * 2.4 + vec3(uSeed)) * 1.6 - 0.8;
+  // Broad plates with warped coastlines keep continents readable from flight distance.
+  vec3 warp = vec3(vnoise(n * 3.0 + uSeed), vnoise(n * 3.0 - uSeed), vnoise(n * 3.0 + 19.0)) - 0.5;
+  float h = fbm(n * 2.1 + warp * 0.65 + vec3(uSeed)) * 1.6 - 0.8;
   float detail = fbm(n * 9.0 + vec3(uSeed * 1.7));
   float hh = h + 0.12 * (detail - 0.5);
   if (uBands > 0.0) {
     // Latitude replaces terrain height; palette selection remains hard-stepped.
-    hh = fract((n.y * 0.5 + 0.5) * uBands + uSeed) * 1.6 - 0.8;
+    hh = fract((n.y * 0.5 + 0.5) * uBands + 0.16 * (detail - 0.5) + uSeed) * 1.6 - 0.8;
   }
   float land = step(uSeaLevel, hh);
   vec3 sea = mix(uDeep, uShallow, step(uSeaLevel - 0.16, hh));
@@ -132,7 +134,12 @@ void main() {
   vec3 alb = mix(sea, ground, land);
   float ice = step(uIceLine, abs(n.y) + 0.06 * (detail - 0.5));
   alb = mix(alb, uIce, ice);
-  gl_FragColor = vec4(alb, land);
+  // Two broad scales form calm cloud banks; a narrow stepped fringe belongs
+  // beside the hard coastline instead of reading as white procedural grain.
+  vec3 cloudP = n * 2.8 + warp * 0.65 + vec3(uSeed + 71.0);
+  float cloud = vnoise(cloudP) * 0.78 + vnoise(cloudP * 2.02 + vec3(17.3, 9.1, 4.7)) * 0.22;
+  float veil = (smoothstep(0.59, 0.607, cloud) * 0.68 + smoothstep(0.665, 0.68, cloud) * 0.32) * uClouds;
+  gl_FragColor = vec4(alb, veil);
 }`;
 
 const SURFACE_FRAG = /* glsl */ `
@@ -145,12 +152,28 @@ void main() {
   vec2 uv = vec2(atan(n.x, n.z) / 6.2831853 + 0.5, asin(clamp(n.y, -1.0, 1.0)) / 3.1415927 + 0.5);
   vec4 t = texture2D(uMap, uv);
   vec3 alb = t.rgb;
-  float land = t.a;
+  float shadow = texture2D(uMap, uv + vec2(0.003, 0.002)).a;
   float ndl = dot(normalize(vN), uSunDir);
-  float day = smoothstep(-0.03, 0.03, ndl);
-  float lit = 0.5 + 0.45 * smoothstep(0.36, 0.42, ndl);
-  vec3 night = uNight * mix(0.55, 0.9, land);
+  float day = smoothstep(-0.055, 0.08, ndl);
+  float lit = 0.38 + 0.42 * smoothstep(0.28, 0.40, ndl);
+  vec3 night = uNight * 0.55 + alb * 0.045;
+  alb *= 1.0 - shadow * 0.22;
   gl_FragColor = vec4(mix(night, alb * lit, day), 1.0);
+}`;
+
+// Cloud coverage shares the baked map alpha: one extra mesh and no per-frame noise.
+const CLOUD_FRAG = /* glsl */ `
+uniform vec3 uSunDir, uNight;
+uniform sampler2D uMap;
+varying vec3 vN;
+varying vec3 vObj;
+void main() {
+  vec3 n = normalize(vObj);
+  vec2 uv = vec2(atan(n.x, n.z) / 6.2831853 + 0.5, asin(clamp(n.y, -1.0, 1.0)) / 3.1415927 + 0.5);
+  float coverage = texture2D(uMap, uv).a;
+  float day = smoothstep(-0.06, 0.18, dot(normalize(vN), uSunDir));
+  vec3 color = mix(uNight * 0.7, vec3(0.40, 0.48, 0.55), day);
+  gl_FragColor = vec4(color, coverage * 0.48);
 }`;
 
 const ATMO_VERT = /* glsl */ `
@@ -170,7 +193,7 @@ uniform float uStrength, uRimWidth;
 varying vec3 vN;
 varying vec3 vView;
 void main() {
-  float f = 1.0 - max(dot(vN, vView), 0.0);
+  float f = 1.0 - max(dot(normalize(vN), normalize(vView)), 0.0);
   // shell is 1.02R, so the planet's own edge sits at f ≈ 0.80 on it; the line lives just outside that
   float line = smoothstep(0.81, 0.81 + uRimWidth * 0.25, f) - smoothstep(0.90, 0.90 + uRimWidth * 0.25, f);
   float halo = smoothstep(0.55, 0.95, f) * 0.12;
@@ -222,6 +245,7 @@ export class Planet {
       uSeaLevel: { value: this.seaLevel ?? T.planet.seaLevel },
       uTerrainLevel: { value: T.planet.seaLevel },
       uBands: { value: o.bands ?? preset?.bands ?? 0 },
+      uClouds: { value: preset === PLANET_PRESETS.moon || preset === PLANET_PRESETS.lava || (o.bands ?? preset?.bands) ? 0 : 1 },
       uIceLine: { value: T.planet.iceLine },
       uSeed: { value: o.seed },
       uDeep: c(p.deep),
@@ -256,6 +280,15 @@ export class Planet {
       ),
     );
     this.group.add(surface, atmo);
+    if (this.bakeU.uClouds.value > 0) {
+      const clouds = noEdge(new THREE.Mesh(
+        new THREE.SphereGeometry(o.radius * 1.007, o.segments, Math.max(8, o.segments >> 1)),
+        new THREE.ShaderMaterial({ vertexShader: SURFACE_VERT, fragmentShader: CLOUD_FRAG, uniforms: this.surfaceU, transparent: true, depthWrite: false }),
+      ));
+      clouds.renderOrder = 1;
+      atmo.renderOrder = 2;
+      this.group.add(clouds);
+    }
     if (o.ring) {
       const ring = new THREE.Mesh(
         new THREE.RingGeometry(o.ring.inner, o.ring.outer, 96, 1),

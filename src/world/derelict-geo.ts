@@ -13,7 +13,7 @@ export function derelictGeometry(kind: number, rnd: () => number): THREE.BufferG
 
   const parts: THREE.BufferGeometry[] = [];
   const vary = (amount: number): number => (rnd() * 2 - 1) * amount;
-  const add = (source: THREE.BufferGeometry, at: Triple, rotation: Triple = [0, 0, 0]): void => {
+  const add = (source: THREE.BufferGeometry, at: Triple, rotation: Triple = [0, 0, 0], tint = 0.72 + rnd() * 0.28): void => {
     const part = source.index === null ? source : source.toNonIndexed();
     if (part !== source) source.dispose();
     // All merge inputs have the same layout; normals are rebuilt flat after merging.
@@ -22,10 +22,13 @@ export function derelictGeometry(kind: number, rnd: () => number): THREE.BufferG
     }
     part.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(...rotation)));
     part.translate(...at);
+    const colors = new Float32Array(part.getAttribute("position").count * 3);
+    colors.fill(tint);
+    part.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     parts.push(part);
   };
-  const box = (size: Triple, at: Triple, rotation: Triple = [0, 0, 0]): void => {
-    add(new THREE.BoxGeometry(...size), at, rotation);
+  const box = (size: Triple, at: Triple, rotation: Triple = [0, 0, 0], tint?: number): void => {
+    add(new THREE.BoxGeometry(...size), at, rotation, tint);
   };
 
   switch (kind) {
@@ -36,6 +39,11 @@ export function derelictGeometry(kind: number, rnd: () => number): THREE.BufferG
       for (const z of [-1.08, -0.05, 0.98]) {
         box([1.65, 1.06, 0.18], [0, 0, z + vary(0.04)]);
         box([1.18, 0.12, 0.65], [0, 0.43, z + 0.12]);
+      }
+      // Dark severed core and bright exposed ribs make the break legible at distance.
+      box([1.16, 0.67, 0.07], [0, 0, -length / 2 - 0.01], [0, 0, 0], 0.24);
+      for (const x of [-0.48, 0.48]) {
+        box([0.08, 0.78, 0.12], [x, 0, -length / 2 - 0.055], [0, 0, 0], 1.35);
       }
       // The aft break retains a solid core beneath bent plate ends.
       for (const x of [-0.46, 0, 0.46]) {
@@ -62,6 +70,9 @@ export function derelictGeometry(kind: number, rnd: () => number): THREE.BufferG
       }
       add(slab, [0, 0, 0]);
       box([0.65, 0.62, 1.7], [-1.08, -0.05, 0]);
+      // Surviving identification stripe and charred wing root.
+      box([0.17, 0.025, 1.25], [-0.42, 0.165, -0.04], [0, 0, 0], 1.6);
+      box([0.035, 0.48, 1.43], [-1.42, -0.05, 0], [0, 0, 0], 0.28);
       // Short torn spars overlap the slab for most of their length.
       for (const z of [-0.47, 0.43]) {
         box([1.25, 0.16, 0.18], [0.98, 0.04, z - 0.2],
@@ -84,8 +95,11 @@ export function derelictGeometry(kind: number, rnd: () => number): THREE.BufferG
           [x, 0.12, 0.05 + vary(0.06)], [Math.PI / 2, 0, 0]);
         box([0.54, 0.2, 0.75], [x, 0.48, 0.25], [0, 0, vary(0.06)]);
       }
-      // Closed, faceted nozzle points aft; no hollow throat or ring.
-      add(new THREE.ConeGeometry(0.42, 0.65, 7), [0, 0.12, -1.12], [-Math.PI / 2, 0, 0]);
+      // Closed dark throats inside faceted nozzle collars; no collision-sized cavities.
+      for (const x of [-0.76, 0, 0.76]) {
+        add(new THREE.CylinderGeometry(0.47, 0.39, 0.24, 8), [x, 0.12, -1.0], [Math.PI / 2, 0, 0], 1.25);
+        add(new THREE.CylinderGeometry(0.31, 0.31, 0.025, 8), [x, 0.12, -1.13], [Math.PI / 2, 0, 0], 0.16);
+      }
       add(new THREE.CylinderGeometry(0.12, 0.15, 0.92, 7),
         [1.13, -0.28, -0.43], [0.36, 0, -0.35 + vary(0.08)]);
       break;
@@ -119,7 +133,7 @@ export function derelictGeometry(kind: number, rnd: () => number): THREE.BufferG
   const radius = geometry.boundingSphere!.radius;
   geometry.scale(1 / radius, 1 / radius, 1 / radius);
   for (const name of Object.keys(geometry.attributes)) {
-    if (name !== "position") geometry.deleteAttribute(name);
+    if (name !== "position" && name !== "color") geometry.deleteAttribute(name);
   }
   geometry.clearGroups();
   geometry.computeVertexNormals();

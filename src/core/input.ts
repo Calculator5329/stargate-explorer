@@ -89,6 +89,19 @@ export class Input {
   private lastTap = { code: "", t: -1 };
   private pendingBarrel = 0;
   private padButtons: boolean[] = [];
+  private enabled = true;
+
+  /** Scene changes discard held and queued flight actions, so a cinematic cannot queue a shot or manoeuvre. */
+  setEnabled(enabled: boolean): void {
+    if (this.enabled === enabled) return;
+    this.enabled = enabled;
+    this.keys.clear();
+    this.fire = this.alt = this.altPending = this.boost = this.space = this.moveFired = false;
+    this.pendingMove.on = false;
+    this.armed.t = this.lastTap.t = -1;
+    this.pendingBarrel = this.barrel = this.pitchKey = this.roll = this.strafe = 0;
+    this.mdx = this.mdy = this.cursor.x = this.cursor.y = this.stick.x = this.stick.y = 0;
+  }
 
   /**
    * `freeLock` (`?lock=free`) treats the pointer as locked from the first frame, so headless
@@ -107,7 +120,7 @@ export class Input {
       if (!this.locked) this.mdx = this.mdy = 0;
     });
     document.addEventListener("mousemove", (e) => {
-      if (!this.locked) return;
+      if (!this.locked || !this.enabled) return;
       if (this.steer === "cursor") {
         // the aim cursor moves at mouse-event rate, not sim rate: integrating it at 60 Hz made the cursor
         // step visibly on a 144 Hz mouse/display and read as jitter (Ethan, 2026-09-06)
@@ -120,6 +133,7 @@ export class Input {
       }
     });
     document.addEventListener("mousedown", (e) => {
+      if (!this.enabled) return;
       if (this.locked && e.button === 0) this.fire = true;
       if (this.locked && e.button === 2) this.altPending = true;
     });
@@ -128,6 +142,7 @@ export class Input {
       if (e.button === 0) this.fire = false;
     });
     document.addEventListener("keydown", (e) => {
+      if (!this.enabled) return;
       if (e.code === "Backquote") return; // debug panel toggle, not flight input
       if (e.code === "Space" || e.code === "Tab") e.preventDefault();
       if (e.repeat) return;

@@ -9,9 +9,9 @@ const _t1 = new THREE.Vector3();
 const _t2 = new THREE.Vector3();
 
 /** Uniform random unit vector, written into `out`. */
-export function randUnit(out: THREE.Vector3): THREE.Vector3 {
-  const z = Math.random() * 2 - 1;
-  const a = Math.random() * Math.PI * 2;
+export function randUnit(out: THREE.Vector3, random = Math.random): THREE.Vector3 {
+  const z = random() * 2 - 1;
+  const a = random() * Math.PI * 2;
   const r = Math.sqrt(1 - z * z);
   return out.set(r * Math.cos(a), r * Math.sin(a), z);
 }
@@ -43,8 +43,8 @@ export function dragDist(t: number, k: number): number {
 }
 
 /** Random in [a, b). */
-export function rr(a: number, b: number): number {
-  return a + Math.random() * (b - a);
+export function rr(a: number, b: number, random = Math.random): number {
+  return a + random() * (b - a);
 }
 
 /** Flat-shaded copy of a geometry (one normal per face) so toon bands step per facet. */

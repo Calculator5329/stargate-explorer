@@ -63,9 +63,9 @@ export class Combat {
   readonly shots = new Projectiles();
   readonly fx = new Explosions();
   /** a glider the player destroyed (pos, vel); the replay hooks this */
-  onKill: ((pos: THREE.Vector3, vel: THREE.Vector3) => void) | null = null;
+  onKill: ((pos: THREE.Vector3, vel: THREE.Vector3, scale: number, seed: number, victimId: number) => void) | null = null;
   /** a rock broke (the replay records it) */
-  onRockBurst: ((pos: THREE.Vector3, scale: number) => void) | null = null;
+  onRockBurst: ((pos: THREE.Vector3, scale: number, seed: number) => void) | null = null;
   /** a player round left the gun: world position and velocity (the replay records them) */
   onFire: ((pos: THREE.Vector3, vel: THREE.Vector3) => void) | null = null;
   readonly missiles = new Missiles();
@@ -97,6 +97,7 @@ export class Combat {
     const geo = new THREE.CircleGeometry(0.55, 10);
     for (const g of GUNS) {
       const m = noEdge(new THREE.Mesh(geo, glowMaterial(0xdff2ff, 3)));
+      m.name = "muzzle-flash";
       m.position.set(g[0], g[1], g[2] + 0.4);
       m.visible = false;
       this.muzzle.push(m);
@@ -215,7 +216,7 @@ export class Combat {
         const r = e.radius + M.fuse;
         if (m.pos.distanceToSquared(e.pos) > r * r) continue;
         m.alive = false;
-        this.fx.spawn(m.pos, e.vel, 3);
+        this.fx.spawn(m.pos, e.vel, 3, undefined, "impact");
         this.audio.explosion(0.6);
         if (this.enemies.damage(e, M.damage)) this.destroy(e);
         break;
@@ -226,7 +227,7 @@ export class Combat {
           const r = x.radius + M.fuse;
           if (x.hits ? !x.hits(m.pos, m.pos) : m.pos.distanceToSquared(x.pos) > r * r) continue;
           m.alive = false;
-          this.fx.spawn(m.pos, ZEROV, 3);
+          this.fx.spawn(m.pos, ZEROV, 3, undefined, "impact");
           this.audio.explosion(0.6);
           x.damage(M.damage);
           break;
@@ -239,7 +240,7 @@ export class Combat {
             m.alive = false;
             const R = this.rocks.radii[i]!;
             if (this.rocks.damage(i, M.damage, m.vel)) this.rockBurst(m.pos, R);
-            else this.fx.spawn(m.pos, ZEROV, 2.5);
+            else this.fx.spawn(m.pos, ZEROV, 2.5, undefined, "impact");
             break;
           }
         }
@@ -306,7 +307,7 @@ export class Combat {
     P.hp = 0;
     P.dying = DEATH_T;
     flight.dead = true;
-    this.fx.spawn(flight.pos, P.vel, 2);
+    this.fx.spawn(flight.pos, P.vel, 2, undefined, "impact");
     this.audio.explosion(0.7);
   }
 
@@ -317,7 +318,7 @@ export class Combat {
     // a small burst every quarter second somewhere on the hull
     if (Math.floor(was * 4) !== Math.floor(P.dying * 4)) {
       _p.set((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 8).multiplyScalar(flight.stats.size).applyQuaternion(flight.quat).add(flight.pos);
-      this.fx.spawn(_p, P.vel, 1.2 * flight.stats.size);
+      this.fx.spawn(_p, P.vel, 1.2 * flight.stats.size, undefined, "impact");
       this.audio.explosion(0.35);
     }
     if (P.dying <= 0) {
@@ -345,8 +346,9 @@ export class Combat {
 
   /** A rock of `radius` breaking at `pos`: debris burst plus the crunch, both scaled by size. */
   private rockBurst(pos: THREE.Vector3, radius: number): void {
-    this.fx.spawn(pos, ZEROV, 1.5 + radius * 0.12);
-    this.onRockBurst?.(pos, 1.5 + radius * 0.12);
+    const scale = 1.5 + radius * 0.12;
+    const seed = this.fx.spawn(pos, ZEROV, scale, undefined, "rock");
+    this.onRockBurst?.(pos, scale, seed);
     this.audio.crunch(radius / 10);
   }
 
@@ -357,13 +359,14 @@ export class Combat {
   }
 
   private destroy(e: Enemy, byPlayer = true): void {
+    // Burst scale and seed are recorded verbatim so replay reconstructs this breakup.
+    const big = e.radius / T.enemy.radius;
+    const scale = 5 * Math.sqrt(big);
+    const seed = this.fx.spawn(e.pos, e.vel, scale);
     if (byPlayer) {
       this.player.kills++;
-      this.onKill?.(e.pos, e.vel);
+      this.onKill?.(e.pos, e.vel, scale, seed, e.id);
     }
-    // burst scales with the hull: a gunboat goes up big
-    const big = e.radius / T.enemy.radius;
-    this.fx.spawn(e.pos, e.vel, 5 * Math.sqrt(big));
     this.audio.explosion(Math.min(1, 0.8 * Math.sqrt(big)));
   }
 

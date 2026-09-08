@@ -72,7 +72,10 @@ function hullPlanes(g: THREE.BufferGeometry): Float32Array {
   const pos = g.getAttribute("position");
   const pts: THREE.Vector3[] = [];
   for (let i = 0; i < pos.count; i++) pts.push(new THREE.Vector3().fromBufferAttribute(pos, i));
-  return facePlanes(new ConvexGeometry(pts));
+  const hull = new ConvexGeometry(pts);
+  const planes = facePlanes(hull);
+  hull.dispose();
+  return planes;
 }
 const _obj = new THREE.Object3D();
 const _pv = new THREE.Matrix4();
@@ -107,26 +110,37 @@ function rockGeometry(rnd: () => number): THREE.BufferGeometry {
   return g;
 }
 
-/**
- * An ice shard: a jittered icosahedron stretched along one axis and pinched
- * across another, then normalised so its farthest vertex sits at 1. Still
- * convex, so the rock collision path handles it unchanged.
+/** Cleaved crystal prisms: broad flat fractures and asymmetric chisel ends.
+ * A real convex hull supplies both visible facets and collision planes.
  */
 function shardGeometry(rnd: () => number): THREE.BufferGeometry {
-  const g = rockGeometry(rnd);
-  const pos = g.getAttribute("position");
-  const stretch = 1.7 + rnd() * 0.9, pinch = 0.55 + rnd() * 0.25;
-  let max = 0;
-  for (let i = 0; i < pos.count; i++) {
-    _v.fromBufferAttribute(pos, i);
-    _v.set(_v.x * pinch, _v.y * stretch, _v.z);
-    // a chisel tip: the far end narrows
-    const tip = 1 - 0.35 * Math.max(0, _v.y / stretch);
-    pos.setXYZ(i, _v.x * tip, _v.y, _v.z * tip);
-    max = Math.max(max, Math.hypot(_v.x * tip, _v.y, _v.z * tip));
+  const points: THREE.Vector3[] = [];
+  const length = 1.6 + rnd() * 1.3, width = 0.45 + rnd() * 0.4;
+  const sides = 5 + Math.floor(rnd() * 3);
+  for (let ring = 0; ring < 2; ring++) {
+    for (let i = 0; i < sides; i++) {
+      const angle = i / sides * Math.PI * 2;
+      const x = Math.cos(angle) * width;
+      const z = Math.sin(angle) * (0.55 + rnd() * 0.15);
+      // Each end is a coherent oblique fracture plane, not a radial rock jitter.
+      points.push(new THREE.Vector3(x + ring * 0.12, (ring - 0.5) * length + x * (ring ? 0.7 : -0.3), z));
+    }
   }
-  for (let i = 0; i < pos.count; i++) pos.setXYZ(i, pos.getX(i) / max, pos.getY(i) / max, pos.getZ(i) / max);
+  const g = new ConvexGeometry(points);
+  g.center();
+  const radius = boundRadius(g);
+  g.scale(1 / radius, 1 / radius, 1 / radius);
   g.computeVertexNormals();
+  const pos = g.getAttribute("position"), normal = g.getAttribute("normal");
+  const colors = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) {
+    const cleave = Math.abs(normal.getY(i));
+    const value = 0.7 + cleave * 0.55;
+    colors[i * 3] = value * 0.86;
+    colors[i * 3 + 1] = value * 0.96;
+    colors[i * 3 + 2] = value;
+  }
+  g.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   return g;
 }
 
@@ -268,7 +282,7 @@ export class Asteroids {
     this.fullR = new Float32Array(this.count);
     this.axes = new Float32Array(this.count * 3);
     // layout: cluster centres sit in the middle of the annulus, never on the start
-    const nClusters = o.clusters ?? 0, clusterR = o.clusterR ?? 250;
+    const nClusters = o.clusters ?? (this.style === "rock" ? 0 : 6), clusterR = o.clusterR ?? 250;
     const clusterShare = nClusters > 0 ? o.clusterShare ?? 0.55 : 0;
     const bandShare = o.band !== undefined ? o.bandShare ?? 0.4 : 0;
     const bandW = o.bandW ?? 120;
@@ -314,7 +328,9 @@ export class Asteroids {
       this.planes.push(style.hull ? hullPlanes(rock) : facePlanes(rock));
       const bound = boundRadius(rock) * 1.02;
       this.bounds[s] = bound;
-      const mesh = new THREE.InstancedMesh(rock, toonMaterial(style.tints[s % style.tints.length]!, { emissive: style.glow, emissiveIntensity: style.glowIntensity }), per);
+      const material = toonMaterial(style.tints[s % style.tints.length]!, { emissive: style.glow, emissiveIntensity: style.glowIntensity });
+      material.vertexColors = rock.hasAttribute("color");
+      const mesh = new THREE.InstancedMesh(rock, material, per);
       this.meshes.push(mesh);
       this.fragHead.push(0);
       for (let i = 0; i < per; i++) {
@@ -330,7 +346,13 @@ export class Asteroids {
           if (!inVoid()) break;
         }
         _obj.quaternion.setFromEuler(new THREE.Euler(rnd() * 6.28, rnd() * 6.28, rnd() * 6.28));
-        const big = rnd() < style.bigChance;
+        // A few large identifiable remains anchor the smaller debris in each knot.
+        const landmark = this.style !== "rock" && i === 0 && s < nClusters;
+        if (landmark) {
+          _obj.position.set(cl[s * 3]!, cl[s * 3 + 1]!, cl[s * 3 + 2]!);
+          if (inVoid()) place();
+        }
+        const big = rnd() < style.bigChance || landmark;
         const scale = big ? style.big[0] + rnd() * style.big[1] : style.small[0] + rnd() * rnd() * style.small[1];
         this.centers.set([_obj.position.x, _obj.position.y, _obj.position.z], gi * 3);
         this.quats.set([_obj.quaternion.x, _obj.quaternion.y, _obj.quaternion.z, _obj.quaternion.w], gi * 4);

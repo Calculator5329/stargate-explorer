@@ -296,3 +296,6 @@ Ethan explicitly authorized one Blender death-glider benchmark and comparison, w
 - **Player only.** Enemies have no bar and no trigger policy; the interpreter does not know who owns it, so that is a later mission-side decision.
 
 **Consequences:** a new primitive step is one `StepKind`, one case in the flight switch, one unit label and one help line in the composer. A move that needs something the primitives cannot express (a target-relative turn, a weapon burst) wants a new step kind, not a special case. `Content.save` posts two files; a third table follows the same route. The four starter numbers are guesses until Ethan flies the proving ground.
+
+## 2026-09-08 — Explicit presentation scenes and reproducible replay effects
+Travel, paused, hub, replay and flight resolve to one presentation mode. Flight input and simulation stop outside flight; audio buses switch with that mode. Replay owns separate tracer/destruction pools and reconstructs effects from recorded seeds on its playback clock. Event lighting uses three bounded shadowless lights, saved off by default. Cloud maps remain baked; cloud shell/shadow transforms animate without rebaking. The optional review module is dynamically loaded only for `?review=1` and labels its predetermined encounter as scripted. No new dependency or art pipeline.

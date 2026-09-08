@@ -16,6 +16,7 @@ export interface MenuHooks {
   /** play the sortie's highlight; shown only while `hasReplay()` is true */
   replay?(): void;
   hasReplay?(): boolean;
+  canOpen?(): boolean;
 }
 
 /**
@@ -36,6 +37,8 @@ export class Menu {
 
   private readonly replayBtn: HTMLElement;
   private readonly hasReplay: () => boolean;
+  private readonly canOpen: () => boolean;
+  private muteControl: HTMLInputElement | null = null;
 
   constructor(root: HTMLElement, canvas: HTMLElement, save: Save, hooks: MenuHooks, enabled = true, private missionTitle = "") {
     this.el = root;
@@ -43,6 +46,7 @@ export class Menu {
     this.sub = q(root, ".sub");
     this.replayBtn = q(root, ".replay");
     this.hasReplay = hooks.hasReplay ?? (() => false);
+    this.canOpen = hooks.canOpen ?? (() => true);
     if (!enabled) {
       root.style.display = "none";
       return;
@@ -59,9 +63,15 @@ export class Menu {
     const sensV = q(root, ".sens-v");
     const diff = q<HTMLSelectElement>(root, "[name=difficulty]");
     const mute = q<HTMLInputElement>(root, "[name=mute]");
+    this.muteControl = mute;
     const invert = q<HTMLInputElement>(root, "[name=invert]");
     const qual = q<HTMLSelectElement>(root, "[name=quality]");
     const dyn = q<HTMLInputElement>(root, "[name=dynamicRes]");
+    const lightingRow = document.createElement("label");
+    lightingRow.innerHTML = '<span>Event lighting (evaluation)</span><input type="checkbox" name="eventLighting" />';
+    dyn.closest("label")!.after(lightingRow);
+    const lighting = q<HTMLInputElement>(lightingRow, "input");
+    lighting.checked = s.eventLighting;
     dyn.checked = s.dynamicRes;
     scheme.value = s.scheme;
     invert.checked = s.invertY;
@@ -90,10 +100,11 @@ export class Menu {
       s.mute = mute.checked;
       s.invertY = invert.checked;
       s.dynamicRes = dyn.checked;
+      s.eventLighting = lighting.checked;
       writeSave(save);
       hooks.apply(s);
     };
-    for (const c of [scheme, assist, assistK, steer, raw, sens, diff, mute, invert, dyn]) c.addEventListener("input", commit);
+    for (const c of [scheme, assist, assistK, steer, raw, sens, diff, mute, invert, dyn, lighting]) c.addEventListener("input", commit);
     // the renderer is built once per page, so a tier change is a reload
     qual.addEventListener("input", () => {
       s.quality = parseQuality(qual.value);
@@ -137,6 +148,8 @@ export class Menu {
   setMission(title: string): void {
     this.missionTitle = title;
   }
+
+  syncMute(muted: boolean): void { if (this.muteControl) this.muteControl.checked = muted; }
 
   /** One row per action; click a key, press the new one, Esc cancels. A taken key swaps. */
   private buildBinds(root: HTMLElement, save: Save, hooks: MenuHooks): void {
@@ -199,6 +212,7 @@ export class Menu {
 
   /** Show or hide; `first` is the start screen (no "paused" wording). */
   private set(open: boolean, first = false): void {
+    if (open && !this.canOpen()) return;
     this.replayBtn.style.display = open && this.hasReplay() ? "" : "none";
     this.open = open;
     this.el.classList.toggle("on", open);

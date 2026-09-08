@@ -27,6 +27,7 @@ export class Loop {
   constructor(private readonly hooks: LoopHooks) {}
 
   start(): void {
+    this.acc = 0;
     this.last = performance.now();
     this.raf = requestAnimationFrame(this.frame);
   }

@@ -4,6 +4,22 @@
  * `T` at use time so live edits take effect immediately. Units: m, s, rad.
  */
 export const T = {
+  travel: {
+    entrySeconds: 0.8,
+    tunnelSeconds: 2.2,
+    arrivalSeconds: 1.4,
+    gateScale: 0.015,
+    entryZoom: 5,
+  },
+  eventLight: {
+    explosionIntensity: 2.2,
+    explosionRange: 100,
+    gateIntensity: 1.6,
+    gateRange: 160,
+    weaponIntensity: 1.4,
+    weaponRange: 32,
+    weaponSeconds: 0.07,
+  },
   flight: {
     minSpeed: 40,
     maxSpeed: 240,

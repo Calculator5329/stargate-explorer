@@ -27,29 +27,39 @@ varying vec2 vUv;
 void main() {
   float r = length(vUv);
   if (r > 1.0) discard;
-  float wave = sin(r * 48.0 - uT * 3.0 + sin(vUv.x * 19.0 + uT) * 1.8);
-  float band = floor((wave * 0.5 + 0.5) * 3.0) / 3.0;
-  vec3 c = mix(vec3(0.035, 0.10, 0.19), vec3(0.32, 0.58, 0.78), band);
+  vec2 p = vUv + vec2(sin(vUv.y * 7.0 + uT), cos(vUv.x * 5.0 - uT * .7)) * .12;
+  float wave = sin(p.x * 14.0 + p.y * 9.0 + uT * 1.8) + .5 * sin(p.y * 23.0 - p.x * 6.0 - uT);
+  float band = floor(smoothstep(-1.4, 1.4, wave) * 5.0) / 5.0;
+  vec3 c = mix(vec3(0.025, 0.09, 0.15), vec3(0.26, 0.50, 0.64), band);
+  c += vec3(.05, .12, .15) * pow(r, 8.0);
   gl_FragColor = vec4(c, 0.96);
 }`;
 
 const BURST_VERT = /* glsl */ `
 uniform float uBurst;
-varying float vBand;
+varying vec2 vFlow;
+varying float vDepth;
 void main() {
   vec3 p = position;
   float r = length(p.xy) / 34.0;
   float envelope = sin(uBurst * 3.14159265);
   p.xy *= 0.85 + 0.15 * sin(r * 19.0 + uBurst * 8.0);
   p.z = pow(max(0.0, 1.0 - r), 1.4) * 60.0 * envelope;
-  vBand = r;
+  vFlow = position.xy / 34.0;
+  vDepth = p.z / 60.0;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
 }`;
 const BURST_FRAG = /* glsl */ `
-varying float vBand;
+varying vec2 vFlow;
+varying float vDepth;
+uniform float uBurst;
 void main() {
-  float band = floor(fract(vBand * 7.0) * 3.0) / 3.0;
-  gl_FragColor = vec4(mix(vec3(0.12, 0.28, 0.46), vec3(0.62, 0.83, 0.95), band), 0.96);
+  vec2 p = vFlow + .13 * vec2(sin(vFlow.y * 8.0 + uBurst * 4.0), cos(vFlow.x * 7.0));
+  float wave = sin(p.x * 18.0 + p.y * 11.0 - uBurst * 9.0) + .6 * sin(p.y * 26.0 - p.x * 9.0);
+  float band = floor(smoothstep(-1.5, 1.5, wave) * 5.0) / 5.0;
+  vec3 c = mix(vec3(.035, .12, .19), vec3(.30, .56, .70), band);
+  c += vec3(.10, .15, .17) * vDepth;
+  gl_FragColor = vec4(c, 1.0);
 }`;
 
 /** Annulus with one horizontal texture cell per symbol. No per-frame texture redraw. */
@@ -193,7 +203,7 @@ export class Gate implements Tracked {
     const target = Math.PI / 2 - (this.address[step]! + .5) * TAU / GLYPH_COUNT;
     const previous = step === 0 ? 0 : Math.PI / 2 - (this.address[step - 1]! + .5) * TAU / GLYPH_COUNT;
     const direction = step % 2 === 0 ? 1 : -1;
-    const distance = direction * (((direction * (target - previous)) % TAU + TAU) % TAU + TAU);
+    const distance = direction * (((direction * (target - previous)) % TAU + TAU) % TAU);
     const fraction = Math.min(1, Math.max(0, (elapsed / CHEVRON_T - step) / .8));
     this.rotor.rotation.z = lit >= 7 ? target : previous + distance * fraction * fraction * (3 - 2 * fraction);
     for (let k = 0; k < 9; k++) {
