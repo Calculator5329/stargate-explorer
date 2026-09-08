@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-09-08 — Replay motion repair approved
+
+Replaced pair-locked camera translation with world-space fly-by framing, made follow-through actually play, labelled snapshot actions Freeze, and simulated the evaluation formation continuously. Removed approved gate-trip evaluation controls. Build and actual-control CPU checks pass; Ethan reviewed the repaired preview and approved push/deployment. Explosion animation refinement remains open. See `evidence/2026-09-08-replay-repair.md`.
+
+
 ## 2026-09-08 — Multi-kill replay and player follow-through
 
 Replay now captures up to three recent kills within eight seconds by default, with N/X controls in evaluation. Both ships fit the kill camera in landscape and portrait, each kill receives slow motion, and the ending follows the player. Expanded bounded history preserves the full sequence plus three seconds after the latest kill. Gate travel retains Ethan’s approved behavior. Build and extended replay checks pass; paired-shot/follow-through captures are in `docs/shots/2026-09-08-replay-{pair,follow}.png`.

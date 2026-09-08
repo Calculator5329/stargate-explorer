@@ -49,7 +49,7 @@ interface Highlight {
   /** player rounds in the window, chronological, SSTRIDE floats each */
   shots: Float32Array;
   camA: THREE.Vector3;
-  kills: { event: Burst; view: THREE.Vector3 }[];
+  kills: { event: Burst; view: THREE.Vector3; anchor: THREE.Vector3; radius: number }[];
 }
 
 const _p = new THREE.Vector3();
@@ -63,8 +63,6 @@ const Y = new THREE.Vector3(0, 1, 0);
 const _look = new THREE.Vector3();
 const _v = new THREE.Vector3();
 const _sd = new THREE.Vector3();
-const _right = new THREE.Vector3();
-const _up = new THREE.Vector3();
 const _offset = new THREE.Vector3();
 
 /** squared distance from point `c` to segment ab */
@@ -120,6 +118,13 @@ export class Replay {
     for (const { event } of this.clip.kills) nearest = Math.min(nearest, Math.abs(this.clipT - event.t));
     const u = Math.min(1, Math.max(0, (nearest - SLOW_WIN) / .4));
     return SLOW_RATE + (RATE - SLOW_RATE) * u * u * (3 - 2 * u);
+  }
+
+  cueProgress(offset: number): number {
+    const c = this.highlight;
+    if (!c) return 0;
+    const first = c.frames[0]!, last = c.frames[(c.count - 1) * STRIDE]!;
+    return Math.min(.98, Math.max(0, (c.kills[c.kills.length - 1]!.event.t + offset - first) / (last - first)));
   }
 
   get highlightKills(): number { return (this.clip ?? this.highlight)?.kills.length ?? 0; }
@@ -232,7 +237,9 @@ export class Replay {
       for (let i = 1; i < k; i++) if (Math.abs(frames[i * STRIDE]! - event.t) < Math.abs(frames[frame * STRIDE]! - event.t)) frame = i;
       const o = frame * STRIDE;
       _q.set(frames[o + 4]!, frames[o + 5]!, frames[o + 6]!, frames[o + 7]!);
-      return { event, view: new THREE.Vector3(-1, .45, -1.1).applyQuaternion(_q).normalize() };
+      const player = new THREE.Vector3(frames[o + 1]!, frames[o + 2]!, frames[o + 3]!);
+      return { event, view: new THREE.Vector3(-1, .45, -.35).applyQuaternion(_q).normalize(),
+        anchor: player.clone().lerp(event.pos, .5), radius: player.distanceTo(event.pos) * .5 };
     });
     this.highlight = { frames, count: k, bursts, kills, shots: shots.subarray(0, m * SSTRIDE), camA };
   }
@@ -295,8 +302,6 @@ export class Replay {
     cam.fov = this.savedFov;
     cam.updateProjectionMatrix();
   }
-
-  /** 1 while the kill point lies at least `fade` m ahead of the ship, 0 once it is behind (uses _p and _fwd as set by update). */
 
   /** Drive ship, gliders and camera from the clip; call after the normal render pass. Returns false when the clip ends. */
   update(dt: number, cam: THREE.PerspectiveCamera, ship: THREE.Object3D, enemies: Enemy[]): boolean {
@@ -381,16 +386,16 @@ export class Replay {
       const halfVertical = THREE.MathUtils.degToRad(cam.fov * .5);
       const tanV = Math.tan(halfVertical), tanH = tanV * cam.aspect;
       const halfAngle = Math.min(halfVertical, Math.atan(tanH));
-      _right.crossVectors(Y, beat.view).normalize();
-      _up.crossVectors(beat.view, _right).normalize();
+      // Park in world space. Translating the camera with the pair erased all
+      // motion in a straight pursuit, even though the replay clock was running.
+      cam.position.copy(beat.anchor).addScaledVector(beat.view, (beat.radius + padding) / Math.sin(halfAngle) * 1.08);
       _a.lerp(_p, follow);
-      let distance = 0;
-      for (let subject = 0; subject < 2; subject++) {
-        _offset.subVectors(subject === 0 ? _p : _a, _look);
-        const fit = Math.max(Math.abs(_offset.dot(_right)) / tanH, Math.abs(_offset.dot(_up)) / tanV);
-        distance = Math.max(distance, _offset.dot(beat.view) + fit + padding / Math.sin(halfAngle));
-      }
-      cam.position.copy(_look).addScaledVector(beat.view, distance * 1.08);
+      _offset.subVectors(cam.position, _look);
+      const parkedDistance = _offset.length();
+      _offset.normalize();
+      const radius = Math.max(_p.distanceTo(_look), _a.distanceTo(_look)) + padding;
+      cam.position.copy(_look).addScaledVector(_offset, Math.max(parkedDistance, radius / Math.sin(halfAngle)));
+
     }
     cam.up.copy(Y);
     cam.lookAt(_look);
