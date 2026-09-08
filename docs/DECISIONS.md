@@ -302,3 +302,26 @@ Travel, paused, hub, replay and flight resolve to one presentation mode. Flight 
 
 ## 2026-09-08 — Bounded continuous multi-kill capture
 Keep the latest N kills within X seconds of the newest kill (defaults 3 and 8). Preserve seven seconds before the first included kill where available, capped after any excluded death, and three after the last. Store 42 seconds of poses and 2800 rounds for supported limits of 8 kills/30 seconds. Every selected kill controls slow motion and a player/victim framing beat; fade attention back to the player after the final breakup. Fit the two padded subjects against both camera axes rather than zooming toward the victim alone. N/X evaluation changes are session tunables; no save migration.
+
+## 2026-09-08 — The frame-rate controller reads the second-worst frame, and bloom is the only thing it may switch off
+
+**Decision.** `Renderer.adapt()` decides on the second-worst frame time of its window, never on a mean
+frame rate. When the 0.35 resolution floor is not enough it disables the bloom pass, and it re-enables
+bloom before it gives back any resolution. No other effect may be added to that ladder without a new entry
+here, and shadows specifically may not.
+
+**Why.** Ethan's report was "drops to 30 FPS sometimes". A mean is blind to that: frames alternating 16.7
+and 33.3 ms average to 40 fps while the picture visibly hitches. A mean is also wrecked from the other side
+by the one-off load stall, which read as a catastrophically slow machine and cost resolution for the rest
+of the sortie. Reading the window's second-worst frame answers "how bad are my bad frames" and, by
+construction, cannot be moved by a single hitch. Bloom is the largest fill cost of the medium and high
+tiers and disabling the pass touches no scene material, so nothing relinks and the switch itself does not
+stutter. `shadowMap.enabled` is part of every program's cache key, so putting shadows on the ladder would
+relink the whole scene mid-fight, which is exactly the stall `render/warmup.ts` was built to remove.
+
+**Consequences.** A machine on relief looks plainer, and the overlay must say so (`bloom off (perf)`), or a
+screenshot from it reads as a bug. `setSilhouette` has to respect the relief state rather than assume it
+owns the bloom pass. Anything that wants to switch a render feature at runtime has to check first whether
+it is in a program's cache key; if it is, the answer is a quality tier chosen at load, not an adaptive
+step. Tests of the controller must stop the render loop, because its own frames otherwise land in the
+window being fed and the reading is of a mixture.

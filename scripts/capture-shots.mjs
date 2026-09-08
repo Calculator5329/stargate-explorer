@@ -28,7 +28,9 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 page.on("pageerror", (e) => console.error("page error:", e.message));
 for (const [name, q] of Object.entries(VIEWS)) {
   if (only && !only.includes(name)) continue;
-  await page.goto(`${base}/${q}`, { waitUntil: "load" });
+  // dynres=0 pins full resolution with bloom on: the dynamic controller reads at 0.6 s, inside the settle
+  // wait below, so a slow headless run would otherwise photograph a reduced or bloom-less frame
+  await page.goto(`${base}/${q}${q.includes("?") ? "&" : "?"}dynres=0`, { waitUntil: "load" });
   await page.waitForTimeout(1500);
   for (const code of HOLD[name] ?? []) await page.evaluate((c) => document.dispatchEvent(new KeyboardEvent("keydown", { code: c })), code);
   if (FIRE.has(name)) {

@@ -18,6 +18,9 @@ export class PerfOverlay {
       `render ${loop.renderMs.toFixed(2)} ms\n` +
       (rend && rend.gpuMs > 0 ? `gpu ${rend.gpuMs.toFixed(2)} ms\n` : "") +
       (rend && rend.scale < 1 ? `res ${Math.round(rend.scale * 100)}%\n` : "") +
+      // shown only when the controller has had to give up an effect: the reading has to say so, or a
+      // screenshot of a machine running without bloom looks like a bug rather than a deliberate trade
+      (rend && rend.relief > 0 ? "bloom off (perf)\n" : "") +
       `${r.calls} calls  ${(r.triangles / 1000).toFixed(1)}k tris`;
   }
 }

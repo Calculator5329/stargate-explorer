@@ -6,7 +6,7 @@ const baseURL = process.env.STARGATE_TEST_URL ?? "http://localhost:5187/";
 const browser = await chromium.launch({ args: ["--use-angle=gl-egl", "--ignore-gpu-blocklist", "--enable-gpu-rasterization"] });
 const page = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
 for (const system of ["abydos", "tollana"]) {
-  const url = new URL(baseURL); url.search = new URLSearchParams({ lock: "free", quality: "med", system, mission: "belt-clear" });
+  const url = new URL(baseURL); url.search = new URLSearchParams({ lock: "free", quality: "med", system, mission: "belt-clear", dynres: "0" });
   await page.goto(url.href, { waitUntil: "load" });
   await page.waitForFunction(() => window.__game && window.__flight);
   // look toward the planet from the start with the hud off, so the compare is pure world
