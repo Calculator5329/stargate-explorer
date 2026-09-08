@@ -34,3 +34,6 @@ Ethan explicitly requested keeping the current procedural approach and implement
 
 ### Integration clarification · 2026-09-06
 Ethan challenged the unnecessary request to approve preserving existing designer documentation before fleet integration. The instruction to implement the reviewed fleet already authorizes routine, reversible preservation needed for that integration. Inspect and retain unrelated work in a separate commit when needed; do not turn the staging convention into a new owner approval gate. Do not discard others’ work or bypass an actual lease conflict.
+
+## Graphics scene direction · 2026-09-08
+Ethan authorized recommendations 1–5: coherent transitions without mixed gameplay/audio, staged ship destruction, replay presentation, improved planets, and distinct asteroid replacements. Include optional event lighting for evaluation. Keep the procedural Three.js direction and existing fleet choices. Browser inspection is part of implementation; evaluation scenes must be labelled scripted and report actual state.

@@ -1,9 +1,12 @@
-import { Quaternion, Vector3 } from "three";
+import { Color, Quaternion, Vector3 } from "three";
 import { Loop } from "@/core/loop";
 import { T } from "@/core/tunables";
 import { Input, lockPointer, setRawMouse } from "@/core/input";
 import { Scheme, parseScheme, parseSteer } from "@/core/scheme";
-import { loadSave } from "@/core/save";
+import { loadSave, writeSave } from "@/core/save";
+import { presentation } from "@/core/presentation";
+import { EventLighting } from "@/render/event-lighting";
+import type { SceneReview } from "@/render/scene-review";
 import { setDifficulty } from "@/core/difficulty";
 import { Menu } from "@/ui/menu";
 import { Hub } from "@/ui/hub";
@@ -45,6 +48,9 @@ const chase = new ChaseCamera(r.camera);
 const hud = new Hud(document.getElementById("hud")!);
 const perf = new PerfOverlay(document.querySelector<HTMLElement>("#hud .perf")!);
 const audio = new Audio();
+audio.setMute(S.mute);
+audio.onMuteChanged = (muted) => { S.mute = muted; menu?.syncMute(muted); writeSave(save); };
+const eventLighting = new EventLighting(r.scene);
 
 /** Everything that belongs to one system + sortie. Gate travel disposes it and builds the next behind the wormhole. */
 interface Sortie {
@@ -69,6 +75,8 @@ function build(params: URLSearchParams): Sortie {
   flight.reset();
   flight.stats = ship.stats;
   chase.reset();
+  flight.sample(1, rig.root.position, rig.root.quaternion);
+  chase.update(0, rig.root.position, rig.root.quaternion, flight.speed, input.stick, false, 99, flight.stats.size);
   const inspect = view ? new InspectView(r.camera, rig.root, view, params.get("spin") !== "0", Number(params.get("dist") ?? 1) || 1) : null;
   if (params.get("silhouette") === "1") (r.setSilhouette(true), rig.setSilhouette(true), (world.root.visible = false));
   if (inspect) world.asteroids.group.visible = world.dust.lines.visible = false; // the belt would sit on top of the ship
@@ -76,6 +84,7 @@ function build(params: URLSearchParams): Sortie {
   hud.reset();
   const game = inspect ? null : new Game(r.scene, world, rig.root, canvas, flight, save, level, audio);
   if (game) {
+    game.onWeapon = (pos) => eventLighting.weapon(pos);
     // the way home: through the gate that opens when a mission is won, or G on the end card
     game.onGate = () => {
       const q = new URLSearchParams(location.search);
@@ -97,10 +106,19 @@ function teardown(s: Sortie): void {
 }
 
 let hub: Hub | null = null, menu: Menu | null = null, travel: Travel | null = null, editor: EditorHandle | null = null;
+let review: SceneReview | null = null;
 const edit = boot.get("edit") === "1";
 let sortie = build(boot);
 travel = sortie.game ? new Travel(document.getElementById("dial")!, r.scene, audio) : null;
 if (travel) {
+  travel.onDepart = () => {
+    sortie.game?.prepareTravel();
+    input.setEnabled(false);
+    eventLighting.clear();
+    menu?.close();
+    hub?.hide();
+    hud.setTravel(true);
+  };
   // the system swap happens behind the wormhole, in this page: audio, pointer lock and settings all carry over
   travel.onSwap = (q) => {
     teardown(sortie);
@@ -117,11 +135,13 @@ hub = new Hub(document.getElementById("hub")!, save, sortie.level, () => undefin
   q.delete("hub");
   q.delete("arrive");
   menu?.close();
+  audio.unlock();
+  lockPointer(canvas);
   travel?.depart(systemOf(lvl.system), q);
 });
 if (sortie.game) {
   window.addEventListener("keydown", (e) => {
-    if (e.code === "KeyG" && sortie.game?.mission.done && !sortie.game.replay.playing) hub?.show();
+    if (e.code === "KeyG" && !travel?.holding && sortie.game?.mission.done && !sortie.game.replay.playing) hub?.show();
   });
   if (boot.get("arrive") === "1") travel?.arrive();
   if (boot.get("hub") === "1") hub.show();
@@ -142,11 +162,12 @@ menu = new Menu(document.getElementById("menu")!, canvas, save, {
     audio.setMute(s.mute);
   },
   restart: () => location.reload(),
-  hub: () => hub?.show(),
+  hub: () => { menu?.close(); hub?.show(); },
   replay: () => {
-    if (sortie.game?.playReplay()) lockPointer(canvas);
+    if (sortie.game?.playReplay()) { menu?.close(); lockPointer(canvas); }
   },
   hasReplay: () => sortie.game?.replay.hasHighlight ?? false,
+  canOpen: () => !travel?.holding && !hub?.active,
 }, sortie.game !== null && !input.freeLock && !edit, sortie.level.title);
 Object.assign(window, { __flight: flight, __input: input, __travel: travel, __hub: hub, __T: T, __renderer: r, __audio: audio });
 // headless tests (scripts/_*.mjs) drive the game through these
@@ -184,39 +205,112 @@ if (edit && sortie.game) {
 }
 
 const _p = new Vector3(), _v = new Vector3(), _q = new Quaternion();
+const _lightPos = new Vector3();
+const travelGrade = { shadow: new Color(1, 1, 1), highlight: new Color(1, 1, 1) };
+const white = new Color(1, 1, 1);
+function currentMode() {
+  if (document.hidden) return "paused" as const;
+  return presentation({
+    travel: travel?.holding ?? false,
+    paused: !!(menu?.open || editor?.active || (!input.locked && !input.freeLock && !hub?.active && !sortie.game?.replay.playing)),
+    hub: hub?.active ?? false,
+    replay: sortie.game?.replay.playing ?? false,
+  });
+}
 const loop = new Loop({
   sim(dt) {
     const { inspect, game, hazards, world } = sortie;
-    if (inspect || menu?.open || game?.replay.playing || editor?.active) return;
+    const mode = currentMode();
+    input.setEnabled(mode === "flight" && !review?.paused);
+    game?.setPresentation(mode);
+    if (inspect || mode !== "flight" || review?.paused) return;
     input.tick(dt);
-    if (travel?.holding) return; // dialing, in the wormhole or fading in: nothing moves yet
     flight.tick(dt, input);
     hazards.tick(flight, dt);
     world.tick(dt);
     game?.tick(dt, flight, input);
   },
   render(alpha, dt) {
+    const realDt = dt;
+    dt = review?.frameDt(dt) ?? dt;
+    let mode = currentMode();
+    audio.setScene(review?.paused ? "paused" : mode);
+    // Travel can replace the entire sortie. Resolve its new objects before rendering anything beneath it.
+    if (mode === "travel") travel?.update(dt, r.camera);
+    mode = currentMode();
+    audio.setScene(review?.paused ? "paused" : mode);
     const { inspect, game, hazards, world, rig } = sortie;
+    input.setEnabled(mode === "flight" && !review?.paused);
+    game?.setPresentation(mode);
     r.gl.info.reset();
     if (inspect) (inspect.update(dt), rig.update(dt, 0.7, false));
     else {
-      flight.sample(alpha, _p, _q);
-      rig.root.position.copy(_p);
-      rig.root.quaternion.copy(_q);
-      rig.update(dt, flight.throttle, flight.boosting);
-      chase.update(dt, _p, _q, flight.speed, input.stick, flight.boosting, flight.sinceHit, flight.stats.size, flight.barrelLeft !== 0 || flight.move !== null);
-      world.dust.update(_p, _v.copy(flight.velDir).multiplyScalar(flight.speed), flight.speed);
-      hud.update(flight, input, hazards.outside);
-      if (menu?.open) hud.hideHint();
-      hud.setTravel(travel?.holding ?? false);
+      if (mode === "flight") {
+        flight.sample(alpha, _p, _q);
+        rig.root.position.copy(_p);
+        rig.root.quaternion.copy(_q);
+        rig.root.visible = game?.combat.player.alive ?? true;
+        rig.update(dt, flight.throttle, flight.boosting);
+        chase.update(dt, _p, _q, flight.speed, input.stick, flight.boosting, flight.sinceHit, flight.stats.size, flight.barrelLeft !== 0 || flight.move !== null);
+        world.dust.update(_p, _v.copy(flight.velDir).multiplyScalar(flight.speed), flight.speed);
+        hud.update(flight, input, hazards.outside);
+      } else if (mode === "travel" || mode === "hub") {
+        rig.root.visible = mode === "travel" && travel?.phase === "arrive";
+        if (rig.root.visible) rig.update(dt, .35, false);
+      }
+      if (mode === "paused" && !game?.replay.playing) {
+        hud.update(flight, input, hazards.outside);
+        hud.updateCombat(game!.combat, game!.mission, r.camera, game!.combat.player.vel, game!.replay.hasHighlight, game!.gate.alive);
+        if (menu?.open || editor?.active) hud.hideHint();
+      }
+      world.dust.lines.visible = mode === "flight";
       game?.render(alpha, dt, r.camera, hud, flight);
-      travel?.update(dt, r.camera);
+      if (mode === "replay" && game) rig.update(dt * game.replay.playbackRate, Math.min(1, game.replay.velocity.length() / T.flight.boostSpeed), false);
+      const g = SKY_PRESETS[world.system.sky].grade;
+      const reveal = travel?.reveal ?? 1;
+      travelGrade.shadow.copy(white).lerp(g.shadow, reveal);
+      travelGrade.highlight.copy(white).lerp(g.highlight, reveal);
+      r.setGrade(travelGrade);
+      if (mode !== "paused") {
+        const gate = game?.gate;
+        let glow = 0;
+        if (mode === "travel" && travel) {
+          _lightPos.set(0, 1, -2).applyQuaternion(r.camera.quaternion).add(r.camera.position);
+          glow = travel.gateGlow;
+        } else if (mode === "flight" && gate?.alive) {
+          _lightPos.copy(gate.pos).addScaledVector(gate.normal, 8);
+          glow = 1;
+        }
+        eventLighting.update(S.eventLighting, mode === "replay" ? dt * (game?.replay.playbackRate ?? 1) : dt,
+          mode === "replay" ? game?.replay.fx ?? null : mode === "flight" ? game?.combat.fx ?? null : null, _lightPos, glow);
+      }
     }
     world.update(r.camera, r.gl, r.tier.bakeSize);
-    r.adapt(dt, loop.fps);
+    r.adapt(realDt, loop.fps);
     r.render();
-    perf.update(dt, loop, r.gl.info, r);
+    perf.update(realDt, loop, r.gl.info, r);
+    review?.report(mode);
   },
 });
 Object.assign(window, { __loop: loop });
 loop.start();
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    audio.setScene("paused");
+    input.setEnabled(false);
+    loop.stop();
+  } else loop.start();
+});
+
+if (boot.get("review") === "1" && travel && sortie.game) {
+  void import("@/render/scene-review").then(({ SceneReview }) => {
+    review = new SceneReview(() => ({ game: sortie.game!, flight, input, camera: r.camera }), () => {
+      travel!.cancel();
+      menu?.close();
+      hub?.hide();
+      eventLighting.clear();
+      teardown(sortie);
+      sortie = build(new URLSearchParams("mission=proving-ground"));
+    }, travel!, save, audio);
+  });
+}

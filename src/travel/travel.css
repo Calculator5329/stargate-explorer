@@ -1,0 +1,14 @@
+#dial .ring { display: none; }
+#dial .dial-console { border: 0; background: transparent; padding: 8px 12px; bottom: 4%; }
+#dial .dest { top: 5%; font-size: 13px; letter-spacing: .18em; }
+#dial .old-script { height: 26px; opacity: .6; }
+#dial .glyph { border: 0; padding-bottom: 4px; }
+#dial .line { margin-top: 8px; }
+#dial[data-phase="opening"] .dest,
+#dial[data-phase="opening"] .dial-console { opacity: 0; transition: opacity .25s ease-out; }
+#hud.replaying .replay-label { letter-spacing: .12em; }
+@media (max-height: 520px) {
+  #dial .old-script { display: none; }
+  #dial .dest { top: 3%; }
+  #dial .dial-console { bottom: 2%; }
+}

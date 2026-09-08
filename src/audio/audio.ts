@@ -1,3 +1,8 @@
+export type AudioScene = "flight" | "travel" | "replay" | "paused" | "hub";
+type SoundBus = "flight" | "travel" | "replay" | "ui";
+type Voice = { source: AudioScheduledSourceNode; gain: GainNode; nodes: AudioNode[]; bus: SoundBus;
+  remaining: number; at: number; rate: number; level: number; pitch: AudioParam | undefined };
+
 export type Mood = "calm" | "combat" | "win" | "lost";
 
 /**
@@ -36,9 +41,13 @@ export class Audio {
   private engineFilter!: BiquadFilterNode;
   private noise!: AudioBuffer;
   private boostGain!: GainNode;
-  /** 1 in flight, ~0 during gate travel: scales the engine and boost beds so the wormhole has the room */
-  private duckLevel = 1;
+  private scene: AudioScene = "hub";
+  private pausedFrom: AudioScene | null = null;
+  private buses!: Record<SoundBus, GainNode>;
+  private voices = new Set<Voice>();
+  private replayRate = 1;
   muted = false;
+  onMuteChanged?: (muted: boolean) => void;
 
   constructor() {
     window.addEventListener("keydown", (e) => {
@@ -49,13 +58,18 @@ export class Audio {
   /** Create the graph; safe to call repeatedly. */
   unlock(): void {
     if (this.ctx) {
-      if (this.ctx.state === "suspended") void this.ctx.resume();
+      if (this.ctx.state === "suspended" && this.scene !== "paused") void this.ctx.resume();
       return;
     }
     const ctx = (this.ctx = new AudioContext());
     this.master = ctx.createGain();
     this.master.gain.value = this.muted ? 0 : 0.5;
     this.master.connect(ctx.destination);
+    this.buses = { flight: ctx.createGain(), travel: ctx.createGain(), replay: ctx.createGain(), ui: ctx.createGain() };
+    for (const [name, bus] of Object.entries(this.buses)) {
+      bus.gain.value = name === "ui" || name === (this.scene === "paused" ? this.pausedFrom : this.scene) ? 1 : 0;
+      bus.connect(this.master);
+    }
 
     // noise buffer for explosions/whoosh
     const len = ctx.sampleRate * 2;
@@ -75,7 +89,7 @@ export class Audio {
     this.engine2.type = "sawtooth";
     this.engine.connect(this.engineFilter);
     this.engine2.connect(this.engineFilter);
-    this.engineFilter.connect(this.engineGain).connect(this.master);
+    this.engineFilter.connect(this.engineGain).connect(this.buses.flight);
     this.engine.start();
     this.engine2.start();
 
@@ -89,7 +103,7 @@ export class Audio {
     bp.Q.value = 0.7;
     this.boostGain = ctx.createGain();
     this.boostGain.gain.value = 0;
-    src.connect(bp).connect(this.boostGain).connect(this.master);
+    src.connect(bp).connect(this.boostGain).connect(this.buses.flight);
     src.start();
 
     // pad: four triangle voices, slow attack, through a gently moving lowpass
@@ -99,7 +113,7 @@ export class Audio {
     this.padFilter.Q.value = 0.6;
     this.padGain = ctx.createGain();
     this.padGain.gain.value = 0;
-    this.padFilter.connect(this.padGain).connect(this.master);
+    this.padFilter.connect(this.padGain).connect(this.buses.flight);
     const lfo = ctx.createOscillator();
     lfo.frequency.value = 0.07;
     const lfoGain = ctx.createGain();
@@ -132,12 +146,13 @@ export class Audio {
     gated.gain.value = 0;
     gate.connect(gateGain).connect(gated.gain);
     gateBias.connect(gated.gain);
-    this.pulse.connect(gated).connect(this.pulseGain).connect(this.master);
+    this.pulse.connect(gated).connect(this.pulseGain).connect(this.buses.flight);
     gate.start();
     gateBias.start();
     this.pulse.start();
     this.applyMood(true);
     this.padGain.gain.setTargetAtTime(0.09, ctx.currentTime, 2.5);
+    if (this.scene === "paused") void ctx.suspend();
   }
 
   /** Pick the key from a string (the system id), so every system hums in its own colour. */
@@ -176,6 +191,7 @@ export class Audio {
 
   toggleMute(): void {
     this.muted = !this.muted;
+    this.onMuteChanged?.(this.muted);
     if (this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : 0.5, this.ctx.currentTime, 0.05);
   }
 
@@ -187,17 +203,95 @@ export class Audio {
     this.engine.frequency.setTargetAtTime(f, t, 0.1);
     this.engine2.frequency.setTargetAtTime(f * 1.007 + 1.5, t, 0.1);
     this.engineFilter.frequency.setTargetAtTime(220 + 900 * speedFrac, t, 0.15);
-    this.boostGain.gain.setTargetAtTime(boosting && this.duckLevel > 0.5 ? 0.18 : 0, t, boosting ? 0.15 : 0.4);
-    this.engineGain.gain.setTargetAtTime(0.12 * this.duckLevel, t, 0.25);
+    this.boostGain.gain.setTargetAtTime(boosting ? 0.18 : 0, t, boosting ? 0.15 : 0.4);
+    this.engineGain.gain.setTargetAtTime(0.12, t, 0.25);
   }
 
-  /** Gate travel: the engine bed and the pad step back for the wormhole, then return on arrival. */
-  duck(on: boolean): void {
-    this.duckLevel = on ? 0.15 : 1;
+  /** One scene owns sound at a time; cancel outgoing tails as well as silencing beds. */
+  setScene(scene: AudioScene): void {
+    if (scene === this.scene) return;
+    const previous = this.scene;
+    this.scene = scene;
+    if (scene === "paused") {
+      this.pausedFrom = previous;
+      // Suspending freezes AudioContext time, including envelopes and scheduled stops.
+      // Replay/travel visuals can pause on the same frame without losing their tails.
+      if (this.ctx) void this.ctx.suspend();
+      return;
+    }
+    if (previous === "paused") {
+      if (this.ctx) void this.ctx.resume();
+      const resuming = this.pausedFrom === scene;
+      this.pausedFrom = null;
+      if (resuming) return;
+    }
+    if (!this.ctx) return;
+    for (const voice of [...this.voices]) {
+      if (voice.bus !== scene) this.stopVoice(voice);
+    }
+    const t = this.ctx.currentTime;
+    for (const bus of ["flight", "travel", "replay"] as const) {
+      this.buses[bus].gain.cancelScheduledValues(t);
+      // Silence immediately on departure; gently introduce the new scene.
+      this.buses[bus].gain.setValueAtTime(0, t);
+      if (bus === scene) this.buses[bus].gain.linearRampToValueAtTime(1, t + 0.08);
+    }
+  }
+
+  /** Compatibility for Travel's start/end notifications. */
+  duck(on: boolean): void { this.setScene(on ? "travel" : "flight"); }
+
+  setReplayRate(rate: number): void {
+    const next = Math.max(0.05, Math.min(2, rate));
+    if (next === this.replayRate) return;
+    this.replayRate = next;
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
-    this.padGain.gain.setTargetAtTime(on ? 0.03 : 0.09, t, on ? 0.6 : 2);
-    this.pulseGain.gain.setTargetAtTime(on ? 0 : this.mood === "combat" ? 0.11 : 0, t, 0.6);
+    for (const voice of this.voices) {
+      if (voice.bus !== "replay") continue;
+      const elapsed = Math.max(0, t - voice.at) * voice.rate;
+      voice.level *= Math.pow(0.001 / voice.level, Math.min(1, elapsed / voice.remaining));
+      voice.remaining = Math.max(0.001, voice.remaining - elapsed);
+      voice.at = t;
+      voice.rate = next;
+      voice.gain.gain.cancelScheduledValues(t);
+      voice.gain.gain.setValueAtTime(Math.max(0.001, voice.level), t);
+      voice.gain.gain.exponentialRampToValueAtTime(0.001, t + voice.remaining / next);
+      voice.pitch?.setValueAtTime(1200 * Math.log2(next), t);
+      voice.source.stop(t + voice.remaining / next + 0.02);
+    }
+  }
+
+  replayShot(rate = 1): void {
+    this.setReplayRate(rate);
+    this.blip(660, 0.18, 0.07, "square", "replay");
+    this.burst(2400, 1.2, 0.12, 0.06, "highpass", "replay");
+  }
+
+  replayExplosion(size: number, rate = 1): void {
+    this.setReplayRate(rate);
+    this.burst(180 * size, 0.6, 0.7, 0.9 + 0.4 * size, "lowpass", "replay");
+    this.burst(900, 1.5, 0.3, 0.25, "bandpass", "replay");
+  }
+
+  private stopVoice(voice: Voice): void {
+    voice.source.stop();
+    voice.source.disconnect();
+    for (const node of voice.nodes) node.disconnect();
+    this.voices.delete(voice);
+  }
+
+  private track(source: AudioScheduledSourceNode, gain: GainNode, nodes: AudioNode[], bus: SoundBus,
+    duration: number, level: number, at: number, pitch?: AudioParam): void {
+    const rate = bus === "replay" ? this.replayRate : 1;
+    const voice: Voice = { source, gain, nodes, bus, remaining: duration, at, rate, level, pitch };
+    this.voices.add(voice);
+    source.onended = () => {
+      source.disconnect();
+      for (const node of nodes) node.disconnect();
+      this.voices.delete(voice);
+    };
+    pitch?.setValueAtTime(1200 * Math.log2(rate), at);
   }
 
   /**
@@ -206,7 +300,7 @@ export class Audio {
    * missile launch sound that used to stand in for it (Ethan, 2026-09-06: "in transitions, the sound is bad").
    */
   wormhole(dur: number): void {
-    if (!this.ctx) return;
+    if (!this.ctx || this.scene !== "travel") return;
     const ctx = this.ctx, t = ctx.currentTime;
     const src = ctx.createBufferSource();
     src.buffer = this.noise;
@@ -222,7 +316,8 @@ export class Audio {
     g.gain.exponentialRampToValueAtTime(0.42, t + 0.35);
     g.gain.setValueAtTime(0.42, t + dur * 0.6);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    src.connect(lp).connect(g).connect(this.master);
+    src.connect(lp).connect(g).connect(this.buses.travel);
+    this.track(src, g, [lp, g], "travel", dur, 0.42, t);
     src.start(t);
     src.stop(t + dur + 0.05);
     // the sub: a sine that dips under the crossing and rises out of it
@@ -236,7 +331,8 @@ export class Audio {
     og.gain.exponentialRampToValueAtTime(0.3, t + 0.5);
     og.gain.setValueAtTime(0.3, t + dur * 0.7);
     og.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(og).connect(this.master);
+    o.connect(og).connect(this.buses.travel);
+    this.track(o, og, [og], "travel", dur, 0.3, t);
     o.start(t);
     o.stop(t + dur + 0.05);
     // the shimmer: two detuned triangles a fifth apart, gliding up, quiet
@@ -250,7 +346,8 @@ export class Audio {
       sg.gain.setValueAtTime(0.0001, t);
       sg.gain.exponentialRampToValueAtTime(0.045, t + 0.6);
       sg.gain.exponentialRampToValueAtTime(0.001, t + dur);
-      s.connect(sg).connect(this.master);
+      s.connect(sg).connect(this.buses.travel);
+      this.track(s, sg, [sg], "travel", dur, 0.045, t);
       s.start(t);
       s.stop(t + dur + 0.05);
     }
@@ -258,12 +355,12 @@ export class Audio {
 
   /** The event horizon opens: a bass thump and a splash of noise. */
   kawoosh(): void {
-    this.burst(240, 0.9, 0.5, 0.7, "lowpass");
-    this.blip(55, 0.25, 0.6, "sine");
+    this.burst(240, 0.9, 0.5, 0.7, "lowpass", "travel");
+    this.blip(55, 0.25, 0.6, "sine", "travel");
   }
 
-  private burst(freq: number, q: number, gain: number, dur: number, type: BiquadFilterType = "bandpass"): void {
-    if (!this.ctx) return;
+  private burst(freq: number, q: number, gain: number, dur: number, type: BiquadFilterType = "bandpass", bus: SoundBus = "flight", delay = 0): void {
+    if (!this.ctx || this.scene === "paused" || (bus !== "ui" && this.scene !== bus)) return;
     const ctx = this.ctx;
     const src = ctx.createBufferSource();
     src.buffer = this.noise;
@@ -273,28 +370,32 @@ export class Audio {
     flt.frequency.value = freq;
     flt.Q.value = q;
     const g = ctx.createGain();
-    const t = ctx.currentTime;
+    const t = ctx.currentTime + delay;
+    const rate = bus === "replay" ? this.replayRate : 1;
     g.gain.setValueAtTime(gain, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    src.connect(flt).connect(g).connect(this.master);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur / rate);
+    src.connect(flt).connect(g).connect(this.buses[bus]);
+    this.track(src, g, [flt, g], bus, dur, gain, t, src.detune);
     src.start(t, Math.random());
-    src.stop(t + dur + 0.05);
+    src.stop(t + dur / rate + 0.05);
   }
 
-  private blip(freq: number, gain: number, dur: number, type: OscillatorType = "square"): void {
-    if (!this.ctx) return;
+  private blip(freq: number, gain: number, dur: number, type: OscillatorType = "square", bus: SoundBus = "flight", delay = 0): void {
+    if (!this.ctx || this.scene === "paused" || (bus !== "ui" && this.scene !== bus)) return;
     const ctx = this.ctx;
     const o = ctx.createOscillator();
     o.type = type;
-    const t = ctx.currentTime;
+    const t = ctx.currentTime + delay;
+    const rate = bus === "replay" ? this.replayRate : 1;
     o.frequency.setValueAtTime(freq, t);
-    o.frequency.exponentialRampToValueAtTime(Math.max(30, freq * 0.3), t + dur);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, freq * 0.3), t + dur / rate);
     const g = ctx.createGain();
     g.gain.setValueAtTime(gain, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g).connect(this.master);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur / rate);
+    o.connect(g).connect(this.buses[bus]);
+    this.track(o, g, [g], bus, dur, gain, t, o.detune);
     o.start(t);
-    o.stop(t + dur + 0.02);
+    o.stop(t + dur / rate + 0.02);
   }
 
   cannon(): void {
@@ -322,12 +423,12 @@ export class Audio {
     this.burst(90 + 40 / s, 0.9, 0.45 + 0.15 * s, 0.22 + 0.12 * s, "lowpass");
     this.burst(1600, 4, 0.16, 0.12 + 0.06 * s, "bandpass");
     // the rattle: three quick clicks trailing off
-    for (let k = 1; k <= 3; k++) setTimeout(() => this.burst(2400 - k * 400, 8, 0.09 / k, 0.05, "bandpass"), 40 * k + Math.random() * 30);
+    for (let k = 1; k <= 3; k++) this.burst(2400 - k * 400, 8, 0.09 / k, 0.05, "bandpass", "flight", 0.04 * k + Math.random() * 0.03);
   }
 
   lock(): void {
     this.blip(1320, 0.12, 0.09, "square");
-    setTimeout(() => this.blip(1320, 0.12, 0.09, "square"), 90);
+    this.blip(1320, 0.12, 0.09, "square", "flight", 0.09);
   }
 
   launch(): void {
@@ -336,21 +437,21 @@ export class Audio {
   }
 
   ui(): void {
-    this.blip(880, 0.08, 0.12, "sine");
+    this.blip(880, 0.08, 0.12, "sine", "ui");
   }
 
   /** A short rising tone pair for each note of the root triad, staggered: the ring pass. */
   ring(): void {
     const base = 440 * Math.pow(2, (this.root + 24 - 69) / 12);
     this.tone(base, 0.1, 0.16);
-    setTimeout(() => this.tone(base * 1.5, 0.1, 0.22), 70);
+    this.tone(base * 1.5, 0.1, 0.22, "sine", 0.07);
   }
 
   /** Mission won: an ascending arpeggio of the win chord. */
   win(): void {
     this.setMood("win");
     const chord = CHORDS.win;
-    chord.forEach((semi, i) => setTimeout(() => this.tone(440 * Math.pow(2, (this.root + 24 + semi - 69) / 12), 0.14, 0.5), i * 110));
+    chord.forEach((semi, i) => this.tone(440 * Math.pow(2, (this.root + 24 + semi - 69) / 12), 0.14, 0.5, "sine", i * 0.11));
   }
 
   /** Mission lost: two low descending tones and the pad goes dark. */
@@ -358,28 +459,29 @@ export class Audio {
     this.setMood("lost");
     const r = 440 * Math.pow(2, (this.root + 12 - 69) / 12);
     this.tone(r, 0.16, 0.7, "sawtooth");
-    setTimeout(() => this.tone(r * 0.84, 0.16, 1.1, "sawtooth"), 420);
+    this.tone(r * 0.84, 0.16, 1.1, "sawtooth", 0.42);
   }
 
   /** Gate dial: a chevron encodes (rising click), the seventh locks (heavier). */
   chevron(index: number, last: boolean): void {
-    this.blip(420 + index * 40, 0.06, 0.08, "triangle");
-    this.burst(last ? 260 : 1400, 2, last ? 0.3 : 0.07, last ? 0.35 : 0.05, last ? "lowpass" : "bandpass");
+    this.blip(420 + index * 40, 0.06, 0.08, "triangle", "travel");
+    this.burst(last ? 260 : 1400, 2, last ? 0.3 : 0.07, last ? 0.35 : 0.05, last ? "lowpass" : "bandpass", "travel");
   }
 
   /** A held tone with a soft attack (unlike `blip`, no pitch drop). */
-  private tone(freq: number, gain: number, dur: number, type: OscillatorType = "sine"): void {
-    if (!this.ctx) return;
+  private tone(freq: number, gain: number, dur: number, type: OscillatorType = "sine", delay = 0): void {
+    if (!this.ctx || this.scene !== "flight") return;
     const ctx = this.ctx;
     const o = ctx.createOscillator();
     o.type = type;
-    const t = ctx.currentTime;
+    const t = ctx.currentTime + delay;
     o.frequency.value = freq;
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(gain, t + 0.03);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g).connect(this.master);
+    o.connect(g).connect(this.buses.flight);
+    this.track(o, g, [g], "flight", dur, gain, t);
     o.start(t);
     o.stop(t + dur + 0.02);
   }

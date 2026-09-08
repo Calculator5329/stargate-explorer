@@ -116,7 +116,8 @@ void main() {
   float grain = 0.80 + 0.20 * swirl + 0.16 * (fine - 0.75);
   vec3 wash = (uCol2 * m2 * (0.35 + 0.65 * n2) * 0.14 + uCol1 * m1 * n1 * 0.02);
   vec3 neb = (uCol1 * mix(0.12, 0.9, pa) * smoothstep(0.02, 0.14, a) + uCol2 * mix(0.12, 0.85, pb) * smoothstep(0.02, 0.14, b)) * grain + uCore * hot * 0.28 + wash;
-  neb = min(neb, vec3(0.92));
+  // Retain the warm/cool lobes while leaving contrast for the planet and action.
+  neb = min(neb * 0.72, vec3(0.66));
   float mw = exp(-pow(dot(d, uBandN), 2.0) * 20.0);
   vec3 s = starLayer(d, 45.0, 0.90, 0.10, 1.0, 0.0) * 1.5
          + starLayer(d, 120.0, 0.92, 0.22, 0.0, 0.06 * mw) * 0.9

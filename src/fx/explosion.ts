@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mulberry32 } from "@/core/random";
 import { noEdge } from "@/render/layers";
 import { glowMaterial, toonMaterial } from "@/render/toon";
 import { HIDDEN, Z_AXIS, dragDist, faceted, fadeOut, popIn, randInCone, randUnit, rr } from "@/fx/fx-util";
@@ -17,7 +18,7 @@ const SP_STREAKS = 3;
 const CHIPS = 10;
 const CRASH_PUFFS = 2;
 
-const BURST_LIFE = 1.6;
+const BURST_LIFE = 2.4;
 const SPARK_LIFE = 0.2;
 const CRASH_LIFE = 0.9;
 const CHUNK_DRAG = 1.4;
@@ -57,6 +58,7 @@ interface Burst {
   pos: THREE.Vector3;
   vel: THREE.Vector3;
   scale: number;
+  kind: "ship" | "rock" | "impact";
   nChunk: number;
   nStreak: number;
   chunkVel: Float32Array; // radial launch velocity, decays with CHUNK_DRAG
@@ -90,12 +92,12 @@ interface Crash {
 }
 
 /**
- * Pooled cel explosions. Three staged effects share eight instanced meshes, so
- * the whole system costs at most eight draw calls however many bursts are live:
+ * Pooled cel explosions. Three staged effects share eleven instanced meshes, so
+ * the whole system costs at most eleven draw calls however many bursts are live:
  *   flash discs (billboard, glow) · shockwave rings (billboard, glow, stepped fade)
  *   fireball cores (glow) · fireball rims (back-face shell, flat orange)
  *   streaks (stretched glow boxes: sparks and chunk embers, tinted per instance)
- *   tetrahedra (toon, tinted: dark ship chunks and rust rock chips)
+ *   tetrahedra (toon, tinted: small hull shards and rust rock chips; six structural ship pieces per burst)
  *   smoke puffs (toon dark grey, lit in bands) · dust cones (toon grey-violet).
  * `spawn` is the full staged burst, `spark` a 0.2 s hit pop, `crash` a rock impact.
  */
@@ -112,6 +114,7 @@ export class Explosions {
   private readonly rim: THREE.InstancedMesh;
   private readonly streak: THREE.InstancedMesh;
   private readonly tetra: THREE.InstancedMesh;
+  private readonly hullParts: THREE.InstancedMesh[] = [];
   private readonly puff: THREE.InstancedMesh;
   private readonly cone: THREE.InstancedMesh;
   private flashTintDirty = false;
@@ -144,6 +147,15 @@ export class Explosions {
     this.tetra = inst(new THREE.TetrahedronGeometry(1, 0), toonMaterial(0xffffff), TETRA_N);
     for (let i = 0; i < TETRA_N; i++) this.tetra.setColorAt(i, _c.set(i < TETRA_CHIP0 ? COL_SHIP : COL_ROCK[i % 2]!));
 
+    // Separate wing plates, engine barrels and fuselage sections keep the breakup readable.
+    const wing = new THREE.CylinderGeometry(1, 1, 0.16, 3);
+    wing.rotateY(Math.PI / 2);
+    const engine = new THREE.CylinderGeometry(0.42, 0.6, 1.8, 6);
+    engine.rotateX(Math.PI / 2);
+    for (const [index, geo] of [wing, engine, new THREE.BoxGeometry(0.8, 0.45, 1.8)].entries()) {
+      this.hullParts.push(inst(faceted(geo), toonMaterial([0xbab4a2, 0x454e59, 0x807e79][index]!), BURSTS * 2));
+    }
+
     this.puff = inst(faceted(new THREE.IcosahedronGeometry(1, 1)), toonMaterial(0xffffff), PUFF_N);
     for (let i = 0; i < PUFF_N; i++) this.puff.setColorAt(i, i < PUFF_CRASH0 ? COL_SMOKE : COL_DUST);
 
@@ -155,7 +167,7 @@ export class Explosions {
 
     for (let i = 0; i < BURSTS; i++) {
       this.bursts.push({
-        t: BURST_LIFE, live: false, pos: new THREE.Vector3(), vel: new THREE.Vector3(), scale: 1, nChunk: 0, nStreak: 0,
+        t: BURST_LIFE, live: false, pos: new THREE.Vector3(), vel: new THREE.Vector3(), scale: 1, kind: "ship", nChunk: 0, nStreak: 0,
         chunkVel: new Float32Array(CHUNKS * 3), chunkSpin: new Float32Array(CHUNKS * 2), chunkSize: new Float32Array(CHUNKS),
         blobOff: new Float32Array(BLOBS * 3), blobR: new Float32Array(BLOBS),
         streakVel: new Float32Array(STREAKS * 3), streakLen: new Float32Array(STREAKS),
@@ -172,39 +184,46 @@ export class Explosions {
   }
 
   /** `scale` ≈ victim radius in metres; `vel` is the victim's velocity, inherited by debris and smoke. */
-  spawn(pos: THREE.Vector3, vel: THREE.Vector3, scale: number): void {
+  spawn(pos: THREE.Vector3, vel: THREE.Vector3, scale: number, seed = Math.floor(Math.random() * 4294967296), kind: Burst["kind"] = "ship"): number {
+    const random = mulberry32(seed);
+    const range = (a: number, b: number) => rr(a, b, random);
     const bi = oldest(this.bursts, BURST_LIFE);
     const b = this.bursts[bi]!;
+    this.hideBurst(bi);
     b.t = 0;
+    b.kind = kind;
     b.pos.copy(pos);
     b.vel.copy(vel);
     b.scale = scale;
-    b.nChunk = 12 + Math.floor(Math.random() * (CHUNKS - 12 + 1));
-    b.nStreak = 6 + Math.floor(Math.random() * (STREAKS - 6 + 1));
+    b.nChunk = 12 + Math.floor(random() * (CHUNKS - 12 + 1));
+    b.nStreak = 6 + Math.floor(random() * (STREAKS - 6 + 1));
     for (let i = 0; i < CHUNKS; i++) {
-      randUnit(_v).multiplyScalar(rr(9, 24) * scale * 0.45);
+      randUnit(_v, random).multiplyScalar(range(9, 24) * scale * 0.45);
       b.chunkVel[i * 3] = _v.x; b.chunkVel[i * 3 + 1] = _v.y; b.chunkVel[i * 3 + 2] = _v.z;
-      b.chunkSpin[i * 2] = rr(-7, 7);
-      b.chunkSpin[i * 2 + 1] = rr(-7, 7);
-      b.chunkSize[i] = rr(0.2, 0.4);
+      b.chunkSpin[i * 2] = range(-7, 7);
+      b.chunkSpin[i * 2 + 1] = range(-7, 7);
+      b.chunkSize[i] = range(0.2, 0.4);
+      this.tetra.setColorAt(bi * CHUNKS + i, _c.set(kind === "rock" ? COL_ROCK[i % 2]! : COL_SHIP));
     }
     for (let i = 0; i < BLOBS; i++) {
-      randUnit(_v).multiplyScalar(i === 0 ? 0 : rr(0.4, 0.85));
+      randUnit(_v, random).multiplyScalar(i === 0 ? 0 : range(0.4, 0.85));
       b.blobOff[i * 3] = _v.x; b.blobOff[i * 3 + 1] = _v.y; b.blobOff[i * 3 + 2] = _v.z;
-      b.blobR[i] = i === 0 ? 1.15 : rr(0.6, 0.95);
+      b.blobR[i] = i === 0 ? 1.15 : range(0.6, 0.95);
     }
     for (let i = 0; i < STREAKS; i++) {
-      randUnit(_v).multiplyScalar(rr(30, 55) * scale * 0.3);
+      randUnit(_v, random).multiplyScalar(range(30, 55) * scale * 0.3);
       b.streakVel[i * 3] = _v.x; b.streakVel[i * 3 + 1] = _v.y; b.streakVel[i * 3 + 2] = _v.z;
-      b.streakLen[i] = rr(0.6, 1.3);
+      b.streakLen[i] = range(0.6, 1.3);
     }
     for (let i = 0; i < PUFFS; i++) {
-      randUnit(_v).multiplyScalar(rr(0.35, 0.75));
+      randUnit(_v, random).multiplyScalar(range(0.35, 0.75));
       b.puffOff[i * 3] = _v.x; b.puffOff[i * 3 + 1] = _v.y; b.puffOff[i * 3 + 2] = _v.z;
-      b.puffR[i] = rr(0.6, 0.95);
+      b.puffR[i] = range(0.6, 0.95);
     }
+    if (this.tetra.instanceColor) this.tetra.instanceColor.needsUpdate = true;
     this.flash.setColorAt(bi, COL_FLASH_BURST);
     this.flashTintDirty = true;
+    return seed;
   }
 
   /** Small 0.2 s hit pop: a flash and three tiny streaks. Cheap; safe to call many times a second. */
@@ -254,44 +273,48 @@ export class Explosions {
       b.live = anyBurst = true;
       b.t += dt;
       const t = b.t, s = b.scale;
+      const staged = b.kind === "ship" && s >= 10;
+      const mainTime = t - (staged ? 0.3 : 0);
+      _v.copy(b.pos).addScaledVector(b.vel, t);
 
       // 1. flash: pops to full in 25 ms, hard cut to a smaller step at 80 ms, gone at 130 ms
-      const fr = t < 0.08 ? 2.6 * popIn(t, 0, 0.025) : t < 0.13 ? 1.1 : 0;
-      this.billboard(this.flash, k, b.pos, camPos, fr * s);
+      const fr = mainTime < 0 ? 0 : mainTime < 0.08 ? 1.9 * popIn(mainTime, 0, 0.025) : mainTime < 0.13 ? 0.8 : 0;
+      this.billboard(this.flash, k, _v, camPos, fr * s);
 
       // 2. shockwave ring: expands fast, brightness steps down, gone at 0.45 s
-      if (t < 0.45) {
-        const u = t / 0.45;
-        this.billboard(this.ring, k, b.pos, camPos, s * (0.6 + 2.6 * (1 - (1 - u) * (1 - u))));
+      if (mainTime >= 0 && mainTime < 0.45) {
+        const u = mainTime / 0.45;
+        this.billboard(this.ring, k, _v, camPos, s * (0.6 + 2.6 * (1 - (1 - u) * (1 - u))));
         const lv = t < 0.18 ? 1 : t < 0.32 ? 0.5 : 0.28;
         this.ring.setColorAt(k, _c.setScalar(lv));
         ringDirty = true;
       } else this.ring.setMatrixAt(k, HIDDEN);
 
       // 3. fireball: overlapping blobs, glow core inside a flat orange back-face rim. The core dies first
-      //    so the ball turns orange as it collapses; blobs drift apart and ride 30 % of the victim's velocity.
+      //    so the ball turns orange as it collapses; blobs drift apart and retain most of the victim's velocity.
       for (let i = 0; i < BLOBS; i++) {
         const id = k * BLOBS + i;
-        if (t < 0.05 || t >= 0.5) {
+        const bt = t - (staged ? (i === 0 ? 0.3 : (i - 1) * 0.07) : 0);
+        if (bt < 0.05 || bt >= 0.5) {
           this.core.setMatrixAt(id, HIDDEN);
           this.rim.setMatrixAt(id, HIDDEN);
           continue;
         }
         // three hard size steps on the way up, then a smooth collapse
-        const grow = t < 0.09 ? 0.6 : t < 0.14 ? 0.85 : 1;
+        const grow = bt < 0.09 ? 0.6 : bt < 0.14 ? 0.85 : 1;
         const r = b.blobR[i]! * s * grow;
-        _p.set(b.blobOff[i * 3]!, b.blobOff[i * 3 + 1]!, b.blobOff[i * 3 + 2]!).multiplyScalar(s * (0.8 + 2.2 * t)).add(b.pos).addScaledVector(b.vel, 0.3 * t);
+        _p.set(b.blobOff[i * 3]!, b.blobOff[i * 3 + 1]!, b.blobOff[i * 3 + 2]!).multiplyScalar(s * (0.8 + 2.2 * t)).add(b.pos).addScaledVector(b.vel, 0.8 * t);
         _obj.position.copy(_p);
         _obj.rotation.set(i * 0.9, i * 1.7, 0);
-        _obj.scale.setScalar(r * 0.7 * fadeOut(t, 0.26, 0.42));
+        _obj.scale.setScalar(r * 0.7 * fadeOut(bt, 0.26, 0.42));
         _obj.updateMatrix();
         this.core.setMatrixAt(id, _obj.matrix);
-        _obj.scale.setScalar(r * fadeOut(t, 0.34, 0.5));
+        _obj.scale.setScalar(r * fadeOut(bt, 0.34, 0.5));
         _obj.updateMatrix();
         this.rim.setMatrixAt(id, _obj.matrix);
       }
 
-      // 4. debris chunks: inherit vel, radial spread decays under drag, tumble, shrink out over the last 0.6 s
+      // 4. debris chunks: inherit vel, radial spread decays under drag, tumble, shrink out over the last 0.8 s
       const dd = dragDist(t, CHUNK_DRAG);
       const decay = Math.exp(-CHUNK_DRAG * t);
       for (let i = 0; i < CHUNKS; i++) {
@@ -304,9 +327,19 @@ export class Explosions {
         _p.copy(b.pos).addScaledVector(b.vel, t).addScaledVector(_v, dd);
         _obj.position.copy(_p);
         _obj.rotation.set(b.chunkSpin[i * 2]! * t, b.chunkSpin[i * 2 + 1]! * t, 0);
-        _obj.scale.setScalar(b.chunkSize[i]! * s * fadeOut(t, 1.0, BURST_LIFE));
-        _obj.updateMatrix();
-        this.tetra.setMatrixAt(id, _obj.matrix);
+        const size = b.chunkSize[i]! * s * popIn(t, 0.04, 0.1) * fadeOut(t, 1.6, BURST_LIFE);
+        _obj.scale.setScalar(size);
+        if (b.kind === "ship" && i < 6) {
+          // Two of each structural piece: wing, engine, body. All inherit ship momentum.
+          const part = Math.floor(i / 2);
+          if (part === 0) _obj.scale.set(size * 1.9, size, size * 1.3);
+          _obj.updateMatrix();
+          this.hullParts[part]!.setMatrixAt(k * 2 + i % 2, _obj.matrix);
+          this.tetra.setMatrixAt(id, HIDDEN);
+        } else {
+          _obj.updateMatrix();
+          this.tetra.setMatrixAt(id, b.kind === "impact" ? HIDDEN : _obj.matrix);
+        }
 
         // 5. embers: the first few chunks trail a glowing streak along their current velocity for 0.7 s
         if (i < EMBERS) {
@@ -348,7 +381,7 @@ export class Explosions {
           continue;
         }
         const g = popIn(t, 0.22, 0.36) * fadeOut(t, 0.7, 1.45);
-        _p.set(b.puffOff[i * 3]!, b.puffOff[i * 3 + 1]!, b.puffOff[i * 3 + 2]!).multiplyScalar(s * (1 + 1.2 * t)).add(b.pos).addScaledVector(b.vel, 0.3 * t);
+        _p.set(b.puffOff[i * 3]!, b.puffOff[i * 3 + 1]!, b.puffOff[i * 3 + 2]!).multiplyScalar(s * (1 + 1.2 * t)).add(b.pos).addScaledVector(b.vel, 0.8 * t);
         _obj.position.copy(_p);
         _obj.rotation.set(i * 1.3, t * 0.6, i * 0.7);
         _obj.scale.setScalar(b.puffR[i]! * s * g);
@@ -432,6 +465,10 @@ export class Explosions {
     this.streak.visible = anyBurst || anySpark;
     this.tetra.visible = anyBurst || anyCrash;
     this.cone.visible = anyCrash;
+    for (const mesh of this.hullParts) {
+      mesh.visible = anyBurst;
+      if (anyBurst) mesh.instanceMatrix.needsUpdate = true;
+    }
     if (anyFlash) {
       this.flash.instanceMatrix.needsUpdate = true;
       if (this.flashTintDirty && this.flash.instanceColor) {
@@ -449,6 +486,28 @@ export class Explosions {
     if (anyBurst || anySpark) this.streak.instanceMatrix.needsUpdate = true;
     if (anyBurst || anyCrash) this.tetra.instanceMatrix.needsUpdate = true;
     if (anyCrash) this.cone.instanceMatrix.needsUpdate = true;
+  }
+
+  /** Reset playback without leaving instances from a previous clip in recycled slots. */
+  clear(): void {
+    for (let i = 0; i < BURSTS; i++) { this.hideBurst(i); this.bursts[i]!.t = BURST_LIFE; }
+    for (let i = 0; i < SPARKS; i++) { this.hideSpark(i); this.sparks[i]!.t = SPARK_LIFE; }
+    for (let i = 0; i < CRASHES; i++) { this.hideCrash(i); this.crashes[i]!.t = CRASH_LIFE; }
+    for (const mesh of this.group.children) mesh.visible = false;
+  }
+
+  /** Brightest active burst, sampled from the same clock as its visible fireball. */
+  strongestLight(out: THREE.Vector3): number {
+    let strongest = 0;
+    for (const b of this.bursts) {
+      const t = b.t - (b.kind === "ship" && b.scale >= 10 ? 0.3 : 0);
+      const light = t >= 0 && t < 0.55 ? b.scale * (1 - t / 0.55) : 0;
+      if (light > strongest) {
+        strongest = light;
+        out.copy(b.pos).addScaledVector(b.vel, b.t * 0.8);
+      }
+    }
+    return strongest;
   }
 
   /** Camera-facing disc of radius `r` (0 hides it). */
@@ -480,6 +539,11 @@ export class Explosions {
   private hideBurst(k: number): void {
     const b = this.bursts[k]!;
     b.live = false;
+    for (const mesh of this.hullParts) {
+      mesh.setMatrixAt(k * 2, HIDDEN);
+      mesh.setMatrixAt(k * 2 + 1, HIDDEN);
+      mesh.instanceMatrix.needsUpdate = true;
+    }
     this.flash.setMatrixAt(k, HIDDEN);
     this.ring.setMatrixAt(k, HIDDEN);
     for (let i = 0; i < BLOBS; i++) {

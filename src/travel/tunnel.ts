@@ -10,23 +10,27 @@ void main() {
 
 // Posterised wormhole: three ring bands racing at the viewer, nine spoke streaks, a hot core. HDR whites so bloom takes them.
 const FRAG = /* glsl */ `
-uniform float uT, uFade, uAspect;
+uniform float uT, uFade, uAspect, uEntry;
 varying vec2 vUv;
 void main() {
   vec2 p = vec2(vUv.x * uAspect, vUv.y);
-  float r = length(p) + 1e-3;
+  // A curved passage with restrained silver-blue ribs; the portal and tunnel share a palette.
+  p -= vec2(sin(uT * .65), cos(uT * .47)) * .045;
+  float r = max(length(p), .025);
   float a = atan(p.y, p.x);
-  float depth = 0.35 / r - uT * 2.2;                 // rings fly outward = we fly in
-  float band = floor(fract(depth) * 3.0);            // 3 hard steps per ring
-  float spoke = step(0.55, fract(a * 9.0 / 6.2831853 + r * 1.5 - uT * 0.7));
-  vec3 deep = vec3(0.035, 0.10, 0.19);
-  vec3 mid = vec3(0.16, 0.42, 0.72);
-  vec3 hot = vec3(1.4, 1.7, 2.2);
-  vec3 c = band < 1.0 ? deep : (band < 2.0 ? mid : hot);
-  c = mix(c, hot, spoke * 0.35);
-  float core = (1.0 - smoothstep(0.08, 0.32, r));
-  c = mix(c, hot * 1.3, floor(core * 3.0) / 3.0);
-  gl_FragColor = vec4(c, uFade);
+  float depth = .55 / r - uT * 1.45;
+  float ripple = sin(depth * 6.283 + sin(a * 5.0 + depth * .3) * .65);
+  float bands = floor((ripple * .5 + .5) * 5.0) / 5.0;
+  vec3 c = mix(vec3(.018, .055, .095), vec3(.22, .49, .67), bands);
+  float ribs = pow(max(0.0, sin(a * 13.0 + depth * .2)), 18.0);
+  c += vec3(.16, .35, .46) * ribs * smoothstep(.1, .7, r);
+  c *= smoothstep(.018, .15, r);
+  c += vec3(.4, .65, .8) * exp(-abs(r - .09) * 65.0);
+  float iris = 1.0 - smoothstep(uEntry * (uAspect + 1.2), uEntry * (uAspect + 1.2) + .08, length(p));
+  // Open a clear exit through the vanishing point instead of cross-fading two busy scenes together.
+  float exitRadius = pow(1.0 - uFade, .9) * (uAspect + 1.3);
+  float exitMask = smoothstep(exitRadius - .035, exitRadius + .035, length(p));
+  gl_FragColor = vec4(c, iris * exitMask * step(.001, uEntry));
 }`;
 
 /**
@@ -42,7 +46,7 @@ export class Tunnel {
     this.mat = new THREE.ShaderMaterial({
       vertexShader: VERT,
       fragmentShader: FRAG,
-      uniforms: { uT: { value: 0 }, uFade: { value: 0 }, uAspect: { value: 1 } },
+      uniforms: { uT: { value: 0 }, uFade: { value: 0 }, uAspect: { value: 1 }, uEntry: { value: 0 } },
       transparent: true,
       depthTest: false,
       depthWrite: false,
@@ -61,6 +65,10 @@ export class Tunnel {
   get fade(): number {
     return this.mat.uniforms.uFade!.value as number;
   }
+
+  set entry(v: number) { this.mat.uniforms.uEntry!.value = v; }
+
+  reset(): void { this.t = 0; this.entry = 0; this.fade = 0; }
 
   update(dt: number, aspect: number): void {
     if (!this.mesh.visible) return;

@@ -40,6 +40,8 @@ export class Hub {
 
   hide(): void { this.el.classList.remove("on"); }
 
+  get active(): boolean { return this.el.classList.contains("on"); }
+
   private cleared(id: string): boolean {
     return (this.save.progress.missions[id]?.completions ?? 0) > 0;
   }

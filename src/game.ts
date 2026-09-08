@@ -16,6 +16,7 @@ import { writeSave, type Save } from "@/core/save";
 import { Replay } from "@/replay/replay";
 import { Gate } from "@/travel/gate";
 import { Minimap } from "@/ui/minimap";
+import type { Presentation } from "@/core/presentation";
 
 /**
  * The game layer above flight: enemies, weapons, the mission script, sound and
@@ -31,6 +32,8 @@ export class Game {
   readonly gate = new Gate();
   /** the ship flew through the gate */
   onGate: (() => void) | null = null;
+  onWeapon: ((position: THREE.Vector3) => void) | null = null;
+  private presentation: Presentation = "flight";
   private lastStick = { x: 0, y: 0 };
   private flight: Flight;
   private cam: THREE.PerspectiveCamera | null = null;
@@ -43,19 +46,22 @@ export class Game {
     this.combat.setShip(flight);
     this.flight = flight;
     this.replay.rocks = world.asteroids;
-    this.combat.onKill = (pos, vel) => this.replay.markKill(pos, vel, this.flight, this.lastStick);
-    this.combat.onFire = (pos, vel) => this.replay.markShot(pos, vel);
-    this.combat.onRockBurst = (pos, scale) => this.replay.markBurst(pos, scale);
+    this.combat.onKill = (pos, vel, scale, seed, victimId) => this.replay.markKill(pos, vel, this.flight, this.lastStick, scale, seed, victimId);
+    this.combat.onFire = (pos, vel) => { this.replay.markShot(pos, vel); this.onWeapon?.(pos); };
+    this.combat.onRockBurst = (pos, scale, seed) => this.replay.markBurst(pos, scale, seed);
+    this.replay.onShot = (rate) => { this.audio.replayShot(rate); this.onWeapon?.(this.combat.ship.position); };
+    this.replay.onBurst = (scale, rate) => this.audio.replayExplosion(Math.min(1.4, scale / 6), rate);
     this.mission = createMission(level, { combat: this.combat, rocks: world.asteroids, audio: this.audio, flight });
     this.audio.setKey(level.system);
     this.map = new Minimap(document.querySelector<HTMLCanvasElement>("#hud .map")!, world.asteroids);
-    scene.add(this.combat.group, this.mission.group, this.gate.group, this.replay.tracers.group);
+    scene.add(this.combat.group, this.mission.group, this.gate.group, this.replay.group);
     canvas.addEventListener("click", () => this.audio.unlock(), { signal: this.ac.signal });
     window.addEventListener("keydown", (e) => {
       if (this.replay.playing) {
         if (e.code === "KeyV" || e.code === "Escape") this.replay.stop(this.cam!, this.enemies.list);
         return;
       }
+      if (this.presentation !== "flight") return;
       if (e.code === "KeyR" && this.mission.done) location.reload();
       // V at any point replays the last kill (the sim holds while it plays; Ethan, 2026-09-05)
       if (e.code === "KeyV" && this.cam) {
@@ -68,7 +74,7 @@ export class Game {
   /** Gate travel swapped the system: everything this game put in the scene goes, listeners with it. */
   dispose(): void {
     this.ac.abort();
-    for (const g of [this.combat.group, this.mission.group, this.gate.group, this.replay.tracers.group]) {
+    for (const g of [this.combat.group, this.mission.group, this.gate.group, this.replay.group]) {
       this.scene.remove(g);
       disposeTree(g);
     }
@@ -79,9 +85,19 @@ export class Game {
     return this.cam ? this.replay.play(this.cam) : false;
   }
 
+  prepareTravel(): void {
+    if (this.cam) this.replay.stop(this.cam, this.enemies.list);
+    this.setPresentation("travel");
+  }
+
+  setPresentation(mode: Presentation): void {
+    this.presentation = mode;
+  }
+
   tick(dt: number, flight: Flight, input: Input): void {
     this.lastStick.x = input.stick.x;
     this.lastStick.y = input.stick.y;
+    this.replay.beginTick(dt);
     this.combat.tick(dt, flight, input);
     this.replay.record(dt, flight, this.enemies.list);
     this.mission.tick(dt);
@@ -127,6 +143,22 @@ export class Game {
 
   render(alpha: number, dt: number, cam: THREE.PerspectiveCamera, hud: Hud, flight: Flight): void {
     this.cam = cam;
+    const mode = this.presentation;
+    hud.setTravel(mode === "travel" || mode === "hub");
+    hud.setReplay(mode === "replay");
+    if (mode === "paused") return;
+    const replaying = mode === "replay", flightVisible = mode === "flight";
+    this.combat.group.visible = flightVisible || replaying;
+    this.combat.shots.group.visible = this.combat.fx.group.visible = this.combat.missiles.group.visible = flightVisible;
+    this.mission.group.visible = flightVisible || replaying;
+    this.gate.group.visible = flightVisible && this.gate.alive;
+    if (replaying) {
+      for (const child of this.combat.ship.children) if (child.name === "muzzle-flash") child.visible = false;
+      this.audio.setReplayRate(this.replay.playbackRate);
+      this.replay.update(dt, cam, this.combat.ship, this.enemies.list);
+      return;
+    }
+    if (!flightVisible) return;
     this.combat.render(alpha, dt, cam.position);
     this.mission.render(dt, alpha);
     this.gate.render(dt);
@@ -134,8 +166,6 @@ export class Game {
     if (!this.mission.done) this.audio.setMood(this.enemies.aliveCount > 0 ? "combat" : "calm");
     hud.updateCombat(this.combat, this.mission, cam, this.combat.player.vel, this.replay.hasHighlight, this.gate.alive);
     this.map.update(flight, this.enemies.list, this.mission.marker);
-    const playing = this.replay.playing && this.replay.update(dt, cam, this.combat.ship, this.enemies.list, (p, v, s) => this.combat.burst(p, v, s, 0.6));
-    hud.setReplay(playing);
   }
 }
 
