@@ -8,6 +8,8 @@ export interface Tracked {
   alive: boolean;
   /** hit radius, m */
   radius: number;
+  /** where it is drawn this frame (interpolated between ticks); the HUD boxes this, the sim reads `pos` */
+  visPos?: Vector3;
 }
 
 /** A Tracked that rounds and missiles can hurt. `damage` returns true when this hit destroyed it. */

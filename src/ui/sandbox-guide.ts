@@ -8,6 +8,7 @@ import './sandbox-guide.css';
 export class SandboxGuide {
   private readonly el = document.createElement('section');
   private signature = '';
+  private frame = 0;
   private readonly rows = new Map<string, { row: HTMLElement; state: HTMLElement }>();
   private active = false;
 
@@ -22,7 +23,8 @@ export class SandboxGuide {
 
   update(flight: Flight, input: Input): void {
     if (!this.active) return;
-    const signature = JSON.stringify([flight.moves.map(m => [m.id, m.name, m.trigger]), input.moveBinds, input.binds]);
+    // the bind table changes from the menu, not per frame: check it four times a second, not 240
+    const signature = this.frame++ % 15 === 0 || !this.signature ? JSON.stringify([flight.moves.map(m => [m.id, m.name, m.trigger]), input.moveBinds, input.binds]) : this.signature;
     if (signature !== this.signature) {
       this.signature = signature;
       this.el.replaceChildren();

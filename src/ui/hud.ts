@@ -42,6 +42,7 @@ export class Hud {
   private readonly cardH: HTMLElement;
   private readonly cardP: HTMLElement;
   private lastObj = "";
+  private lastHp = -1;
   private lastAmmo = -1;
   private readonly ammoEl: HTMLElement;
   private readonly againEl: HTMLElement;
@@ -160,8 +161,11 @@ export class Hud {
 
   updateCombat(combat: Combat, mission: Mission, cam: Camera, playerVel: Vector3, hasReplay = false, gateUp = false): void {
     const P = combat.player;
-    this.hpEl.style.width = `${((P.hp / combat.maxHp) * 100).toFixed(1)}%`;
-    this.hpEl.classList.toggle("hurt", P.hp < combat.maxHp * 0.35);
+    if (P.hp !== this.lastHp) {
+      this.lastHp = P.hp;
+      this.hpEl.style.width = `${((P.hp / combat.maxHp) * 100).toFixed(1)}%`;
+      this.hpEl.classList.toggle("hurt", P.hp < combat.maxHp * 0.35);
+    }
     const obj = `${mission.line}  ·  kills ${P.kills}`;
     if (obj !== this.lastObj) {
       this.lastObj = obj;
@@ -201,7 +205,10 @@ export class Hud {
       return;
     }
     const w = window.innerWidth, h = window.innerHeight;
-    _s.copy(best.pos).project(cam);
+    // box where the thing is drawn this frame, not where the sim last put it: at 240 Hz the hull is interpolated
+    // between ticks and a box on the tick position detaches from it three frames in four
+    const at = best.visPos ?? best.pos;
+    _s.copy(at).project(cam);
     const onScreen = _s.z < 1 && Math.abs(_s.x) < 1 && Math.abs(_s.y) < 1;
     this.tgtEl.classList.toggle("on", onScreen);
     this.arrowEl.classList.toggle("on", !onScreen);
@@ -220,7 +227,7 @@ export class Hud {
       // lead: where a round fired now meets the target (first-order)
       const closing = Math.max(120, T.weapons.muzzleSpeed);
       const t = dist / closing;
-      _l.copy(best.pos).addScaledVector(best.vel, t).addScaledVector(playerVel, -t).project(cam);
+      _l.copy(at).addScaledVector(best.vel, t).addScaledVector(playerVel, -t).project(cam);
       const leadOn = !isMarker && _l.z < 1 && Math.abs(_l.x) < 1 && Math.abs(_l.y) < 1;
       this.leadEl.classList.toggle("on", leadOn);
       if (leadOn) {

@@ -3,7 +3,7 @@
  * Story beats lean on the show (a Ha'tak over the belt, the Prometheus limping
  * home) but franchise names stay in strings, never in identifiers.
  */
-import type { EnemyKind } from "@/combat/enemy-kinds";
+import { ENEMY_KINDS, type EnemyKind } from "@/combat/enemy-kinds";
 
 export interface Wave {
   count: number;
@@ -219,3 +219,33 @@ export function parseLevel(v: string | null | undefined): LevelDef {
 }
 
 if (import.meta.env.DEV) for (const line of checkLevels(LEVELS)) console.error(`campaign.json: ${line}`);
+
+/**
+ * The most of each enemy kind a level can have alive at once, for `Enemies.prewarm`: wave counts by cycled kind
+ * (waves wait for zero alive, so the max over waves is the pool depth), plus two of every kind a scripted
+ * spawn names (`foe`, `quarry`, `runner`, escorts, reinforcements, harassers).
+ */
+export function enemyKindsOf(def: LevelDef): Map<EnemyKind, number> {
+  const out = new Map<EnemyKind, number>();
+  const bump = (k: EnemyKind, n: number) => out.set(k, Math.max(out.get(k) ?? 0, n));
+  const isKind = (v: unknown): v is EnemyKind => typeof v === "string" && v in ENEMY_KINDS;
+  const walk = (v: unknown, key: string): void => {
+    if (Array.isArray(v)) {
+      if (key === "waves") {
+        for (const w of v as Wave[]) {
+          const kinds = w.kinds?.length ? w.kinds : (["glider"] as EnemyKind[]);
+          const per = new Map<EnemyKind, number>();
+          for (let i = 0; i < w.count; i++) {
+            const k = kinds[i % kinds.length]!;
+            per.set(k, (per.get(k) ?? 0) + 1);
+          }
+          for (const [k, n] of per) bump(k, n);
+        }
+      } else for (const x of v) walk(x, key);
+    } else if (v && typeof v === "object") {
+      for (const [k, x] of Object.entries(v)) walk(x, k);
+    } else if (isKind(v) && /kind|foe|quarry|runner/i.test(key)) bump(v, 2);
+  };
+  walk(def, "");
+  return out;
+}

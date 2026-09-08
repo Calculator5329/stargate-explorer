@@ -18,6 +18,7 @@ const ROCK_TINT = { rock: "#c9825c", ice: "#9fd3e6", wreck: "#8f98a3" } as const
 export class Minimap {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly px: number;
+  private sinceDraw = 1;
 
   constructor(canvas: HTMLCanvasElement, private readonly rocks: Asteroids) {
     this.px = Math.min(2, window.devicePixelRatio || 1);
@@ -25,7 +26,11 @@ export class Minimap {
     this.ctx = canvas.getContext("2d")!;
   }
 
-  update(flight: Flight, enemies: Enemy[], marker: Tracked | null): void {
+  /** Redrawn at 30 Hz: the sim it shows moves at 60, and a 180 px map does not need 240 canvas passes a second. */
+  update(flight: Flight, enemies: Enemy[], marker: Tracked | null, dt = 1): void {
+    this.sinceDraw += dt;
+    if (this.sinceDraw < 1 / 30) return;
+    this.sinceDraw = 0;
     const c = this.ctx, px = this.px, half = (SIZE * px) / 2;
     const range = T.rocks.mapRange, k = half / range;
     _f.set(0, 0, 1).applyQuaternion(flight.quat);

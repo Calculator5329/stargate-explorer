@@ -15,6 +15,7 @@ import { Hub } from "@/ui/hub";
 import { Flight } from "@/sim/flight";
 import { Hazards } from "@/sim/hazards";
 import { QUALITY, Renderer, parseQuality } from "@/render/renderer";
+import { warmPrograms } from "@/render/warmup";
 import { ChaseCamera } from "@/render/camera";
 import { InspectView, parseView } from "@/render/inspect";
 import { PerfOverlay } from "@/render/perf";
@@ -132,10 +133,12 @@ if (travel) {
   travel.onSwap = (q) => {
     teardown(sortie);
     sortie = build(q);
+    void warmPrograms(r);
     // a `?hub=1` destination opens the console once the tunnel has thinned out
     travel!.onArrived = q.get("hub") === "1" ? () => hub?.show() : null;
   };
 }
+void warmPrograms(r); // every program the sortie can show, linked before play (render/warmup.ts)
 hub = new Hub(document.getElementById("hub")!, save, sortie.level, () => undefined, (lvl, shipId) => {
   const q = new URLSearchParams(location.search);
   q.set("mission", lvl.id);
@@ -301,7 +304,7 @@ const loop = new Loop({
           mode === "replay" ? game?.replay.fx ?? null : mode === "flight" ? game?.combat.fx ?? null : null, _lightPos, glow);
       }
     }
-    world.update(r.camera, r.gl, r.tier.bakeSize);
+    world.update(r.camera, r.gl, r.tier.bakeSize, alpha);
     r.adapt(realDt, loop.fps);
     r.render();
     perf.update(realDt, loop, r.gl.info, r);

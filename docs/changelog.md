@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-08 — Mid-fight stutters removed
+
+Every shader program a sortie can show is now linked and drawn once before play (`render/warmup.ts`: `compileAsync`, then one hidden frame into a 4x4 target with every object shown and the light groups untouched), and the level's enemy hulls are built before the first frame (`Enemies.prewarm`). The stutters Ethan saw at every tier were driver shader links on the first explosion, tracer, fragment, flare and gate frame, 50 to 130 ms each. Tracers, missiles, rock fragments, the escort and the HUD target box are now interpolated at render rate, so a 240 Hz display no longer shows them stepping at 60 Hz; the minimap redraws at 30 Hz and the audio and sandbox guide skip unchanged frames. Uncapped on the RTX 5070 Ti the worst frame in a 25 s blockade fight fell from 105 to 121 ms to 5.6 (low), 9.0 (med) and 18.0 ms (high), with no frame over 25 ms. New probe: `scripts/stutter-probe.mjs`. Readings in [evidence](evidence/2026-09-perf.md).
+
 ## 2026-09-08 — Sandbox move practice
 
 Added direct SANDBOX entry from pause/gate control, saved one-key bindings for all four moves (defaults 1–4), and a practice guide that follows custom keys and shows the running move. Existing B chords remain available. Sandbox hull damage is disabled and the boost bar refills between moves; normal sorties retain costs/damage. Fixed the speed-coupled-turn checkbox persistence and made expanded settings scroll within the viewport. Build, focused simulation checks and browser controls verification pass; see [evidence](evidence/2026-09-08-sandbox-controls.md).

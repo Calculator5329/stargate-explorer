@@ -195,9 +195,15 @@ export class Audio {
     if (this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : 0.5, this.ctx.currentTime, 0.05);
   }
 
-  /** Per frame: engine pitch/brightness from speed (0..1 of boost), boost whoosh level. */
+  private lastSpeedFrac = -1;
+  private lastBoosting = false;
+
+  /** Per frame: engine pitch/brightness from speed (0..1 of boost), boost whoosh level. Same inputs as last frame queue nothing. */
   update(speedFrac: number, boosting: boolean): void {
     if (!this.ctx) return;
+    if (Math.abs(speedFrac - this.lastSpeedFrac) < 0.002 && boosting === this.lastBoosting) return;
+    this.lastSpeedFrac = speedFrac;
+    this.lastBoosting = boosting;
     const t = this.ctx.currentTime;
     const f = 42 + 90 * speedFrac;
     this.engine.frequency.setTargetAtTime(f, t, 0.1);

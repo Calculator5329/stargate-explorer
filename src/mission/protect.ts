@@ -15,7 +15,7 @@ const _n = new THREE.Vector3();
  * survive. The escort crawls toward the gate under sublight.
  */
 export class ProtectMission extends ClearMission<ProtectLevel> {
-  private readonly escort: Lockable & { hp: number; rig: ShipRig; sinceHit: number };
+  private readonly escort: Lockable & { hp: number; rig: ShipRig; sinceHit: number; prevPos: THREE.Vector3 };
   private readonly mats: THREE.MeshToonMaterial[] = [];
   private readonly maxHp: number;
   /** the parent's objective line and what we last showed, so the hull suffix is composed once, not appended every tick (2026-09-05 bug: the HUD filled with "Prometheus hull 100%") */
@@ -41,7 +41,7 @@ export class ProtectMission extends ClearMission<ProtectLevel> {
     this.group.add(rig.root);
     const self = this;
     this.escort = {
-      rig, hp: def.escortHp, sinceHit: 99, pos: rig.root.position, vel: fwd.clone().multiplyScalar(def.escortSpeed), alive: true, radius: def.escortRadius ?? 30,
+      rig, hp: def.escortHp, sinceHit: 99, pos: pos.clone(), prevPos: pos.clone(), visPos: rig.root.position, vel: fwd.clone().multiplyScalar(def.escortSpeed), alive: true, radius: def.escortRadius ?? 30,
       damage(amount) {
         if (!this.alive) return false;
         this.hp -= amount;
@@ -65,6 +65,7 @@ export class ProtectMission extends ClearMission<ProtectLevel> {
   protected override run(dt: number): void {
     const e = this.escort;
     e.sinceHit += dt;
+    e.prevPos.copy(e.pos);
     e.pos.addScaledVector(e.vel, dt);
     // keep the escort off the rocks: slide around anything it is about to hit
     const R = this.ctx.rocks;
@@ -85,8 +86,9 @@ export class ProtectMission extends ClearMission<ProtectLevel> {
     this.line = this.shownLine = `${this.baseLine}  ·  ${this.name} hull ${Math.round((100 * e.hp) / this.maxHp)}%`;
   }
 
-  override render(dt: number): void {
+  override render(dt: number, alpha = 1): void {
     const e = this.escort;
+    e.rig.root.position.lerpVectors(e.prevPos, e.pos, alpha);
     e.rig.update(dt, 0.35, false);
     const flash = e.sinceHit < 0.09 ? 1 : 0;
     for (const m of this.mats) {
