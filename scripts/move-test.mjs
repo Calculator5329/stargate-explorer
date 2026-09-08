@@ -1,4 +1,4 @@
-// Moves against the running dev server, on the proving ground: the sandbox lists every chord on the HUD, B then W
+// Moves against the running dev server, on the proving ground: the sandbox lists every shortcut and chord on the HUD, B then W
 // inside the window fires the Lunge (bar paid, cap lifted, chip on the bar, camera pulled back), B alone after the
 // window fires the Cobra (nose up), B then A fires the Scissor (roll and slide). Usage: node scripts/move-test.mjs
 // (STARGATE_TEST_URL picks the server; default localhost:5187)
@@ -14,9 +14,9 @@ page.on("pageerror", (e) => pageErrors.push(e.message));
 await page.goto(`${base}?lock=free&quality=low&mission=proving-ground`, { waitUntil: "load" });
 await page.waitForFunction(() => window.__game && window.__game.mission.phase !== "intro", null, { timeout: 30000 });
 
-const sb = await page.evaluate(() => ({ type: window.__game.mission.def.type, line: document.querySelector("#hud .mission .obj").textContent, keys: [...window.__input.moveKeys], n: window.__flight.moves.length }));
+const sb = await page.evaluate(() => ({ type: window.__game.mission.def.type, line: document.querySelector("#hud .sandbox-guide").textContent, keys: [...window.__input.moveKeys], n: window.__flight.moves.length }));
 check(sb.type === "sandbox" && sb.n === 4, `proving ground is a sandbox level with ${sb.n} moves`);
-check(sb.keys.includes("KeyB") && /B \+ W Lunge/.test(sb.line) && /\bB Cobra/.test(sb.line), `HUD lists the chords (${sb.line})`);
+check(sb.keys.includes("KeyB") && /Lungeor B then W/.test(sb.line) && /Cobraor B/.test(sb.line), `HUD lists the chords (${sb.line})`);
 
 /** sample the flight every frame until `until` says stop or `ms` pass */
 const sample = (ms, until) => page.evaluate(async ([ms, until]) => {
@@ -79,15 +79,9 @@ check(sc.length > 0, `B then A fires the Scissor left (${sc.length} frames), not
 const rolled = Math.max(...sc.map((x) => Math.abs(x.rightY)));
 check(rolled > 0.6, `Scissor rolls the hull (|right.y| peaks at ${rolled.toFixed(2)})`);
 
-// an empty bar refuses a paid move
-await page.evaluate(() => (window.__flight.boostEnergy = 0.05));
-await page.keyboard.down("KeyB");
-await page.waitForTimeout(60);
-await page.keyboard.down("KeyW");
-await page.keyboard.up("KeyB");
-await page.keyboard.up("KeyW");
-s = await sample(400, "s.move !== null");
-check(s.every((x) => x.move === null), `a move costs more than the bar holds: nothing fires (${s.find((x) => x.move)?.move ?? "none"} at bar ${s[0]?.bar.toFixed(2)})`);
+// The sandbox refills between moves; normal-flight affordability is covered by sandbox-controls-check.mjs.
+await page.waitForFunction(() => !window.__flight.move && window.__flight.boostEnergy === 1, null, { timeout: 5000 });
+check(await page.evaluate(() => window.__game.combat.practice), "sandbox protection is enabled");
 
 check(pageErrors.length === 0, `no page errors (${pageErrors.slice(0, 2).join(" | ")})`);
 await browser.close();

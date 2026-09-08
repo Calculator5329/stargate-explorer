@@ -1,3 +1,4 @@
+import { SandboxGuide } from "@/ui/sandbox-guide";
 import { Color, Quaternion, Vector3 } from "three";
 import { Loop } from "@/core/loop";
 import { T } from "@/core/tunables";
@@ -46,6 +47,7 @@ const input = new Input(canvas, scheme, view === null, boot.get("lock") === "fre
 input.moveKeys = moveKeys(MOVES);
 const chase = new ChaseCamera(r.camera);
 const hud = new Hud(document.getElementById("hud")!);
+const sandboxGuide = new SandboxGuide(document.getElementById("hud")!);
 const perf = new PerfOverlay(document.querySelector<HTMLElement>("#hud .perf")!);
 const audio = new Audio();
 audio.setMute(S.mute);
@@ -82,6 +84,7 @@ function build(params: URLSearchParams): Sortie {
   if (inspect) world.asteroids.group.visible = world.dust.lines.visible = false; // the belt would sit on top of the ship
   if (inspect) hud.hideAll();
   hud.reset();
+  sandboxGuide.setActive(level.type === "sandbox");
   const game = inspect ? null : new Game(r.scene, world, rig.root, canvas, flight, save, level, audio);
   if (game) {
     game.onWeapon = (pos) => eventLighting.weapon(pos);
@@ -155,6 +158,7 @@ menu = new Menu(document.getElementById("menu")!, canvas, save, {
     input.sens = s.sens;
     input.invertY = s.invertY;
     input.binds = s.binds;
+    input.moveBinds = s.moveBinds;
     input.steer = boot.has("steer") ? parseSteer(boot.get("steer")) : s.steer;
     setRawMouse(s.rawMouse);
     setDifficulty(s.difficulty);
@@ -183,6 +187,7 @@ if (edit && sortie.game) {
         // the designer's working copy becomes the live table, unsaved; the move starts as soon as the sim resumes
         flight.moves = table;
         input.moveKeys = moveKeys(table);
+        input.moveTable = table;
         flight.startMove(id);
         lockPointer(canvas);
       },
@@ -254,11 +259,13 @@ const loop = new Loop({
         chase.update(dt, _p, _q, flight.speed, input.stick, flight.boosting, flight.sinceHit, flight.stats.size, flight.barrelLeft !== 0 || flight.move !== null);
         world.dust.update(_p, _v.copy(flight.velDir).multiplyScalar(flight.speed), flight.speed);
         hud.update(flight, input, hazards.outside);
+        sandboxGuide.update(flight, input);
       } else if (mode === "travel" || mode === "hub") {
         rig.root.visible = mode === "travel" && travel?.phase === "arrive";
         if (rig.root.visible) rig.update(dt, .35, false);
       }
       if (mode === "paused" && !game?.replay.playing) {
+        sandboxGuide.update(flight, input);
         hud.update(flight, input, hazards.outside);
         hud.updateCombat(game!.combat, game!.mission, r.camera, game!.combat.player.vel, game!.replay.hasHighlight, game!.gate.alive);
         if (menu?.open || editor?.active) hud.hideHint();

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-08 — Sandbox move practice
+
+Added direct SANDBOX entry from pause/gate control, saved one-key bindings for all four moves (defaults 1–4), and a practice guide that follows custom keys and shows the running move. Existing B chords remain available. Sandbox hull damage is disabled and the boost bar refills between moves; normal sorties retain costs/damage. Fixed the speed-coupled-turn checkbox persistence and made expanded settings scroll within the viewport. Build, focused simulation checks and browser controls verification pass; see [evidence](evidence/2026-09-08-sandbox-controls.md).
+
 ## 2026-09-08 — Replay motion repair approved
 
 Replaced pair-locked camera translation with world-space fly-by framing, made follow-through actually play, labelled snapshot actions Freeze, and simulated the evaluation formation continuously. Removed approved gate-trip evaluation controls. Build and actual-control CPU checks pass; Ethan reviewed the repaired preview and approved push/deployment. Explosion animation refinement remains open. See `evidence/2026-09-08-replay-repair.md`.

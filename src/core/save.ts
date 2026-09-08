@@ -1,3 +1,4 @@
+import { DEFAULT_MOVE_BINDS, mergeMoveBinds, type MoveBinds } from "@/core/move-binds";
 import type { SchemeName, SteerMode } from "@/core/scheme";
 import type { DifficultyName } from "@/core/difficulty";
 import type { Quality } from "@/render/renderer";
@@ -33,6 +34,7 @@ export interface Settings {
   /** Optional gate, weapon and explosion illumination, retained for visual comparison. */
   eventLighting: boolean;
   binds: Binds;
+  moveBinds: MoveBinds;
   /** the start screen has been seen and dismissed once; later loads go straight to "click to fly" */
   onboarded: boolean;
 }
@@ -57,7 +59,7 @@ export interface Save {
 const KEY = "stargate-explorer.save.v1";
 
 export const DEFAULT_SAVE: Save = {
-  settings: { scheme: "arcade", assist: true, assistStrength: 1, speedTurn: false, steer: "cursor", rawMouse: true, sens: 1, difficulty: "normal", mute: false, invertY: false, quality: "med", dynamicRes: true, eventLighting: false, binds: { ...DEFAULT_BINDS }, onboarded: false },
+  settings: { scheme: "arcade", assist: true, assistStrength: 1, speedTurn: false, steer: "cursor", rawMouse: true, sens: 1, difficulty: "normal", mute: false, invertY: false, quality: "med", dynamicRes: true, eventLighting: false, binds: { ...DEFAULT_BINDS }, moveBinds: { ...DEFAULT_MOVE_BINDS }, onboarded: false },
   progress: { ship: "f11", unlocked: ["f11"], missions: {} },
 };
 
@@ -67,7 +69,7 @@ export function loadSave(): Save {
     if (!raw) return structuredClone(DEFAULT_SAVE);
     const j = JSON.parse(raw) as Partial<Save>;
     return {
-      settings: { ...DEFAULT_SAVE.settings, ...(j.settings ?? {}), binds: mergeBinds(j.settings?.binds) },
+      settings: { ...DEFAULT_SAVE.settings, ...(j.settings ?? {}), binds: mergeBinds(j.settings?.binds), moveBinds: mergeMoveBinds(j.settings?.moveBinds, mergeBinds(j.settings?.binds)) },
       progress: { ...structuredClone(DEFAULT_SAVE.progress), ...(j.progress ?? {}) },
     };
   } catch {

@@ -22,6 +22,14 @@ export class Hub {
     root.querySelector("h1")!.innerHTML = `${scriptSvg("Gate control")}<span>GATE CONTROL</span>`;
     root.querySelector(".back")!.addEventListener("click", () => (this.hide(), onBack()));
     root.querySelector(".go")!.addEventListener("click", () => this.launch());
+    const practice = document.createElement("button");
+    practice.textContent = "SANDBOX · TEST MOVES";
+    practice.addEventListener("click", () => {
+      const url = new URL(location.pathname, location.origin);
+      url.searchParams.set("mission", "proving-ground");
+      location.href = url.toString();
+    });
+    root.querySelector(".back")!.after(practice);
     this.build();
   }
 

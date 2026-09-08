@@ -1,6 +1,8 @@
 import { T, clamp } from "@/core/tunables";
 import type { Scheme, SteerMode } from "@/core/scheme";
 import { DEFAULT_BINDS, type Binds } from "@/core/binds";
+import { DEFAULT_MOVE_BINDS, type MoveBinds } from "@/core/move-binds";
+import { MOVES, type MoveDef } from "@/sim/moves";
 import type { MoveDir } from "@/sim/moves";
 
 /** Ask for raw (unaccelerated) mouse motion when locking; a setting, so the menu can turn it off. */
@@ -77,6 +79,8 @@ export class Input {
   padActive = false;
   /** trigger keys that arm a move chord (sim/moves.ts `moveKeys`); content, so set from outside */
   moveKeys: Set<string> = new Set();
+  moveBinds: MoveBinds = { ...DEFAULT_MOVE_BINDS };
+  moveTable: readonly MoveDef[] = MOVES;
   /** true for the one tick a chord resolves; `move` then names it */
   moveFired = false;
   readonly move: { key: string; dir: MoveDir } = { key: "", dir: "none" };
@@ -146,6 +150,13 @@ export class Input {
       if (e.code === "Backquote") return; // debug panel toggle, not flight input
       if (e.code === "Space" || e.code === "Tab") e.preventDefault();
       if (e.repeat) return;
+      const direct = this.moveTable.find(m => this.moveBinds[m.id] === e.code);
+      if (direct) {
+        e.preventDefault();
+        this.armed.t = -1;
+        this.fireMove(direct.trigger.key, direct.trigger.dir);
+        return;
+      }
       const b = this.binds;
       if (e.code === b.scheme) this.scheme.toggle();
       if (e.code === b.assist) this.scheme.toggleAssist();
@@ -154,7 +165,7 @@ export class Input {
         this.keys.add(e.code);
         return;
       }
-      if (this.armed.t >= 0) {
+      if (this.armed.t >= 0 && performance.now() - this.armed.t < T.flight.doubleTapMs) {
         // a direction inside the window completes the chord; the tap is the move's, not a roll or a pull
         const dir: MoveDir | null = e.code === b.pullUp ? "up" : e.code === b.dive ? "down" : e.code === b.rollLeft ? "left" : e.code === b.rollRight ? "right" : null;
         if (dir) {

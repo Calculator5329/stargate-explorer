@@ -85,6 +85,7 @@ export class Combat {
   /** seconds into rebuilding the next torpedo (T.missile.reload) */
   private reloadT = 0;
   readonly player: PlayerState = { hp: T.player.hp, alive: true, kills: 0, fired: 0, hits: 0, vel: new THREE.Vector3(), pos: new THREE.Vector3(), sinceHit: 99, dying: 0, fwd: new THREE.Vector3(0, 0, 1) };
+  practice = false;
   private fireAcc = 0;
   private gun = 0;
   private readonly muzzle: THREE.Mesh[] = [];
@@ -293,6 +294,7 @@ export class Combat {
 
   /** Every source of player damage comes through here; a dying ship takes no more. */
   hurt(amount: number, flight: Flight): void {
+    if (this.practice) return;
     const P = this.player;
     if (!P.alive || P.dying > 0) return;
     P.hp -= amount;
