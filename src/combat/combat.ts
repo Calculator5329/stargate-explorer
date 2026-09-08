@@ -373,9 +373,8 @@ export class Combat {
   }
 
   render(alpha: number, dt: number, camPos: THREE.Vector3): void {
-    void alpha;
-    this.shots.update();
-    this.missiles.update();
+    this.shots.update(alpha);
+    this.missiles.update(alpha);
     this.enemies.render(alpha, dt);
     this.fx.update(dt, camPos);
     const on = this.muzzleT > 0;

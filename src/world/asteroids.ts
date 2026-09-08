@@ -223,6 +223,8 @@ export class Asteroids {
   readonly group = new THREE.Group();
   readonly count: number;
   readonly centers: Float32Array;
+  /** fragment centres at the previous tick (belt rocks never move): `matrixAt` lerps toward `centers` by the render alpha */
+  readonly prevCenters: Float32Array;
   readonly radii: Float32Array;
   /** per base shape: packed face planes of the unit rock (see `facePlanes`) */
   readonly planes: Float32Array[] = [];
@@ -269,6 +271,7 @@ export class Asteroids {
     this.per = per;
     this.count = per * o.shapes;
     this.centers = new Float32Array(this.count * 3);
+    this.prevCenters = new Float32Array(this.count * 3);
     this.radii = new Float32Array(this.count);
     this.bounds = new Float32Array(o.shapes);
     this.alive = new Uint8Array(this.count);
@@ -384,7 +387,7 @@ export class Asteroids {
    * side is compacted, and only the used range is uploaded. A null camera draws everything, which
    * the inspect views and the first frame use. Rocks off-screen still collide and tumble.
    */
-  cull(camera: THREE.Camera | null): void {
+  cull(camera: THREE.Camera | null, alpha = 1): void {
     if (camera) {
       _pv.multiplyMatrices(camera.projectionMatrix, _pv.copy(camera.matrixWorld).invert());
       _frustum.setFromProjectionMatrix(_pv);
@@ -402,7 +405,7 @@ export class Asteroids {
           _sphere.radius = this.radii[gi]!;
           if (!_frustum.intersectsSphere(_sphere)) continue;
         }
-        this.matrixAt(gi, _obj.matrix);
+        this.matrixAt(gi, _obj.matrix, alpha);
         mesh.setMatrixAt(k++, _obj.matrix);
       }
       mesh.count = k;
@@ -417,10 +420,12 @@ export class Asteroids {
     this.drawn = drawn;
   }
 
-  /** World matrix of rock `gi` (position, tumble, uniform scale). */
-  matrixAt(gi: number, out: THREE.Matrix4): void {
+  /** World matrix of rock `gi` (position, tumble, uniform scale); a moving fragment is placed `alpha` of the way from its last tick. */
+  matrixAt(gi: number, out: THREE.Matrix4, alpha = 1): void {
     const s = this.scales[gi]!;
-    _obj.position.set(this.centers[gi * 3]!, this.centers[gi * 3 + 1]!, this.centers[gi * 3 + 2]!);
+    const c = this.centers, p = this.prevCenters, i3 = gi * 3;
+    if (alpha < 1 && this.ttl[gi]! > 0) _obj.position.set(p[i3]! + (c[i3]! - p[i3]!) * alpha, p[i3 + 1]! + (c[i3 + 1]! - p[i3 + 1]!) * alpha, p[i3 + 2]! + (c[i3 + 2]! - p[i3 + 2]!) * alpha);
+    else _obj.position.set(c[i3]!, c[i3 + 1]!, c[i3 + 2]!);
     _obj.quaternion.set(this.quats[gi * 4]!, this.quats[gi * 4 + 1]!, this.quats[gi * 4 + 2]!, this.quats[gi * 4 + 3]!);
     out.compose(_obj.position, _obj.quaternion, _obj.scale.setScalar(s));
   }
@@ -452,6 +457,7 @@ export class Asteroids {
       _axis.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
       const fr = radius * R.fragScale * (0.75 + Math.random() * 0.5);
       this.centers.set([cx + _axis.x * radius * 0.5, cy + _axis.y * radius * 0.5, cz + _axis.z * radius * 0.5], fi * 3);
+      this.prevCenters.set([this.centers[fi * 3]!, this.centers[fi * 3 + 1]!, this.centers[fi * 3 + 2]!], fi * 3);
       const sp = R.fragSpeed * (0.6 + Math.random() * 0.8);
       this.vel.set([vx + _axis.x * sp + _v.x, vy + _axis.y * sp + _v.y, vz + _axis.z * sp + _v.z], fi * 3);
       _q.setFromEuler(new THREE.Euler(Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28));
@@ -497,6 +503,9 @@ export class Asteroids {
       const t = this.ttl[gi]!;
       if (t > 0) {
         // a fragment: drift, then shrink out over the last half second
+        this.prevCenters[gi * 3] = this.centers[gi * 3]!;
+        this.prevCenters[gi * 3 + 1] = this.centers[gi * 3 + 1]!;
+        this.prevCenters[gi * 3 + 2] = this.centers[gi * 3 + 2]!;
         this.centers[gi * 3] = this.centers[gi * 3]! + this.vel[gi * 3]! * dt;
         this.centers[gi * 3 + 1] = this.centers[gi * 3 + 1]! + this.vel[gi * 3 + 1]! * dt;
         this.centers[gi * 3 + 2] = this.centers[gi * 3 + 2]! + this.vel[gi * 3 + 2]! * dt;

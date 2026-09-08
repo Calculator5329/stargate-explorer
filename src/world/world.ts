@@ -54,11 +54,11 @@ export class World {
     disposeTree(this.root);
   }
 
-  /** Once per render frame, before `render()`: sun glare, the sky and planet bakes (no-ops once baked), belt culling. */
-  update(camera: THREE.Camera, gl: THREE.WebGLRenderer, bakeSize: number): void {
+  /** Once per render frame, before `render()`: sun glare, the sky and planet bakes (no-ops once baked), belt culling. `alpha` places fragments between ticks. */
+  update(camera: THREE.Camera, gl: THREE.WebGLRenderer, bakeSize: number, alpha = 1): void {
     this.sun.update(camera.position);
     this.sky.update(gl, bakeSize);
     this.planet.update(gl, bakeSize);
-    this.asteroids.cull(this.asteroids.group.visible ? camera : null);
+    this.asteroids.cull(this.asteroids.group.visible ? camera : null, alpha);
   }
 }

@@ -8,6 +8,7 @@ import { Combat } from "@/combat/combat";
 import type { Mission } from "@/mission/mission";
 import { createMission } from "@/mission/index";
 import type { LevelDef } from "@/mission/levels";
+import { enemyKindsOf } from "@/mission/levels";
 import type { Audio } from "@/audio/audio";
 import { disposeTree } from "@/render/dispose";
 import { PALETTES } from "@/ships/palettes";
@@ -52,6 +53,7 @@ export class Game {
     this.replay.onShot = (rate) => { this.audio.replayShot(rate); this.onWeapon?.(this.combat.ship.position); };
     this.replay.onBurst = (scale, rate) => this.audio.replayExplosion(Math.min(1.4, scale / 6), rate);
     this.mission = createMission(level, { combat: this.combat, rocks: world.asteroids, audio: this.audio, flight });
+    this.enemies.prewarm(enemyKindsOf(level)); // hulls exist before the first frame: no build or shader link on a spawn tick
     this.audio.setKey(level.system);
     this.map = new Minimap(document.querySelector<HTMLCanvasElement>("#hud .map")!, world.asteroids);
     scene.add(this.combat.group, this.mission.group, this.gate.group, this.replay.group);
@@ -165,7 +167,7 @@ export class Game {
     this.audio.update(flight.speed / T.flight.boostSpeed, flight.boosting);
     if (!this.mission.done) this.audio.setMood(this.enemies.aliveCount > 0 ? "combat" : "calm");
     hud.updateCombat(this.combat, this.mission, cam, this.combat.player.vel, this.replay.hasHighlight, this.gate.alive);
-    this.map.update(flight, this.enemies.list, this.mission.marker);
+    this.map.update(flight, this.enemies.list, this.mission.marker, dt);
   }
 }
 
