@@ -1,5 +1,50 @@
 # Changelog
 
+## 2026-09-08 — Six defects two exploration agents found in the deployed build
+
+Ethan asked for exploration to catch bugs. Two agents drove the live site, one through menus, hub and
+travel, one through combat and flight. Between them they found six real defects and confirmed a long list
+of things that work. Two of the six made a whole screen unusable and had shipped unnoticed, because every
+gate this repo has drives the game through `?lock=free`, which skips pointer lock, and through `window.__game`,
+which never touches a rectangle.
+
+**GATE CONTROL was dead to the mouse on every route the game itself uses.** `hub.show()` never released
+pointer lock, so the console appeared with no cursor and swallowed every click: after the return gate
+(`?hub=1`), after G on the end card, and from MISSIONS when the page was locked. Pressing Esc fixed it and
+nothing on screen said so. The release now lives in `show()` rather than at the call sites, so a new route
+cannot reintroduce it, and the class is set first because the pause menu opens on `pointerlockchange` and is
+refused only while the hub already reads as active.
+
+**GATE CONTROL was also clipped.** The panel was the scroller and its content is about 1280 px tall, so on a
+1280x720 screen DIAL & LAUNCH sat roughly 470 px below the fold with the panel opening at `scrollTop 0`. It
+is now the same shape as the settings menu: header and footer pinned, only the middle scrolls. Checked at
+1280x720, 1024x768, 1366x768 and 1280x900. SANDBOX · TEST MOVES got the `act` class in passing; unstyled
+between two bordered buttons it read as loose text.
+
+**A save holding a value of the wrong type killed the page, with no way back.** `loadSave()` spread the
+stored settings verbatim. `quality: "ultra"` threw on `QUALITY[q].dpr` before the canvas existed, giving a
+black page with no menu; `sens: "loud"` threw inside the Menu constructor, so the session had no pause
+screen, no settings and no MISSIONS button. Both are unreachable from inside the game and both are one
+parse call away from being safe, and the surface that would fix the setting is the surface that failed to
+build. Every settings field and every progress field is now checked against the type it claims to be.
+
+**The bomber line counted and throttled off a duplicated list.** `Enemies.spawn` hands back pooled objects,
+so pushing every spawn stored the same bomber several times; both the HUD count and the spawn budget count
+`alive` entries in that list. The HUD claimed ten bombers with two flying, and `maxAlive - alive` starved
+spawning for most of a three-minute mission. `runners` is a `Set` now, so identity does the deduplication.
+
+**Kills were credited to a dead player.** Every rock crash scores as a player kill, with no check that the
+player is still flying. Enemies keep hitting rocks through the 1.6 s death sequence, so the HUD counter ran
+up behind a loss card frozen with the count from the moment of death: two numbers on screen disagreeing.
+
+**Two cards said things that were not true.** The Ha'tak win card printed the turret and node array lengths,
+so killing only the nodes and the core still read "ring guns 6" with all six guns turning; it now counts what
+was destroyed, out of the total. And every loss card blamed the belt whatever killed you, which reads as a
+bug the first time a glider shoots you down in open space; `hurt()` now carries a cause.
+
+Both new gates were watched failing first. `scripts/ui-guard.mjs` gives nine failures on the old build and
+`scripts/combat-guard.mjs` gives four, each one the defect it is meant to catch.
+
 ## 2026-09-08 — Dynamic resolution rebuilt for laptops, and a cheaper first frame
 
 Ethan again, on the deployed build: "there are still drops to 30 FPS sometimes and especially on initial

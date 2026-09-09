@@ -34,17 +34,18 @@ try {
   console.log("hunt fight", h2);
   check(!h2.steer && h2.fightT > 0, "quarry turned to fight when the player closed");
 
-  // bomber-line: runners head for the relay and a leak counts
+  // bomber-line: runners head for the relay and a leak counts.
+  // `mission.runners` is a Set (pooled enemies are reused, so object identity is what keeps its count honest).
   await open("bomber-line");
   await sim(22);
-  const b1 = await page.evaluate(() => { const g = window.__game, m = g.mission; const rs = m.runners.filter((e) => e.alive); const relay = m.relay.pos;
+  const b1 = await page.evaluate(() => { const g = window.__game, m = g.mission; const rs = [...m.runners].filter((e) => e.alive); const relay = m.relay.pos;
     const closing = rs.map((e) => { const d = relay.clone().sub(e.pos); return e.vel.dot(d.normalize()); });
     return { sent: m.sent, alive: rs.length, closing, others: g.enemies.list.filter((e) => e.alive && !rs.includes(e)).length, line: m.line }; });
   console.log("bomber-line", b1);
   check(b1.sent >= 1 && b1.alive >= 1, "runners spawned");
   check(b1.closing.every((c) => c > 60), "every live runner is closing on the relay");
   check(b1.others >= 1, "escorts came with them");
-  await page.evaluate(() => { const m = window.__game.mission; const e = m.runners.find((x) => x.alive); e.pos.copy(m.relay.pos).addScaledVector(e.vel, -0.2); });
+  await page.evaluate(() => { const m = window.__game.mission; const e = [...m.runners].find((x) => x.alive); e.pos.copy(m.relay.pos).addScaledVector(e.vel, -0.2); });
   await sim(0.5);
   const b2 = await page.evaluate(() => { const m = window.__game.mission; return { leaks: m.leaks, line: m.line, done: m.done }; });
   console.log("leak", b2);

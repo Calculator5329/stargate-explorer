@@ -19,9 +19,14 @@ const GUNS: [number, number, number][] = [
   [-1.9, -0.05, 4.2],
 ];
 
+/** What landed the killing blow, so the loss card can name it instead of always blaming the belt. */
+export type DeathCause = "rock" | "enemy" | "unknown";
+
 export interface PlayerState {
   hp: number;
   alive: boolean;
+  /** the last thing to damage the player; read by `Mission.deathLine()` */
+  cause: DeathCause;
   kills: number;
   fired: number;
   hits: number;
@@ -83,7 +88,7 @@ export class Combat {
   private missileCd = 0;
   /** seconds into rebuilding the next torpedo (T.missile.reload) */
   private reloadT = 0;
-  readonly player: PlayerState = { hp: T.player.hp, alive: true, kills: 0, fired: 0, hits: 0, vel: new THREE.Vector3(), pos: new THREE.Vector3(), sinceHit: 99, dying: 0, fwd: new THREE.Vector3(0, 0, 1) };
+  readonly player: PlayerState = { hp: T.player.hp, alive: true, cause: "unknown", kills: 0, fired: 0, hits: 0, vel: new THREE.Vector3(), pos: new THREE.Vector3(), sinceHit: 99, dying: 0, fwd: new THREE.Vector3(0, 0, 1) };
   practice = false;
   private fireAcc = 0;
   private gun = 0;
@@ -128,7 +133,7 @@ export class Combat {
       _p.copy(flight.pos).addScaledVector(flight.lastImpactNormal, -T.arena.shipRadius * flight.stats.size * 0.8);
       this.fx.crash(_p, flight.lastImpactNormal, flight.lastImpact);
       flight.lastImpact = 0;
-      if (dmg > 0) this.hurt(dmg, flight);
+      if (dmg > 0) this.hurt(dmg, flight, "rock");
     }
     if (P.dying > 0) this.dieTick(dt, flight);
 
@@ -155,7 +160,11 @@ export class Combat {
 
     this.enemies.tick(dt, P, this.shots);
     // every rock crash is the player's kill: chased into a rock or hit by a fragment alike (Ethan, 2026-09-05)
-    for (const e of this.enemies.crashed) this.destroy(e, true);
+    // -- but only while the player is flying. `alive` stays true for the 1.6 s death sequence, so it is not
+    // enough on its own: enemies keep hitting rocks throughout, and crediting those ran the HUD counter up
+    // behind a loss card frozen with the count from the moment of death, so the two numbers on screen
+    // disagreed with each other.
+    for (const e of this.enemies.crashed) this.destroy(e, this.player.alive && this.player.dying === 0);
     this.enemies.crashed.length = 0;
     // move rounds, then test the swept segment of each against its targets. The segment start is the shot's
     // own `prevPos`, which the renderer also interpolates from: a second local copy of it here is what made
@@ -291,15 +300,17 @@ export class Combat {
     this.shots.kill(s);
     this.fx.spark(s.pos);
     flight.sinceHit = Math.max(flight.sinceHit, 0.25); // a light shake and flash, not the rock-hit slam
-    this.hurt(T.weapons.enemyDamage * s.dmg * D.enemyDamage, flight);
+    this.hurt(T.weapons.enemyDamage * s.dmg * D.enemyDamage, flight, "enemy");
   }
 
   /** Every source of player damage comes through here; a dying ship takes no more. */
-  hurt(amount: number, flight: Flight): void {
+  /** `cause` is what the loss card says took you down; the last one to land the killing blow wins. */
+  hurt(amount: number, flight: Flight, cause: DeathCause = "unknown"): void {
     if (this.practice) return;
     const P = this.player;
     if (!P.alive || P.dying > 0) return;
     P.hp -= amount;
+    P.cause = cause;
     P.sinceHit = 0;
     this.audio.damage();
     if (P.hp <= 0) this.die(flight);

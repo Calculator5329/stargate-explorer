@@ -22,6 +22,20 @@ A browser space-combat game in the *tone* of late-90s/2000s space sims (Freespac
 - **Target hardware.** Deferred ("don't care yet"). Revisit at end of M1 once we know what B costs.
 - **Multiplayer.** Assume no. Confirm — it changes the sim architecture if yes.
 
+## Exploration sweep · 2026-09-08
+
+Two agents drove the deployed build, one through menus/hub/travel and one through combat/flight. Six defects, all fixed; see `changelog.md` and the two new gates.
+
+- [x] Release pointer lock when GATE CONTROL opens, so the console is not dead to the mouse on the return-gate, end-card-G and locked-MISSIONS routes. Done 2026-09-08; `ui-guard.mjs`, watched failing first.
+- [x] Pin the GATE CONTROL header and footer so DIAL & LAUNCH is on screen at 1280x720 and below. Done 2026-09-08; checked at four viewport sizes.
+- [x] Validate every stored setting and progress field, so a wrong type resets to default instead of killing the page or the menu. Done 2026-09-08; eight corrupt-save shapes in `ui-guard.mjs`.
+- [x] Count bomber-line runners by identity, so the HUD number and the spawn budget stop reading a pooled object several times. Done 2026-09-08; `combat-guard.mjs`.
+- [x] Stop crediting rock crashes to the player through the death sequence. Done 2026-09-08.
+- [x] Make the Ha'tak win card count what was destroyed, and the loss card name what killed you. Done 2026-09-08.
+
+- [ ] Decide what to do about `pursuit-probe.mjs`'s flaky hunt assertion: gate rings are unseeded, so "cleared 2 gates by 12 s" varies run to run, and the obvious reshapings are not stable either (the quarry legitimately stops advancing when it turns to fight). Either seed the placement or assert something geometry-independent.
+- [ ] `scripts/kinds-test.mjs` does not honour `STARGATE_TEST_URL` and imports `/src/core/tunables.ts`, so it only runs against the dev server. Bring it in line with every other script.
+
 ## Graphics scene pass · 2026-09-08
 
 - [x] <!-- workspace:id=work:628219bb-c511-52e6-a81c-16938037791a --> Implement the five authorized graphics improvements and an optional event-lighting setting: exclusive travel/control/audio scenes, staged seeded destruction, independent replay presentation, planet/sky layering, and distinct ice/wreck fields. Done 2026-09-08; build and focused checks pass; browser captures and verification limits in [evidence](evidence/2026-09-08-graphics-scenes.md).

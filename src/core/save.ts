@@ -3,6 +3,8 @@ import type { SchemeName, SteerMode } from "@/core/scheme";
 import type { DifficultyName } from "@/core/difficulty";
 import type { Quality } from "@/render/renderer";
 import { DEFAULT_BINDS, mergeBinds, type Binds } from "@/core/binds";
+import { parseDifficulty } from "@/core/difficulty";
+import { parseQuality } from "@/render/renderer";
 
 /**
  * Persistent player state in localStorage, one key, one JSON blob. Settings are
@@ -67,14 +69,71 @@ export const DEFAULT_SAVE: Save = {
   progress: { ship: "f11", unlocked: ["f11"], missions: {} },
 };
 
+/**
+ * A stored value is only trusted once it has been checked against the type it claims to be. The blob is
+ * whatever is in localStorage: a save written by an older build, hand-edited, or half-written when a tab
+ * died. Spreading it verbatim let two of those shapes kill the page outright, with no way back because the
+ * surface that would fix the setting is the surface that failed to build. `quality: "ultra"` threw on
+ * `QUALITY[q].dpr` before the canvas existed (black page, no menu); `sens: "loud"` threw on `sens.toFixed`
+ * inside the Menu constructor, so the whole session had no pause screen, no settings and no MISSIONS button.
+ * Every field below is either an enum with a parser or a primitive with a range, so check them all: the next
+ * bad value should cost a reset to default, never the game.
+ */
+function sanitise(raw: Partial<Settings> | undefined): Partial<Settings> {
+  if (!raw || typeof raw !== "object") return {};
+  const d = DEFAULT_SAVE.settings;
+  const bool = (v: unknown, fallback: boolean): boolean => (typeof v === "boolean" ? v : fallback);
+  const num = (v: unknown, lo: number, hi: number, fallback: number): number =>
+    typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : fallback;
+  return {
+    ...raw,
+    quality: parseQuality(typeof raw.quality === "string" ? raw.quality : null),
+    difficulty: parseDifficulty(typeof raw.difficulty === "string" ? raw.difficulty : null),
+    steer: raw.steer === "relative" ? "relative" : "cursor",
+    scheme: raw.scheme === "arcade" ? "arcade" : "classic",
+    sens: num(raw.sens, 0.1, 5, d.sens),
+    assistStrength: num(raw.assistStrength, 0.2, 1, d.assistStrength),
+    assist: bool(raw.assist, d.assist),
+    speedTurn: bool(raw.speedTurn, d.speedTurn),
+    rawMouse: bool(raw.rawMouse, d.rawMouse),
+    mute: bool(raw.mute, d.mute),
+    invertY: bool(raw.invertY, d.invertY),
+    dynamicRes: bool(raw.dynamicRes, d.dynamicRes),
+    eventLighting: bool(raw.eventLighting, d.eventLighting),
+    onboarded: bool(raw.onboarded, d.onboarded),
+  };
+}
+
+/** Progress drives array and record reads all over the mission code; a wrong type there is the same class of crash. */
+function sanitiseProgress(raw: Partial<Progress> | undefined): Partial<Progress> {
+  if (!raw || typeof raw !== "object") return {};
+  const missions: Record<string, MissionRecord> = {};
+  const src = raw.missions;
+  if (src && typeof src === "object" && !Array.isArray(src)) {
+    for (const [id, rec] of Object.entries(src as Record<string, unknown>)) {
+      if (!rec || typeof rec !== "object") continue;
+      const r = rec as Partial<MissionRecord>;
+      const completions = typeof r.completions === "number" && Number.isFinite(r.completions) ? Math.max(0, Math.floor(r.completions)) : 0;
+      const bestTime = typeof r.bestTime === "number" && Number.isFinite(r.bestTime) ? r.bestTime : 0;
+      missions[id] = { completions, bestTime };
+    }
+  }
+  const unlocked = Array.isArray(raw.unlocked) ? raw.unlocked.filter((x): x is string => typeof x === "string") : [...DEFAULT_SAVE.progress.unlocked];
+  return {
+    ship: typeof raw.ship === "string" ? raw.ship : DEFAULT_SAVE.progress.ship,
+    unlocked: unlocked.length ? unlocked : [...DEFAULT_SAVE.progress.unlocked],
+    missions,
+  };
+}
+
 export function loadSave(): Save {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return structuredClone(DEFAULT_SAVE);
     const j = JSON.parse(raw) as Partial<Save>;
     return {
-      settings: { ...DEFAULT_SAVE.settings, ...(j.settings ?? {}), ...FLIGHT_PROFILE, binds: mergeBinds(j.settings?.binds), moveBinds: mergeMoveBinds(j.settings?.moveBinds, mergeBinds(j.settings?.binds)) },
-      progress: { ...structuredClone(DEFAULT_SAVE.progress), ...(j.progress ?? {}) },
+      settings: { ...DEFAULT_SAVE.settings, ...sanitise(j.settings), ...FLIGHT_PROFILE, binds: mergeBinds(j.settings?.binds), moveBinds: mergeMoveBinds(j.settings?.moveBinds, mergeBinds(j.settings?.binds)) },
+      progress: { ...structuredClone(DEFAULT_SAVE.progress), ...sanitiseProgress(j.progress) },
     };
   } catch {
     return structuredClone(DEFAULT_SAVE);

@@ -88,7 +88,11 @@ export abstract class Mission {
   }
 
   protected deathLine(): string {
-    return `${this.ctx.combat.player.kills} gliders down before the belt took you.`;
+    const P = this.ctx.combat.player;
+    // this used to blame the belt whatever killed you, which reads as a bug the first time a glider shoots
+    // you down in open space
+    const end = P.cause === "rock" ? "before the belt took you." : P.cause === "enemy" ? "before they got you." : "before the hull gave out.";
+    return `${P.kills} gliders down ${end}`;
   }
 
   protected abstract begin(): void;

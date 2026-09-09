@@ -70,13 +70,20 @@
       #hud .card .again { margin-top: 26px; font-size: 13px; letter-spacing: .2em; opacity: .7; animation: blink 1.2s steps(2) infinite; }
       #hub { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(4,6,12,.86); color: #cfe9ff; }
       #hub.on { display: flex; }
-      #hub .panel { box-sizing: border-box; width: 1080px; max-width: calc(100vw - 40px); max-height: 94vh; overflow-y: auto; scrollbar-gutter: stable; padding: 24px; border: 1px solid rgba(255,217,168,.45); background: #080a14; box-shadow: 0 0 0 4px rgba(8,10,20,.6); }
-      #hub header { display: flex; justify-content: space-between; align-items: end; padding-bottom: 18px; border-bottom: 1px solid #34404e; }
+      /* The console is taller than a laptop viewport (about 1280px of content), so the panel itself must never
+       * be the scroller: it was, and DIAL & LAUNCH sat ~470px below the fold on a 1280x720 screen with the
+       * panel opening at scrollTop 0, which reads as a console you cannot launch from. Same shape as #menu:
+       * header and footer pinned, only .hub-body scrolls, so the launch row is on screen at every size. */
+      #hub .panel { box-sizing: border-box; display: flex; flex-direction: column; width: 1080px; max-width: calc(100vw - 40px); max-height: calc(100dvh - 32px); overflow: hidden; padding: 0; border: 1px solid rgba(255,217,168,.45); background: #080a14; box-shadow: 0 0 0 4px rgba(8,10,20,.6); }
+      #hub .hub-body { overflow-y: auto; min-height: 0; scrollbar-gutter: stable; padding: 0 24px; }
+      #hub header, #hub footer { flex: none; padding-left: 24px; padding-right: 24px; }
+      #hub header { display: flex; justify-content: space-between; align-items: end; padding-top: 24px; padding-bottom: 18px; border-bottom: 1px solid #34404e; }
       #hub h1, #hub .destination { margin: 0; color: #ffd9a8; font-weight: 500; }
       .old-script { display: block; width: auto; height: 36px; max-width: 100%; }
       #hub h1 span { display: block; font-size: 13px; letter-spacing: .28em; margin-top: 5px; }
       #hub .console-note { text-align: right; font-size: 11px; line-height: 1.7; color: #cfe9ff; }
       #hub h2 { margin: 16px 0 10px; font-size: 11px; letter-spacing: .18em; font-weight: 500; color: #cfe9ff; }
+      #hub .hub-body > h2:first-child, #hub .console h2:first-child, #hub .console nav h2 { margin-top: 16px; }
       #hub .console { display: grid; grid-template-columns: 310px minmax(0, 1fr); gap: 24px; }
       #hub .systems { display: flex; flex-direction: column; }
       #hub button { font: inherit; color: inherit; border: 0; border-bottom: 1px solid #34404e; background: transparent; cursor: pointer; border-radius: 0; }
@@ -116,7 +123,7 @@
       #hub .ships { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
       #hub .s { padding: 10px 12px; text-align: left; border-top: 1px solid #34404e; }
       #hub .stats { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 10px; }
-      #hub footer { margin-top: 18px; padding-top: 14px; border-top: 1px solid #34404e; display: flex; gap: 16px; align-items: center; }
+      #hub footer { padding-top: 14px; padding-bottom: 20px; border-top: 1px solid #34404e; display: flex; gap: 16px; align-items: center; background: #080a14; }
       #hub .launch-summary { font-size: 11px; flex: 1; line-height: 1.5; }
       #hub .row { display: flex; gap: 10px; }
       #hub .act { border: 1px solid #ffd9a8; color: #ffd9a8; padding: 12px 20px; font-size: 12px; letter-spacing: .15em; }
@@ -138,7 +145,9 @@
       #dial .line { margin-top: 12px; font-size: 11px; letter-spacing: .12em; }
       @media (prefers-reduced-motion: reduce) { #hub .sequence .glyph { animation: none; color: #ffd9a8; background: #182333; } }
       @media (max-width: 760px) {
-        #hub .panel { max-width: calc(100vw - 16px); padding: 16px; }
+        #hub .panel { max-width: calc(100vw - 16px); }
+        #hub .hub-body { padding: 0 16px; }
+        #hub header, #hub footer { padding-left: 16px; padding-right: 16px; }
         #hub .console { grid-template-columns: 1fr; gap: 0; }
         #hub .systems { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
         #hub .ships { grid-template-columns: 1fr; }
@@ -208,11 +217,13 @@
     <div id="hub">
       <div class="panel">
         <header><h1>GATE CONTROL</h1><div class="console-note">STELLAR ADDRESS REGISTER<br />6 COORDINATES / 1 POINT OF ORIGIN</div></header>
-        <div class="console">
-          <nav aria-label="Star systems"><h2>01 / ADDRESS REGISTER</h2><div class="systems"></div></nav>
-          <section aria-label="Selected destination"><h2 class="destination"></h2><p class="system-blurb"></p><div class="selected-address address" aria-label="Selected address"></div><h2>02 / SORTIE ORDERS</h2><div class="missions"></div></section>
+        <div class="hub-body">
+          <div class="console">
+            <nav aria-label="Star systems"><h2>01 / ADDRESS REGISTER</h2><div class="systems"></div></nav>
+            <section aria-label="Selected destination"><h2 class="destination"></h2><p class="system-blurb"></p><div class="selected-address address" aria-label="Selected address"></div><h2>02 / SORTIE ORDERS</h2><div class="missions"></div></section>
+          </div>
+          <h2>03 / ASSIGN SHIP</h2><div class="ships"></div>
         </div>
-        <h2>03 / ASSIGN SHIP</h2><div class="ships"></div>
         <footer><div class="launch-summary"></div><div class="row"><button class="act back">BACK</button><button class="act go">DIAL &amp; LAUNCH</button></div></footer>
       </div>
     </div>

@@ -23,6 +23,7 @@ export class Hub {
     root.querySelector(".back")!.addEventListener("click", () => (this.hide(), onBack()));
     root.querySelector(".go")!.addEventListener("click", () => this.launch());
     const practice = document.createElement("button");
+    practice.className = "act"; // it sits in the launch row between BACK and DIAL & LAUNCH; unstyled it reads as loose text
     practice.textContent = "SANDBOX · TEST MOVES";
     practice.addEventListener("click", () => {
       const url = new URL(location.pathname, location.origin);
@@ -44,6 +45,13 @@ export class Hub {
     this.shownSystem = "";
     this.build();
     this.el.classList.add("on");
+    // The console is a mouse surface, and every route into it except the pause menu arrives with the
+    // pointer still locked to the canvas: the return gate (`?hub=1`), G on the end card, and MISSIONS
+    // reached from a locked page. Locked means no cursor and no click reaches a button, so the console
+    // looks broken until the player guesses that Esc frees it. Release it here rather than at each call
+    // site, so a new route cannot reintroduce the bug. The class is added first on purpose: the pause
+    // menu opens on pointerlockchange and is refused only while `active` is already true (its `canOpen`).
+    if (document.pointerLockElement) document.exitPointerLock();
   }
 
   hide(): void { this.el.classList.remove("on"); }

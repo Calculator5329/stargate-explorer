@@ -22,7 +22,11 @@ const LEAK_R = 90;
  */
 export class InterceptMission extends Mission {
   private readonly relay: Tracked;
-  private readonly runners: Enemy[] = [];
+  /** Every bomber this mission has put on the line. A **Set**, not an array, because `Enemies.spawn` hands
+   * back pooled objects: a dead runner is reused for the next one, so pushing on every spawn stored the same
+   * object several times. Both readers count `alive` entries, so the HUD claimed 10 bombers where 2 were
+   * flying, and `maxAlive - alive` went negative and stopped spawning for ~116 s of a 3-minute mission. */
+  private readonly runners = new Set<Enemy>();
   private spawnT: number;
   private restockT: number;
   private leaks = 0;
@@ -69,7 +73,7 @@ export class InterceptMission extends Mission {
       const e = E.spawn(_pos, this.relay.pos, d.runner);
       e.steer = new THREE.Vector3();
       e.steerSpeed = d.runnerSpeed;
-      this.runners.push(e);
+      this.runners.add(e);
       this.sent++;
     }
     if (d.escortsPer > 0) this.spawnCone(d.escortsPer, d.near - 200, d.far - 200, 0.9, d.escortKinds);
@@ -86,7 +90,7 @@ export class InterceptMission extends Mission {
     if (this.restockT <= 0) (this.restockT = d.restockEvery), this.ctx.combat.restock();
     if (this.spawnT <= 0) {
       this.spawnT = d.interval;
-      const alive = this.runners.filter((e) => e.alive).length;
+      const alive = countAlive(this.runners);
       const want = d.groupStart + Math.floor((this.clock / 60) * d.groupGrow);
       const n = Math.min(want, Math.max(0, d.maxAlive - alive));
       if (n > 0) (this.spawnGroup(n), this.ctx.audio.ui());
@@ -111,7 +115,7 @@ export class InterceptMission extends Mission {
       e.steer!.copy(_dir).multiplyScalar(1 / dist);
     }
     const left = d.duration - this.clock;
-    const live = this.runners.filter((e) => e.alive).length;
+    const live = countAlive(this.runners);
     this.phase = this.ctx.combat.enemies.aliveCount > 0 ? "wave" : "wait";
     this.line = left < 20 ? `${d.finaleLine}  ·  ${fmt(left)}` : `Relay ${fmt(left)}  ·  ${live} bomber${live === 1 ? "" : "s"} on the line  ·  leaks ${this.leaks}/${d.maxLeaks}`;
   }
@@ -129,4 +133,10 @@ export class InterceptMission extends Mission {
   protected override deathLine(): string {
     return `Held ${fmt(this.clock)} of ${fmt(this.def.duration)} with ${this.leaks} leak${this.leaks === 1 ? "" : "s"}.`;
   }
+}
+
+function countAlive(set: Set<Enemy>): number {
+  let n = 0;
+  for (const e of set) if (e.alive) n++;
+  return n;
 }

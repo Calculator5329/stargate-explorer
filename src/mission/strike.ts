@@ -173,7 +173,9 @@ export class StrikeMission extends Mission {
   }
 
   override summary(): string {
-    return `${super.summary()}\nring guns ${this.turrets.length}  ·  shield nodes ${this.nodes.length}`;
+    // what the player actually destroyed, not the array lengths: killing only the nodes and the core used to
+    // print "ring guns 6" on the win card while all six guns were still turning
+    return `${super.summary()}\nring guns ${this.turrets.length - this.aliveGuns()} of ${this.turrets.length}  ·  shield nodes ${this.nodes.length - this.aliveNodes()} of ${this.nodes.length}`;
   }
 
   protected override deathLine(): string {
