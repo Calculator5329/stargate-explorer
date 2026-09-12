@@ -142,12 +142,12 @@ export class Encounter {
     const band = threatBand(r.threat);
     const verdict = band === "low" ? "comfortable" : band === "mid" ? "a real fight" : "lethal unless flown well";
     this.root.append(h(`<div class="power">
-      <div class="big ${band}"><b>${Math.round(r.threat * 100)}%</b><span>of the ${esc(SHIPS[r.ship]?.def.name ?? r.ship)}'s hull lost over the level: <em>${verdict}</em></span></div>
+      <div class="big ${band}"><b>${r.threat === null ? "N/A" : `${Math.round(r.threat * 100)}%`}</b><span>${r.threat === null ? "Fleet threat model unavailable; playtest this operation." : `of the ${esc(SHIPS[r.ship]?.def.name ?? r.ship)}'s hull lost over the level: <em>${verdict}</em>`}</span></div>
       <div class="grid">
         <span>takes about</span><b>${r.clearMin.toFixed(1)} min</b>
         <span>enemy hull to chew</span><b>${Math.round(r.enemyHp)}</b>
         <span>peak enemy dps</span><b>${r.peakDps.toFixed(1)}</b>
-        <span>clock pressure</span><b>${r.pressure ? r.pressure.toFixed(2) : "none"}</b>
+        <span>clock pressure</span><b>${r.threat === null ? "not modeled" : r.pressure ? r.pressure.toFixed(2) : "none"}</b>
       </div>
       <p>${esc(r.note)}</p>
       <p class="dim">green under 45%, gold to 90%, red above. Clock pressure is how much of the time limit the kills or the course need; over 1 the clock wins.</p>
@@ -160,6 +160,8 @@ export class Encounter {
   /** what the fight section's numbers mean for this type, in one line */
   private fightHelp(l: LevelDef): string {
     switch (l.type) {
+      case "polar": return "Bombers attack the cargo ship, then the outpost. Allied fighters intercept attackers; the carrier supplies covering fire.";
+      case "deck": return "Cross the blue ring to expose the vent. Deck guns cover clear firing lines; fighters split between the player and allied defenders.";
       case "clear":
       case "protect":
         return "Each wave spawns its ships at once, between near and far metres out, the given seconds after the previous wave is dead. The mix cycles through the kinds you list.";

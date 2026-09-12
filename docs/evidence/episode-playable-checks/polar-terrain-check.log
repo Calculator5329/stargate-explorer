@@ -1,0 +1,1 @@
+{"terrainTriangles":52482,"draws":16,"heightSamples":849,"rayChecks":60,"minHeight":-395.954345703125,"maxHeight":3929.244140625,"sweepCases":"fast vertical/horizontal, large sphere, flyby, penetration, stationary, four boundaries, underside, exact slope"}

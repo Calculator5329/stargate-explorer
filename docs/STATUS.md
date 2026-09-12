@@ -1,12 +1,20 @@
-# STATUS.md — as of 2026-09-11
+# STATUS.md — as of 2026-09-12
+
+## Playable episode operations · 2026-09-12
+
+**Works, first balance pass:** Antarctica (`antarctic-defense`) and Fallen (`superweapon-strike`) are selectable game missions, connected by completion requirements. Antarctica has a 16 km ice map with actual surface collision, moving Tel’tak escort, Prometheus covering fire, allied F-302 interception, bomber priorities, outpost defense and a damaging animated drone salvo. Fallen has a solid mothership deck, swept jump-ring entry, a brief controlled hop, targetable deck guns and cooling vent, and a separate timed escape. Their first four seconds hold the player for the briefing so the arrival route cannot be skipped before objectives start.
+
+The fleet gallery now includes all 21 current ship/role samples and is linked from the pause menu. Episode spacecraft that do not belong in these two battles remain samples. The other ten episode scenes remain proposals. New mission types and tuning fields appear in the campaign editor; fleet threat is explicitly unmodeled rather than shown as zero.
+
+Sandbox's existing powered trajectories are verified through real 1–4 browser key presses. The guide now shows costs and progress, while the HUD explains busy/insufficient-boost presses. Actual motion checks cover reversal, corkscrew, lateral cuts, boost expenditure and camera fit. [Evidence, captures and testing limits](evidence/2026-09-12-playable-episodes.md). Build and CPU mechanics/compatibility checks pass. The agent browser used free flight; complete human-flown victories, pointer-lock feel, wide-device performance and balance tuning remain unverified. No deployment was performed.
 
 ## Episode graphics studies · 2026-09-11
 
-Nine new procedural ship models and twelve staged SG-1 episode concepts are available at `/episode-fleet.html`, with Antarctica first. This is an art review surface: campaign order, objectives, balance and level integration are deferred by Ethan. The current gameplay registry is unchanged. Build and real geometry checks pass; all nine hulls were captured in four views and all twelve scenes rendered in the in-app browser. [Review, captures and limits](evidence/2026-09-11-episode-fleet.md).
+Nine new procedural ship models and twelve staged SG-1 episode concepts are available at `/episode-fleet.html`, with Antarctica first. At that milestone this was an art-only surface. The September 12 pass above supersedes the deferral for Antarctica and Fallen. Build and real geometry checks pass; all nine hulls were captured in four views and all twelve scenes rendered in the in-app browser. [Review, captures and limits](evidence/2026-09-11-episode-fleet.md).
 
 ## Sandbox controls · 2026-09-08
 
-Sandbox is reachable from pause and gate control. Defaults: 1 Cobra, 2 Lunge, 3/4 Scissor left/right; Esc → Flight & move keys saves replacements, swapping occupied keys. Existing B chords still work. Practice is invulnerable, refills the bar between moves and restocks missiles every three seconds. The guide shows bound keys and running status. Build, focused CPU checks and browser activation/persistence/swap checks pass. Agent browser flight used the existing `lock=free` harness; manual pointer-lock feel awaits Ethan's play. [Evidence](evidence/2026-09-08-sandbox-controls.md).
+Sandbox is reachable from pause and gate control. Defaults: 1 Cobra reversal, 2 Vortex drive, 3/4 Sidewinder left/right; Esc → Flight & move keys saves replacements, swapping occupied keys. Existing B chords still work. Practice is invulnerable, refills the bar between moves and restocks missiles every three seconds. The guide shows bound keys and running status. Build, focused CPU checks and browser activation/persistence/swap checks pass. Agent browser flight used the existing `lock=free` harness; manual pointer-lock feel awaits Ethan's play. [Evidence](evidence/2026-09-08-sandbox-controls.md).
 
 ## Replay owner feedback · 2026-09-08
 

@@ -1,6 +1,11 @@
 {
   "acts": [
     {
+      "id": "episodes",
+      "title": "SG-1 \u00b7 EPISODE OPERATIONS",
+      "blurb": "Two connected playable adaptations: defend Earth, then strike the superweapon."
+    },
+    {
       "id": "act1",
       "title": "FIRST FLIGHT",
       "blurb": "Learn the ship over Abydos and Tollana: guns, missiles, the gate chain, one duel."
@@ -17,6 +22,84 @@
     }
   ],
   "levels": [
+    {
+      "id": "antarctic-defense",
+      "act": "episodes",
+      "board": {
+        "x": 80,
+        "y": 100
+      },
+      "type": "polar",
+      "title": "THE ANTARCTIC DEFENSE",
+      "blurb": "Escort the Tel\u2019tak over the ice. Hold the outpost until the Ancient drones launch.",
+      "system": "antarctica",
+      "intro": [
+        "Lost City \u00b7 Fly cover for the Tel\u2019tak as it reaches the outpost.",
+        "Bombers prioritize the cargo ship and drilling site. Keep both alive. Prometheus and allied F-302s will help."
+      ],
+      "start": {
+        "pos": [
+          0,
+          70,
+          -1850
+        ],
+        "yaw": 0
+      },
+      "escortHp": 550,
+      "escortSpeed": 30,
+      "carrierHp": 1800,
+      "siteHp": 800,
+      "defenseSeconds": 90,
+      "firstDelay": 5,
+      "interval": 16,
+      "maxAlive": 12,
+      "groupSize": 4,
+      "defenders": 3,
+      "droneSeconds": 18,
+      "kinds": [
+        "glider",
+        "glider",
+        "bomber",
+        "interceptor"
+      ]
+    },
+    {
+      "id": "superweapon-strike",
+      "act": "episodes",
+      "board": {
+        "x": 520,
+        "y": 100
+      },
+      "type": "deck",
+      "title": "UNDER THE SHIELD",
+      "blurb": "Cross the jump marker, strike the cooling vent, then escape the mothership.",
+      "system": "superweapon",
+      "requires": "antarctic-defense",
+      "intro": [
+        "Fallen \u00b7 Reach the marked jump corridor in front of the mothership.",
+        "A short hyperspace hop takes you inside its shield. Destroy the cooling vent, then reach the escape beacon."
+      ],
+      "start": {
+        "pos": [
+          0,
+          250,
+          2250
+        ],
+        "yaw": 3.141592653589793
+      },
+      "ventHp": 300,
+      "turretHp": 80,
+      "timeLimit": 240,
+      "escapeSeconds": 32,
+      "escorts": 4,
+      "maxAlive": 8,
+      "interval": 22,
+      "defenders": 2,
+      "kinds": [
+        "glider",
+        "interceptor"
+      ]
+    },
     {
       "id": "belt-clear",
       "act": "act1",

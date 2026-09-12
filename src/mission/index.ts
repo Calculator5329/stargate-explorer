@@ -11,8 +11,13 @@ import { HuntMission } from "@/mission/hunt";
 import { InterceptMission } from "@/mission/intercept";
 import { SandboxMission } from "@/mission/sandbox";
 
+import { PolarMission } from "@/mission/polar";
+import { DeckMission } from "@/mission/deck";
+
 export function createMission(def: LevelDef, ctx: MissionCtx): Mission {
   switch (def.type) {
+    case "polar": return new PolarMission(def, ctx);
+    case "deck": return new DeckMission(def, ctx);
     case "clear":
       return new ClearMission(def, ctx);
     case "run":

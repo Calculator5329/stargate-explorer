@@ -329,3 +329,17 @@ window being fed and the reading is of a mixture.
 ## 2026-09-11 — Episode art before mission integration
 
 Ethan requested episode-based ship and level graphics, with Antarctica as the centerpiece, and deferred order and implementation. Agent judgment: keep this pass in a separate Vite entry (`episode-fleet.html`) using the existing procedural Three.js geometry/material approach. Missing hulls live in `episode-earth.ts`, `episode-alien.ts` and `episode-machine.ts`; scene props live in `episode-scenes.ts`. The review composes these with existing ships without changing gameplay registries. Source facts, approximated shapes and proposed objectives are labeled separately. Ship sizes are review units, never canon measurements. This is revisitable art structure, not a new campaign format.
+
+
+## 2026-09-12 — Playable episode operations reuse the game loop
+
+**Owner direction.** Ethan authorized complete Antarctica gameplay plus one agent-selected second episode: maps, terrain collision, escorts, defenders, attack priorities and representative ship samples, then review the paid sandbox shortcuts he had not seen. The previous art-only limit is superseded for these two operations. Agent selection: Fallen gives a precision surface strike and escape to contrast with Antarctica’s fleet defense.
+
+**Implementation.** Add `polar` and `deck` data-defined mission types to the existing mission factory; retain normal Game completion, save and return-gate handling. Small lifecycle hooks place arrivals, hold authored briefing/jump beats, update craft before combat and position gates clear of the new maps. Reuse existing enemies, projectiles, damage, missiles and destruction effects. The ally projectile side carries its own damage and does not claim player hits/kills. Fleet craft combine a visible hull, tracked target, health and a local-space collider.
+
+**Collision seam.** `Solid.sweep` returns the first moving-sphere contact. Polar collision follows the actual heightfield triangles and closed boundary; mothership and fleet collision use a local-space triangle BVH built from visible solid meshes. Glows and outline shells are not invisible walls. The same field serves player contact, AI avoidance and weapon occlusion. The contact retains its owning solid so damage does not repeat an intersection at a rounded endpoint. First-contact damage has a 1,000-ray rotated-hull regression.
+
+**Presentation and scope.** These are game adaptations, not exact canon deck plans or dimensions. Only ships relevant to these episodes are mission actors; all current role hulls remain inspectable in the 21-sample gallery. Reuse the already implemented large paid stunt trajectories and repair visibility/feedback rather than add a second move registry. The live deployment remains owner-operated. Difficulty is a first balance pass, not a measured skill rating; the editor shows fleet threat as unavailable.
+
+
+**Arrival visibility stream check.** This pass found one paused-arrival failure in the shared presentation path; earlier presentation decisions already make `mode` authoritative. The failure is in the stream: the travel stage hides mission groups, then the paused stage returns before deriving visibility from its new mode. Carry that same mode through visibility assignment before the pause early return; keep animation and mission clocks frozen. No terrain-specific visibility override or new guard is added. A CPU regression exercises travel → paused and verifies restored scenery with an unchanged mission clock.

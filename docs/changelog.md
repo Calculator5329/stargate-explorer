@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-09-12 — Antarctica and Fallen playable operations
+
+Added a surface-defense mission and a mothership strike mission to the normal campaign/hub/save flow. Antarctica includes detailed ice terrain, mesh-aligned swept collision, moving cargo escort, carrier covering fire, allied fighter interception, bomber target priorities, outpost defense and a real damaging drone finale. Fallen includes a collidable deck, jump corridor and controlled shield-bypass hop, cooling vent and deck guns damaged by normal weapons, enemy escorts, allied cover and a separately timed escape.
+
+Shared collision now clips cannon and missile travel against mission surfaces, and carries the first contact's owner into damage resolution to avoid missed hull damage from endpoint rounding. Allied rounds and the drone sweep do not fabricate player kill credit. The campaign editor supports both mission types and marks the unmodeled fleet threat as N/A. The pause menu links the expanded 21-sample fleet gallery.
+
+Made existing paid shortcut stunts easier to recognize: boost cost, duration and progress in the sandbox guide; visible cost/busy/low-boost feedback in flight. Verified all four shortcuts through browser keyboard events. Build, geometry, real mission/combat simulation, persistence and legacy combat checks pass. Human flight balance and deployment remain separate. [Evidence](evidence/2026-09-12-playable-episodes.md).
+
 ## 2026-09-11 — Episode fleet and scene studies
 
 Added nine procedural ships: BC-304, Tel’tak, O’Neill class, Daniel Jackson class, Ori warship, Anubis’s Lost City flagship, his earlier Fallen superweapon ship, Seberus and a Replicator craft interpretation. Added polar terrain, drilling-site scenery, drone paths, Supergate and twelve staged episode compositions. `/episode-fleet.html` presents source-linked ideas, five camera views, silhouette/rotation controls and browser-local feedback. These are graphics studies; mission integration remains deferred.

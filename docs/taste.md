@@ -59,3 +59,12 @@ Ethan selected classic controls, cursor mouse steering, raw mouse on, flight ass
 ## Episode expansion scope · Ethan, 2026-09-11
 
 “Specifically ones modeled after actual episodes in Stargate SG-1.” Antarctica is “a really huge one.” Build the new ship and level graphics first; “then we'll talk about the order and how to implement these levels later.” The art pass must distinguish researched episode facts from proposed fighter objectives and scene placements. Preserve the preferred existing fleet while introducing missing types. The autonomous window is one hour, with a hard stop by 23:30 America/Chicago on September 11; this session used the earlier elapsed-hour cutoff, 23:27.
+
+## Playable episodes and visible paid moves · Ethan, 2026-09-12
+
+Antarctica then a second episode are now authorized for actual gameplay, including maps, terrain collision, escorts, defenders and attack priorities. Improve Antarctic detail beyond the initial art-study screenshot. After the two missions, make the shortcut-key powered stunts reachable and visibly worthwhile; Ethan says he has not seen the promised cool moves. Do not treat the presence of move JSON or CPU test success as proof that he can find and experience them. This supersedes the September 11 implementation deferral for these two episodes only.
+
+
+## Paid move visibility · 2026-09-12
+
+Ethan still had not seen the promised paid shortcut stunts. A table or a passing trajectory test alone does not close that complaint: verify the reachable sandbox with the actual bound keys, expose each cost and progress, and explain a rejected press. Existing large trajectories are Cobra reversal, Vortex drive and mirrored Sidewinders; do not call them newly created when only their visibility/feedback changed. The local preview and deployed build must be distinguished in delivery.

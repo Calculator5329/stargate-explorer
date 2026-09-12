@@ -61,6 +61,7 @@ const audio = new Audio();
 audio.setMute(S.mute);
 audio.onMuteChanged = (muted) => { S.mute = muted; menu?.syncMute(muted); writeSave(save); };
 const eventLighting = new EventLighting(r.scene);
+const _levelUp = new Vector3(0, 1, 0);
 
 /** Everything that belongs to one system + sortie. Gate travel disposes it and builds the next behind the wormhole. */
 interface Sortie {
@@ -88,6 +89,14 @@ function build(params: URLSearchParams): Sortie {
   world.sun.follow(rig.root);
   flight.reset();
   flight.stats = ship.stats;
+  if (level.start) {
+    flight.pos.set(...level.start.pos);
+    flight.prevPos.copy(flight.pos);
+    flight.quat.setFromAxisAngle(_levelUp, level.start.yaw);
+    flight.prevQuat.copy(flight.quat);
+    flight.velDir.set(0, 0, 1).applyQuaternion(flight.quat);
+    flight.vel.copy(flight.velDir).multiplyScalar(flight.speed);
+  }
   chase.reset();
   flight.sample(1, rig.root.position, rig.root.quaternion);
   chase.update(0, rig.root.position, rig.root.quaternion, flight.speed, input.stick, false, 99, flight.stats.size);
@@ -246,7 +255,7 @@ const loop = new Loop({
     game?.setPresentation(mode);
     if (inspect || mode !== "flight" || review?.paused) return;
     input.tick(dt);
-    flight.tick(dt, input);
+    if (!game?.mission.holdsFlight) flight.tick(dt, input);
     hazards.tick(flight, dt);
     world.tick(dt);
     game?.tick(dt, flight, input);

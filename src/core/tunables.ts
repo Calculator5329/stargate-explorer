@@ -4,6 +4,27 @@
  * `T` at use time so live edits take effect immediately. Units: m, s, rad.
  */
 export const T = {
+  episode: {
+    avoidSeconds: 1.8,
+    avoidMargin: 24,
+    avoidStrength: 5,
+    allySpeed: 135,
+    allyTurnRate: 1.8,
+    allyAccel: 60,
+    allyFireInterval: .65,
+    allyDamage: .6,
+    allyRange: 950,
+    allyFireCone: .2,
+    allyBreakDistance: 100,
+    carrierFireInterval: 1.8,
+    carrierDamage: 1.8,
+    carrierRange: 1450,
+    routeArrival: 35,
+    jumpSeconds: 1.25,
+    contactMargin: .15,
+    droneSpeed: 420,
+    droneBurstScale: 35,
+  },
   replay: {
     maxKills: 3,
     windowSeconds: 8,

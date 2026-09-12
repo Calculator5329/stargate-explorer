@@ -38,6 +38,18 @@ export class World {
     // the arena is a per-system size; T stays the live-tunable copy every consumer (hazards, minimap, enemy AI) reads
     T.arena.radius = S.arena ?? 1500;
     this.root.add(this.sky.mesh, this.sun.glare, this.planet.group, this.asteroids.group, this.dust.lines);
+    if (S.atmosphere === "polar") {
+      this.sky.mesh.visible = this.planet.group.visible = false;
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(24000, 32, 16), new THREE.ShaderMaterial({
+        side: THREE.BackSide, depthWrite: false,
+        uniforms: { zenith: { value: new THREE.Color(0x5489b7) }, horizon: { value: new THREE.Color(0xc7dfe9) } },
+        vertexShader: 'varying vec3 vDir; void main(){vDir=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+        fragmentShader: 'uniform vec3 zenith; uniform vec3 horizon; varying vec3 vDir; void main(){float h=pow(max(0.,normalize(vDir).y),.6); gl_FragColor=vec4(mix(horizon,zenith,h),1.);}',
+      }));
+      dome.name = "Polar sky";
+      this.root.add(dome);
+      scene.fog = new THREE.Fog(0xb4d2e2, 2800, 12500);
+    }
     scene.add(this.root);
   }
 
@@ -48,6 +60,7 @@ export class World {
   /** Gate travel swaps systems in place: drop everything this world put in the scene and on the GPU. */
   dispose(scene: THREE.Scene): void {
     scene.remove(this.root);
+    if (this.system.atmosphere) scene.fog = null;
     this.sun.dispose(scene);
     this.sky.dispose();
     this.planet.dispose();
@@ -57,8 +70,10 @@ export class World {
   /** Once per render frame, before `render()`: sun glare, the sky and planet bakes (no-ops once baked), belt culling. `alpha` places fragments between ticks. */
   update(camera: THREE.Camera, gl: THREE.WebGLRenderer, bakeSize: number, alpha = 1): void {
     this.sun.update(camera.position);
-    this.sky.update(gl, bakeSize);
-    this.planet.update(gl, bakeSize);
+    if (!this.system.atmosphere) {
+      this.sky.update(gl, bakeSize);
+      this.planet.update(gl, bakeSize);
+    }
     this.asteroids.cull(this.asteroids.group.visible ? camera : null, alpha);
   }
 }

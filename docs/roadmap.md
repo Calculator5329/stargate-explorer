@@ -298,5 +298,12 @@ Multiplayer, mobile/touch, VR, mod support, story/dialogue system.
 ## Episode graphics expansion · 2026-09-11
 
 - [x] <!-- workspace:id=work:ca03efe6-c434-4cc2-a3de-d899a41bf60b --> (2026-09-11) Research SG-1 episode level candidates, author nine missing ship types and twelve staged scene studies, with Antarctica as the centerpiece. [Review and evidence](evidence/2026-09-11-episode-fleet.md).
-- [ ] <!-- workspace:id=work:95d29b28-2c07-4078-abac-ddb255c47182 --> **Named, not built — episode missions.** Ethan will discuss order and implementation after reviewing the graphics. No campaign wiring, combat balance, scripted episode events or level-specific collision work is authorized by this art pass.
+- [x] <!-- workspace:id=work:95d29b28-2c07-4078-abac-ddb255c47182 --> (2026-09-12) Deferral resolved: Ethan authorized Antarctica plus one agent-selected episode; Fallen was selected and both playable operations are implemented below. Other episode ideas remain proposals.
 - [ ] <!-- workspace:id=work:46b93b34-0326-448d-99d9-d437e5db4e2d --> **Found, unresolved — art refinement.** Review the new ship likenesses and scene compositions with Ethan. Replicator silhouette is an interpretation; Dakara installation, decoy pursuers, mission-scale VFX and moving formations remain separate work after the review.
+
+## Playable episode pass · 2026-09-12
+
+- [x] (2026-09-12) Antarctica: detailed flyable ice map, swept terrain collision, cargo escort, allied defenders, prioritized attackers, timed defense and animated drone finale.
+- [x] (2026-09-12) Fallen: solid capital-ship map, shield-bypass approach, vulnerable cooling target, turrets/escort fighters and escape phase.
+- [x] (2026-09-12) Give the new episode fleet accessible ship samples from the normal game and integrate mission craft.
+- [x] (2026-09-12) After both levels, investigate reachable sandbox/build/keys and improve the visible paid stunts; verify actual shortcut activation, boost cost and full animation. [Mechanics, captures and limits](evidence/2026-09-12-playable-episodes.md).
