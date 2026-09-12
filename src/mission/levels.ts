@@ -33,6 +33,8 @@ interface BaseLevel {
   unlocks?: string;
   /** multiply the system's rock count (0.06 = a few reference rocks in open space) */
   beltScale?: number;
+  /** Authored arrival pose; also used when restarting a surface or deck sortie. */
+  start?: { pos: [number, number, number]; yaw: number };
 }
 
 export interface ClearLevel extends BaseLevel {
@@ -174,7 +176,36 @@ export interface SandboxLevel extends BaseLevel {
   restockEvery: number;
 }
 
-export type LevelDef = ClearLevel | RunLevel | ProtectLevel | StrikeLevel | RaceLevel | HoldLevel | DuelLevel | HuntLevel | InterceptLevel | SandboxLevel;
+export interface PolarLevel extends BaseLevel {
+  type: "polar";
+  escortHp: number;
+  escortSpeed: number;
+  carrierHp: number;
+  siteHp: number;
+  defenseSeconds: number;
+  firstDelay: number;
+  interval: number;
+  maxAlive: number;
+  groupSize: number;
+  defenders: number;
+  droneSeconds: number;
+  kinds: EnemyKind[];
+}
+
+export interface DeckLevel extends BaseLevel {
+  type: "deck";
+  ventHp: number;
+  turretHp: number;
+  timeLimit: number;
+  escapeSeconds: number;
+  escorts: number;
+  maxAlive: number;
+  interval: number;
+  defenders: number;
+  kinds: EnemyKind[];
+}
+
+export type LevelDef = ClearLevel | RunLevel | ProtectLevel | StrikeLevel | RaceLevel | HoldLevel | DuelLevel | HuntLevel | InterceptLevel | SandboxLevel | PolarLevel | DeckLevel;
 
 /**
  * The campaign lives in `content/campaign.json` (acts + levels); the in-game editor (`?edit=1`, `src/editor/`)
@@ -198,6 +229,11 @@ export function checkLevels(levels: readonly LevelDef[]): string[] {
   for (const l of levels) {
     if (ids.has(l.id)) out.push(`duplicate id ${l.id}`);
     ids.add(l.id);
+    if (l.type === "polar" || l.type === "deck") {
+      if (!l.kinds.length || l.kinds.some(k => !(k in ENEMY_KINDS))) out.push(`${l.id}: provide at least one valid attacker kind`);
+      if (!(l.interval > 0 && l.maxAlive >= 1)) out.push(`${l.id}: attack interval and maximum alive must be positive`);
+      if (!l.start || l.start.pos.length !== 3 || !l.start.pos.every(Number.isFinite) || !Number.isFinite(l.start.yaw)) out.push(`${l.id}: provide a finite arrival pose`);
+    }
   }
   for (const l of levels) if (l.requires && !ids.has(l.requires)) out.push(`${l.id} requires unknown ${l.requires}`);
   // a cycle in requires locks every level on it forever
@@ -247,5 +283,6 @@ export function enemyKindsOf(def: LevelDef): Map<EnemyKind, number> {
     } else if (isKind(v) && /kind|foe|quarry|runner/i.test(key)) bump(v, 2);
   };
   walk(def, "");
+  if (def.type === "polar" || def.type === "deck") for (const k of def.kinds) bump(k, def.maxAlive);
   return out;
 }

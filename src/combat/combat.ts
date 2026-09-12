@@ -12,6 +12,7 @@ import type { Audio } from "@/audio/audio";
 import type { Lockable, Tracked } from "@/combat/targets";
 import { noEdge } from "@/render/layers";
 import { glowMaterial } from "@/render/toon";
+import { SolidField, solidHit } from "@/world/solid";
 
 /** Ship-local gun muzzles (port, starboard), under the nose chines. */
 const GUNS: [number, number, number][] = [
@@ -20,7 +21,7 @@ const GUNS: [number, number, number][] = [
 ];
 
 /** What landed the killing blow, so the loss card can name it instead of always blaming the belt. */
-export type DeathCause = "rock" | "enemy" | "unknown";
+export type DeathCause = "rock" | "enemy" | "terrain" | "hull" | "unknown";
 
 export interface PlayerState {
   hp: number;
@@ -80,6 +81,11 @@ export class Combat {
   readonly extras: Lockable[] = [];
   /** mission-owned things enemy rounds can hurt (an escort) */
   readonly friendlies: Lockable[] = [];
+  readonly solids = new SolidField();
+  private readonly surfaceHit = solidHit();
+  /** Only an authored hyperspace transit suppresses player weapons/damage. */
+  inTransit = false;
+  impactCause: DeathCause = "rock";
   ammo = T.missile.count;
   /** rack size and hull points for the current ship (stats × T) */
   maxAmmo = T.missile.count;
@@ -133,12 +139,13 @@ export class Combat {
       _p.copy(flight.pos).addScaledVector(flight.lastImpactNormal, -T.arena.shipRadius * flight.stats.size * 0.8);
       this.fx.crash(_p, flight.lastImpactNormal, flight.lastImpact);
       flight.lastImpact = 0;
-      if (dmg > 0) this.hurt(dmg, flight, "rock");
+      if (dmg > 0) this.hurt(dmg, flight, this.impactCause);
+      this.impactCause = "rock";
     }
     if (P.dying > 0) this.dieTick(dt, flight);
 
     // player cannons: alternate guns at fireRate
-    if (P.alive && P.dying === 0 && input.fire && input.locked) {
+    if (P.alive && P.dying === 0 && !this.inTransit && input.fire && input.locked) {
       this.fireAcc += dt * T.weapons.fireRate;
       while (this.fireAcc >= 1) {
         this.fireAcc -= 1;
@@ -179,8 +186,14 @@ export class Combat {
         continue;
       }
       s.pos.addScaledVector(s.vel, dt);
-      if (s.side === "player") this.hitEnemies(s);
-      else this.hitPlayer(s, flight);
+      const blocked = this.solids.sweep(s.prevPos, s.pos, 0, this.surfaceHit);
+      if (blocked) s.pos.copy(this.surfaceHit.point);
+      if (s.side !== "enemy") this.hitEnemies(s, blocked ? this.surfaceHit.solid : undefined);
+      else this.hitPlayer(s, flight, blocked ? this.surfaceHit.solid : undefined);
+      if (s.alive && blocked) {
+        this.shots.kill(s);
+        this.fx.spark(s.pos);
+      }
       if (s.alive) this.hitRocks(s);
     }
   }
@@ -212,7 +225,7 @@ export class Combat {
       this.lock = Math.min(1, this.lock + dt / M.lockTime);
       if (was < 1 && this.lock >= 1) this.audio.lock();
     }
-    if (input.alt && this.player.alive && this.player.dying === 0 && this.ammo > 0 && this.missileCd <= 0 && best && this.lock >= 1) {
+    if (input.alt && !this.inTransit && this.player.alive && this.player.dying === 0 && this.ammo > 0 && this.missileCd <= 0 && best && this.lock >= 1) {
       _p.set(0, -0.6 * flight.stats.size, 2.0 * flight.stats.size).applyQuaternion(flight.quat).add(flight.pos);
       if (this.missiles.fire(_p, _fwdv, this.player.vel, best)) {
         this.ammo--;
@@ -223,10 +236,12 @@ export class Combat {
     this.missiles.tick(dt);
     for (const m of this.missiles.list) {
       if (!m.alive) continue;
+      const blocked = this.solids.sweep(m.prevPos, m.pos, 0, this.surfaceHit);
+      if (blocked) m.pos.copy(this.surfaceHit.point);
       for (const e of this.enemies.list) {
         if (!e.alive) continue;
         const r = e.radius + M.fuse;
-        if (m.pos.distanceToSquared(e.pos) > r * r) continue;
+        if (segDist2(m.prevPos, m.pos, e.pos) > r * r) continue;
         m.alive = false;
         this.fx.spawn(m.pos, e.vel, 3, undefined, "impact");
         this.audio.explosion(0.6);
@@ -237,13 +252,17 @@ export class Combat {
         for (const x of this.extras) {
           if (!x.alive) continue;
           const r = x.radius + M.fuse;
-          if (x.hits ? !x.hits(m.pos, m.pos) : m.pos.distanceToSquared(x.pos) > r * r) continue;
+          if ((x as object) !== this.surfaceHit.solid && (x.hits ? !x.hits(m.prevPos, m.pos) : segDist2(m.prevPos, m.pos, x.pos) > r * r)) continue;
           m.alive = false;
           this.fx.spawn(m.pos, ZEROV, 3, undefined, "impact");
           this.audio.explosion(0.6);
           x.damage(M.damage);
           break;
         }
+      if (m.alive && blocked) {
+        m.alive = false;
+        this.fx.spawn(m.pos, ZEROV, 2.5, undefined, "impact");
+      }
       if (m.alive) {
         for (let i = 0; i < this.rocks.count; i++) {
           const dx = m.pos.x - this.rocks.centers[i * 3]!, dy = m.pos.y - this.rocks.centers[i * 3 + 1]!, dz = m.pos.z - this.rocks.centers[i * 3 + 2]!;
@@ -266,30 +285,30 @@ export class Combat {
     this.reloadT = 0;
   }
 
-  private hitEnemies(s: Shot): void {
+  private hitEnemies(s: Shot, contact?: object): void {
     for (const e of this.enemies.list) {
       if (!e.alive || segDist2(s.prevPos, s.pos, e.pos) > e.radius * e.radius) continue;
       this.shots.kill(s);
-      this.player.hits++;
+      if (s.side === "player") this.player.hits++;
       this.fx.spark(s.pos);
       this.audio.hit();
-      if (this.enemies.damage(e, this.gunDamage)) this.destroy(e);
+      this.damageEnemy(e, s.side === "player" ? this.gunDamage : T.weapons.damage * s.dmg, s.side === "player");
       return;
     }
     for (const x of this.extras) {
-      if (!x.alive || (x.hits ? !x.hits(s.prevPos, s.pos) : segDist2(s.prevPos, s.pos, x.pos) > x.radius * x.radius)) continue;
+      if (!x.alive || (x !== contact && (x.hits ? !x.hits(s.prevPos, s.pos) : segDist2(s.prevPos, s.pos, x.pos) > x.radius * x.radius))) continue;
       this.shots.kill(s);
-      this.player.hits++;
+      if (s.side === "player") this.player.hits++;
       this.fx.spark(s.pos);
       this.audio.hit();
-      x.damage(this.gunDamage);
+      x.damage(s.side === "player" ? this.gunDamage : T.weapons.damage * s.dmg);
       return;
     }
   }
 
-  private hitPlayer(s: Shot, flight: Flight): void {
+  private hitPlayer(s: Shot, flight: Flight, contact?: object): void {
     for (const x of this.friendlies) {
-      if (!x.alive || segDist2(s.prevPos, s.pos, x.pos) > x.radius * x.radius) continue;
+      if (!x.alive || (x !== contact && (x.hits ? !x.hits(s.prevPos, s.pos) : segDist2(s.prevPos, s.pos, x.pos) > x.radius * x.radius))) continue;
       this.shots.kill(s);
       this.fx.spark(s.pos);
       x.damage(T.weapons.enemyDamage * s.dmg * D.enemyDamage);
@@ -306,7 +325,7 @@ export class Combat {
   /** Every source of player damage comes through here; a dying ship takes no more. */
   /** `cause` is what the loss card says took you down; the last one to land the killing blow wins. */
   hurt(amount: number, flight: Flight, cause: DeathCause = "unknown"): void {
-    if (this.practice) return;
+    if (this.practice || this.inTransit) return;
     const P = this.player;
     if (!P.alive || P.dying > 0) return;
     P.hp -= amount;
@@ -371,6 +390,13 @@ export class Combat {
   burst(pos: THREE.Vector3, vel: THREE.Vector3, scale: number, loud = 0.8): void {
     this.fx.spawn(pos, vel, scale);
     this.audio.explosion(loud);
+  }
+
+  /** Allied fire and scripted battle events share destruction effects without inventing player kills. */
+  damageEnemy(enemy: Enemy, amount: number, byPlayer = false): boolean {
+    if (!enemy.alive || !this.enemies.damage(enemy, amount)) return false;
+    this.destroy(enemy, byPlayer);
+    return true;
   }
 
   private destroy(e: Enemy, byPlayer = true): void {

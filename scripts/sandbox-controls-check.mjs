@@ -48,7 +48,8 @@ tick();key('KeyB');now+=300;tick();assert.equal(input.move.dir,'none','plain cho
 key('KeyJ');input.setEnabled(false);tick();assert.equal(input.moveFired,false,'pause discards queued shortcut');
 key('KeyJ');tick();assert.equal(input.moveFired,false,'paused shortcut ignored');
 input.setEnabled(true);tick();assert.equal(input.moveFired,false,'resume does not replay paused input');
-const normal=new Flight();normal.boostEnergy=.01;key('Digit2');tick();normal.tick(1/60,input);assert.equal(normal.move,null,'normal flight still refuses unaffordable move');
+const normal=new Flight();normal.boostEnergy=.01;key('Digit2');tick();normal.tick(1/60,input);assert.equal(normal.move,null,'normal flight still refuses unaffordable move');assert(normal.moveFeedback.includes('NEED'),'unaffordable shortcut explains its cost');
+const busy=new Flight();key('Digit2');tick();busy.tick(1/60,input);const paid=busy.boostEnergy;key('Digit3');tick();busy.tick(1/60,input);assert.equal(busy.boostEnergy,paid,'busy press cannot charge twice');assert(busy.moveFeedback.includes('FINISH'),'busy shortcut explains why it did not start');
 const migrated=mergeMoveBinds({cobra:'KeyW',lunge:'Escape','scissor-left':'KeyJ','scissor-right':'KeyJ'},DEFAULT_BINDS);
 assert.equal(new Set(Object.values(migrated)).size,4,'invalid/duplicate saved move bindings repaired');
 assert(!Object.values(migrated).some(k=>Object.values(DEFAULT_BINDS).includes(k)),'migration preserves basic flight keys');

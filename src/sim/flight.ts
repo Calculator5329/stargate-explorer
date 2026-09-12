@@ -61,6 +61,8 @@ export class Flight {
   /** the move in progress and how far into it we are (s) */
   move: MoveDef | null = null;
   moveT = 0;
+  moveFeedback = "";
+  moveFeedbackT = 0;
   /** Powered move thrust, for the existing engine presentation. */
   moveThrust = false;
   private readonly moveFrame = new Quaternion();
@@ -92,6 +94,8 @@ export class Flight {
     this.barrelLeft = 0;
     this.move = null;
     this.moveT = 0;
+    this.moveFeedback = "";
+    this.moveFeedbackT = 0;
     this.moveThrust = false;
     this.moveOffsetVel.set(0, 0, 0);
     this.pendingMove = null;
@@ -125,6 +129,8 @@ export class Flight {
     this.prevQuat.copy(this.quat);
     const f = T.flight;
     this.sinceHit += dt;
+    this.moveFeedbackT = Math.max(0, this.moveFeedbackT - dt);
+    if (!this.moveFeedbackT) this.moveFeedback = "";
     if (this.dead) {
       this.quat.multiply(_q.setFromAxisAngle(_n.set(0.6, 0.3, 1).normalize(), 2.2 * dt)).normalize();
       this.vel.multiplyScalar(Math.exp(-0.5 * dt));
@@ -144,9 +150,14 @@ export class Flight {
       const m = this.moves.find((x) => x.id === this.pendingMove);
       this.pendingMove = null;
       if (m) this.beginMove(m, false);
-    } else if (input.moveFired && this.move === null) {
+    } else if (input.moveFired) {
       const m = findMove(this.moves, input.move.key, input.move.dir);
-      if (m && this.boostEnergy >= m.cost) this.beginMove(m, true);
+      if (m) {
+        this.moveFeedbackT = 1.4;
+        if (this.move) this.moveFeedback = `FINISH ${this.move.name.toUpperCase()} FIRST`;
+        else if (this.boostEnergy < m.cost) this.moveFeedback = `NEED ${Math.ceil(m.cost * 100)}% BOOST · ${Math.floor(this.boostEnergy * 100)}% AVAILABLE`;
+        else { this.beginMove(m, true); this.moveFeedback = `${m.name.toUpperCase()} · −${Math.round(m.cost * 100)}% BOOST`; }
+      }
     }
     const mv = this.move;
     if (mv) {

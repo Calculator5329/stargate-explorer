@@ -22,6 +22,8 @@ export interface SystemDef {
   arena?: number;
   /** who flies against you here: recolours every enemy hull (PALETTES); omitted = each hull's own default */
   faction?: FactionName;
+  /** A local daylight battlefield; hides the distant planet and space sky. */
+  atmosphere?: "polar";
 }
 
 // Rock tints, one per base shape (six shapes cycle through them). Ethan 2026-09-05: "maybe gray, maybe
@@ -37,6 +39,16 @@ const mix = (...fams: number[][]): number[] => {
 };
 
 export const SYSTEMS: SystemDef[] = [
+  {
+    id: "antarctica", name: "EARTH · ANTARCTICA", blurb: "The ice shelf, the outpost and the defense of Earth.",
+    sky: "frost", planet: "ice", planetPos: [0, -20000, 0], sunDir: [-.55, .72, -.25], arena: 5800, atmosphere: "polar",
+    belt: { count: 1, seed: 722, inner: 20000, outer: 21000, thickness: 10, shapes: 1 },
+  },
+  {
+    id: "superweapon", name: "ANUBIS · SUPERWEAPON", blurb: "A shielded mothership. One brief jump, one vulnerable cooling port.",
+    sky: "deepSpace", planet: "desert", planetPos: [-7000, -6000, -10000], sunDir: [.4, .65, .6], arena: 5500,
+    belt: { count: 1, seed: 701, inner: 20000, outer: 21000, thickness: 10, shapes: 1 },
+  },
   {
     id: "abydos",
     name: "ABYDOS",

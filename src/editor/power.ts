@@ -16,7 +16,7 @@ import type { LevelDef, Wave } from "@/mission/levels";
  *   pressure kill rate demanded / kill rate available (hold, intercept, strike); above 1 the clock wins
  */
 export interface PowerRead {
-  threat: number;
+  threat: number | null;
   clearMin: number;
   pressure: number;
   enemyHp: number;
@@ -110,6 +110,12 @@ export function power(level: LevelDef, ship: PlayerShip): PowerRead {
   const p = player(ship);
   const base = { pressure: 0, ship: ship.id, note: "" };
   switch (level.type) {
+    case "polar":
+    case "deck": {
+      const seconds = level.type === "polar" ? 1590 / level.escortSpeed + level.defenseSeconds + level.droneSeconds : level.timeLimit;
+      const mix = cycle(level.maxAlive, level.kinds);
+      return { ...base, threat: null, clearMin: seconds / 60, enemyHp: sum(mix.map(kindHp)), peakDps: sum(mix.map(kindDps)), note: "Fleet threat estimate unavailable: allied interception and terrain cover require playtesting. Time is the authored route/window." };
+    }
     case "clear":
       return { ...base, ...waves(level.waves, p), note: `${level.waves.length} waves, ${sum(level.waves.map((w) => w.count))} ships` };
     case "protect": {

@@ -27,7 +27,7 @@ export class Minimap {
   }
 
   /** Redrawn at 30 Hz: the sim it shows moves at 60, and a 180 px map does not need 240 canvas passes a second. */
-  update(flight: Flight, enemies: Enemy[], marker: Tracked | null, dt = 1): void {
+  update(flight: Flight, enemies: Enemy[], marker: Tracked | null, dt = 1, friendlies: readonly Tracked[] = []): void {
     this.sinceDraw += dt;
     if (this.sinceDraw < 1 / 30) return;
     this.sinceDraw = 0;
@@ -67,6 +67,12 @@ export class Minimap {
       c.fill();
     }
     c.globalAlpha = 1;
+    c.fillStyle = "#72e2d0";
+    for (const ally of friendlies) {
+      if (!ally.alive) continue;
+      const x = sx(ally.pos.x - P.x, ally.pos.z - P.z), y = sy(ally.pos.x - P.x, ally.pos.z - P.z);
+      c.fillRect(x - 2.5 * px, y - 2.5 * px, 5 * px, 5 * px);
+    }
     // enemies
     c.fillStyle = "#ff5a4a";
     for (const e of enemies) {

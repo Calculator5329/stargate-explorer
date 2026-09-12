@@ -1,6 +1,8 @@
 import { PALETTES } from '@/ships/palettes';
 import { originalArt } from '@/ships/art-version';
 import * as THREE from "three";
+import type { Solid } from "@/world/solid";
+import { solidHit } from "@/world/solid";
 import { T, clamp } from "@/core/tunables";
 import { D } from "@/core/difficulty";
 import { ENEMY_KINDS, type EnemyKind, type EnemyStats } from "@/combat/enemy-kinds";
@@ -111,6 +113,9 @@ export class Enemies {
   readonly list: Enemy[] = [];
   /** what gliders go after; [0] is always the player, missions may append an escort (listed twice = two thirds of spawns) */
   readonly targets: Target[] = [];
+  /** Optional mission geometry: steer away before contact and resolve real terrain/deck hits. */
+  terrain: Solid | null = null;
+  private readonly surfaceHit = solidHit();
   private spawned = 0;
   /** set by combat: crash dust at a rock scrape */
   onCrash: ((pos: THREE.Vector3, normal: THREE.Vector3, speed: number) => void) | null = null;
@@ -282,6 +287,13 @@ export class Enemies {
         targetSpeed = e.steerSpeed;
       }
 
+      if (this.terrain) {
+        _lead.copy(e.pos).addScaledVector(e.vel, T.episode.avoidSeconds);
+        if (this.terrain.sweep(e.pos, _lead, e.radius + T.episode.avoidMargin, this.surfaceHit)) {
+          _want.addScaledVector(this.surfaceHit.normal, T.episode.avoidStrength);
+        }
+      }
+
       // rocks ahead push the wanted direction away; the arena edge pulls it home
       const R = this.rocks;
       // a scripted runner holds a straight line at speed through the belt, so it looks further ahead than the brain does (avoidDist is half a second at ace speed)
@@ -312,6 +324,15 @@ export class Enemies {
       _fwd.set(0, 0, 1).applyQuaternion(e.quat);
       e.vel.lerp(_tmp.copy(_fwd).multiplyScalar(e.speed), 1 - Math.exp(-6 * dt));
       e.pos.addScaledVector(e.vel, dt);
+      if (this.terrain?.sweep(e.prevPos, e.pos, e.radius, this.surfaceHit)) {
+        e.pos.copy(this.surfaceHit.point).addScaledVector(this.surfaceHit.normal, .1);
+        const impact = -e.vel.dot(this.surfaceHit.normal);
+        if (impact > T.rocks.crashKill) {
+          if (this.damage(e, e.hp + 1)) this.crashed.push(e);
+          continue;
+        }
+        if (impact > 0) e.vel.addScaledVector(this.surfaceHit.normal, impact * 1.5);
+      }
       this.rockHit(e);
     }
   }

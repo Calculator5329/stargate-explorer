@@ -1,0 +1,9 @@
+PASS: paid multi-stage trajectories, real vector thrust, 180-degree reversal, 720-degree helix, mirrored cuts, all-hull rotation, landscape/portrait camera fit, bounded fading ribbons.
+{"id":"cobra","aspect":1.7777777777777777,"agility":1,"peakSpeed":680.0000000000003,"peakSide":7.784081993332832e-30,"peakLift":63.82947853688953,"turnDegrees":359.9999999999745,"maxScreen":0.3117469182951182,"frames":225}
+{"id":"cobra","aspect":0.8,"agility":1,"peakSpeed":680.0000000000003,"peakSide":7.784081993332832e-30,"peakLift":63.82947853688953,"turnDegrees":359.9999999999745,"maxScreen":0.3540349684329059,"frames":225}
+{"id":"lunge","aspect":1.7777777777777777,"agility":1,"peakSpeed":842.8671306914276,"peakSide":24.906138032623105,"peakLift":46.53391158473787,"turnDegrees":719.999999999982,"maxScreen":0.2838003725810958,"frames":216}
+{"id":"lunge","aspect":0.8,"agility":1,"peakSpeed":842.8671306914276,"peakSide":24.906138032623105,"peakLift":46.53391158473787,"turnDegrees":719.999999999982,"maxScreen":0.12347213474538488,"frames":216}
+{"id":"scissor-left","aspect":1.7777777777777777,"agility":1,"peakSpeed":700,"peakSide":108.00000000000001,"peakLift":6.110841001248056e-14,"turnDegrees":600.0000017075141,"maxScreen":0.2864001950109614,"frames":240}
+{"id":"scissor-left","aspect":0.8,"agility":1,"peakSpeed":700,"peakSide":108.00000000000001,"peakLift":6.110841001248056e-14,"turnDegrees":600.0000017075141,"maxScreen":0.2590541154863597,"frames":240}
+{"id":"scissor-right","aspect":1.7777777777777777,"agility":1,"peakSpeed":700,"peakSide":108.00000000000001,"peakLift":6.110841001248056e-14,"turnDegrees":600.0000017075141,"maxScreen":0.2864001950109614,"frames":240}
+{"id":"scissor-right","aspect":0.8,"agility":1,"peakSpeed":700,"peakSide":108.00000000000001,"peakLift":6.110841001248056e-14,"turnDegrees":600.0000017075141,"maxScreen":0.2590541154863597,"frames":240}

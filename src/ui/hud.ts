@@ -134,7 +134,7 @@ export class Hud {
     if (bw !== this.lastBoostW) (this.lastBoostW = bw), (this.boostEl.style.width = bw);
     this.boostEl.classList.toggle("low", flight.boostEnergy < T.flight.boostMinEngage && !flight.boosting);
     // the running move's name sits on the bar it was paid from
-    const mv = flight.move?.name.toUpperCase() ?? "";
+    const mv = flight.moveFeedback || (flight.move ? `${flight.move.name.toUpperCase()} · ${Math.round(flight.moveT / flight.move.duration * 100)}%` : "");
     if (mv !== this.lastMove) {
       this.lastMove = mv;
       if (mv) this.moveEl.textContent = mv;

@@ -74,6 +74,15 @@ export abstract class Mission {
   /** Per render frame, for visuals only; `alpha` is the sim interpolation for anything the mission moves per tick. */
   render(_dt: number, _alpha = 1): void {}
 
+  /** Move mission craft and resolve the player's environment before weapons read their positions. */
+  beforeCombat(_dt: number): void {}
+
+  /** A short authored travel beat may own the player's pose; normal flight resumes afterwards. */
+  get holdsFlight(): boolean { return false; }
+
+  /** Keep the return gate clear of mission geometry (terrain or a capital deck). */
+  placeReturnGate(_pos: THREE.Vector3): void {}
+
   /** Card body on completion. */
   summary(): string {
     const P = this.ctx.combat.player;
@@ -91,7 +100,7 @@ export abstract class Mission {
     const P = this.ctx.combat.player;
     // this used to blame the belt whatever killed you, which reads as a bug the first time a glider shoots
     // you down in open space
-    const end = P.cause === "rock" ? "before the belt took you." : P.cause === "enemy" ? "before they got you." : "before the hull gave out.";
+    const end = P.cause === "rock" ? "before the belt took you." : P.cause === "terrain" ? "before impact with the ice." : P.cause === "hull" ? "before impact with the mothership." : P.cause === "enemy" ? "before they got you." : "before the hull gave out.";
     return `${P.kills} gliders down ${end}`;
   }
 

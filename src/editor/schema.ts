@@ -44,6 +44,8 @@ const COURSE: Field[] = [
 ];
 
 export const TYPE_FIELDS: Record<LevelDef["type"], Field[]> = {
+  polar: [n("escortHp", "cargo hull", 50, 5000, 10), n("escortSpeed", "escort speed (m/s)", 5, 120), n("carrierHp", "carrier hull", 100, 10000, 50), n("siteHp", "outpost hull", 50, 5000, 10), n("defenseSeconds", "hold outpost (s)", 10, 300), n("firstDelay", "first attack (s)", 0, 60), n("interval", "attack interval (s)", 2, 120), n("groupSize", "attackers per group", 1, 12), n("maxAlive", "maximum attackers", 1, 24), n("defenders", "allied fighters", 0, 6), n("droneSeconds", "drone finale (s)", 8, 60), { key: "kinds", label: "attacker kinds", kind: "kinds" }],
+  deck: [n("ventHp", "cooling vent hull", 40, 1000, 10), n("turretHp", "deck gun hull", 10, 300, 10), n("timeLimit", "strike window (s)", 30, 600), n("escapeSeconds", "escape window (s)", 10, 120), n("escorts", "enemy fighters at start", 0, 12), n("maxAlive", "maximum attackers", 1, 24), n("interval", "reinforcement interval (s)", 2, 120), n("defenders", "allied fighters", 0, 6), { key: "kinds", label: "attacker kinds", kind: "kinds" }],
   clear: [{ key: "finaleLine", label: "finale line", kind: "text" }],
   protect: [
     { key: "finaleLine", label: "finale line", kind: "text" },
@@ -119,6 +121,8 @@ export const TYPE_FIELDS: Record<LevelDef["type"], Field[]> = {
 };
 
 export const TYPE_LABEL: Record<LevelDef["type"], string> = {
+  polar: "POLAR (escort + outpost defense)",
+  deck: "DECK (jump + surface strike)",
   clear: "CLEAR (waves)",
   protect: "PROTECT (escort + waves)",
   run: "RUN (gate chain)",
@@ -133,6 +137,8 @@ export const TYPE_LABEL: Record<LevelDef["type"], string> = {
 
 /** one plain sentence per type: what the player does, how it is won, how it is lost */
 export const TYPE_HELP: Record<LevelDef["type"], string> = {
+  polar: "Escort the cargo ship over solid ice, protect the outpost and carrier, and hold until the drones clear the sky.",
+  deck: "Cross the jump ring, destroy the cooling vent and escape before the timer expires. Deck guns and fighters defend the solid mothership.",
   clear: "Waves of enemies spawn round you, one after another. Win when the last wave is dead; lose when your hull is gone.",
   protect: "A big friendly ship crawls toward the gate while waves come in. Win when the waves are done and the escort lives; lose if it dies or you do.",
   run: "Fly a chain of gates before the clock runs out. Chasers can join at a chosen gate and mines can sit on the gates.",
@@ -150,6 +156,8 @@ export function defaultsFor(type: LevelDef["type"], from: Partial<LevelDef> & { 
   const base = { id: from.id, system: from.system, title: from.title ?? "NEW SORTIE", blurb: from.blurb ?? "", intro: from.intro ?? ["Briefing goes here."], ...(from.requires ? { requires: from.requires } : {}), ...(from.unlocks ? { unlocks: from.unlocks } : {}), ...(from.act ? { act: from.act } : {}), ...(from.board ? { board: from.board } : {}) };
   const course = { rings: 8, spacing: 600, wander: 350, ringRadius: 34, timeLimit: 120, harassAt: 99, harass: 0, minesPerGate: 0 };
   switch (type) {
+    case "polar": return { ...base, type, system: "antarctica", start: { pos: [0, 70, -1850], yaw: 0 }, escortHp: 550, escortSpeed: 30, carrierHp: 1800, siteHp: 800, defenseSeconds: 90, firstDelay: 5, interval: 16, maxAlive: 12, groupSize: 4, defenders: 3, droneSeconds: 18, kinds: ["glider", "glider", "bomber", "interceptor"] };
+    case "deck": return { ...base, type, system: "superweapon", start: { pos: [0, 250, 2250], yaw: Math.PI }, ventHp: 300, turretHp: 80, timeLimit: 240, escapeSeconds: 32, escorts: 4, maxAlive: 8, interval: 22, defenders: 2, kinds: ["glider", "interceptor"] };
     case "clear":
       return { ...base, type, waves: [{ count: 3, delay: 4, near: 700, far: 900 }], finaleLine: "Last wave." };
     case "protect":

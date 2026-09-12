@@ -3,7 +3,7 @@ import { T } from "@/core/tunables";
 import { noEdge } from "@/render/layers";
 
 /** Who fired: player shots hit enemies, enemy shots hit the player. */
-export type Side = "player" | "enemy";
+export type Side = "player" | "enemy" | "ally";
 
 export interface Shot {
   alive: boolean;
@@ -44,22 +44,23 @@ export class Projectiles {
     this.meshes = {
       player: noEdge(new THREE.InstancedMesh(geo, mat(0xbfe6ff, 2.6), capacity)),
       enemy: noEdge(new THREE.InstancedMesh(geo, mat(0xffa040, 2.6), capacity)),
+      ally: noEdge(new THREE.InstancedMesh(geo, mat(0x73e4dc, 2.0), capacity)),
     };
-    for (const side of ["player", "enemy"] as const) {
+    for (const side of ["player", "enemy", "ally"] as const) {
       const m = this.meshes[side];
       m.frustumCulled = false;
       for (let i = 0; i < capacity; i++) m.setMatrixAt(i, HIDDEN);
       this.group.add(m);
     }
-    for (let i = 0; i < capacity * 2; i++) {
-      this.shots.push({ alive: false, side: i < capacity ? "player" : "enemy", pos: new THREE.Vector3(), prevPos: new THREE.Vector3(), vel: new THREE.Vector3(), ttl: 0, dmg: 1 });
+    for (let i = 0; i < capacity * 3; i++) {
+      this.shots.push({ alive: false, side: i < capacity ? "player" : i < capacity * 2 ? "enemy" : "ally", pos: new THREE.Vector3(), prevPos: new THREE.Vector3(), vel: new THREE.Vector3(), ttl: 0, dmg: 1 });
     }
   }
 
   /** Spawn a round at `pos` travelling along `dir` at the side's muzzle speed plus the shooter's velocity. */
   fire(side: Side, pos: THREE.Vector3, dir: THREE.Vector3, shooterVel: THREE.Vector3, dmg = 1): Shot | null {
     const w = T.weapons;
-    const speed = side === "player" ? w.muzzleSpeed : w.enemyMuzzleSpeed;
+    const speed = side === "enemy" ? w.enemyMuzzleSpeed : w.muzzleSpeed;
     return this.spawn(side, pos, _dir.copy(dir).multiplyScalar(speed).add(shooterVel), w.range / speed, dmg);
   }
 
@@ -99,12 +100,12 @@ export class Projectiles {
 
   /** Rebuild instance matrices: length follows speed so a tracer is a streak, not a dot. `alpha` interpolates between ticks. */
   update(alpha = 1): void {
-    let pi = 0, ei = 0;
+    let pi = 0, ei = 0, ai = 0;
     const cap = this.meshes.player.count;
     for (const s of this.shots) {
       if (!s.alive) continue;
       const m = this.meshes[s.side];
-      const i = s.side === "player" ? pi++ : ei++;
+      const i = s.side === "player" ? pi++ : s.side === "enemy" ? ei++ : ai++;
       if (i >= cap) continue;
       const len = Math.max(6, s.vel.length() * T.weapons.tracerSec);
       _obj.position.copy(alpha < 1 ? _pos.lerpVectors(s.prevPos, s.pos, alpha) : s.pos).addScaledVector(_dir.copy(s.vel).normalize(), -len / 2);
@@ -115,7 +116,9 @@ export class Projectiles {
     }
     for (let i = pi; i < cap; i++) this.meshes.player.setMatrixAt(i, HIDDEN);
     for (let i = ei; i < cap; i++) this.meshes.enemy.setMatrixAt(i, HIDDEN);
+    for (let i = ai; i < cap; i++) this.meshes.ally.setMatrixAt(i, HIDDEN);
     this.meshes.player.instanceMatrix.needsUpdate = true;
     this.meshes.enemy.instanceMatrix.needsUpdate = true;
+    this.meshes.ally.instanceMatrix.needsUpdate = true;
   }
 }

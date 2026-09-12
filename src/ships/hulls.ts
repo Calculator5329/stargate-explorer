@@ -11,12 +11,14 @@ import { DART, DART_ORIGINAL } from "@/ships/dart-def";
 import { LANCER, LANCER_ORIGINAL } from "@/ships/lancer-def";
 import { BOMBER, BOMBER_ORIGINAL } from "@/combat/bomber-def";
 import { ACE } from "@/combat/enemy-kinds";
+import { CARGO_SHIP, CARRIER_SHIP, RACE_TRANSPORT_SHIP } from "@/ships/episode-earth";
 
 /**
  * Every hull def by key, player and enemy alike, so `?view=side&hull=<key>`
  * can inspect any of them. Enemy hulls register here as they are added.
  */
 export const HULLS: Record<string, ShipDef> = { f11: PLAYER_HULL, original: F11_HALBERD, prometheus: PROMETHEUS, glider: GLIDER, interceptor: INTERCEPTOR, gunboat: GUNBOAT, racer: RACER, heavy: HEAVY, dart: DART, lancer: LANCER, bomber: BOMBER, ace: ACE };
+Object.assign(HULLS, { cargo: CARGO_SHIP, carrier: CARRIER_SHIP, civilian: RACE_TRANSPORT_SHIP });
 
 /** Preserved, inspectable pre-refinement designs. */
 export const ORIGINAL_HULLS: Record<string, ShipDef> = {f11:PLAYER_ORIGINAL,prometheus:PROMETHEUS_ORIGINAL,glider:GLIDER_ORIGINAL,bomber:BOMBER_ORIGINAL,heavy:HEAVY_ORIGINAL,dart:DART_ORIGINAL,lancer:LANCER_ORIGINAL,racer:RACER_ORIGINAL,interceptor:INTERCEPTOR_ORIGINAL,gunboat:GUNBOAT_ORIGINAL,ace:{...GLIDER_ORIGINAL,name:'Ace',palette:ACE.palette}};

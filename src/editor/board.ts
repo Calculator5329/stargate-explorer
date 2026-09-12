@@ -24,8 +24,8 @@ export interface BoardOpts {
   shipOverride: () => string | null;
 }
 
-export function threatBand(t: number): "low" | "mid" | "high" {
-  return t < 0.45 ? "low" : t < 0.9 ? "mid" : "high";
+export function threatBand(t: number | null): "low" | "mid" | "high" {
+  return (t ?? 0) < 0.45 ? "low" : (t ?? 0) < 0.9 ? "mid" : "high";
 }
 
 export function readFor(levels: readonly LevelDef[], l: LevelDef, override: string | null): PowerRead {
@@ -147,7 +147,7 @@ export class Board {
       g.append(el("text", { x: 10, y: 54, class: "sub" }, l.unlocks && SHIPS[l.unlocks] ? `unlocks ${SHIPS[l.unlocks]!.def.name}` : r.ship === "f11" ? "" : `in the ${SHIPS[r.ship]?.def.name ?? r.ship}`));
       const pill = el("g", { class: `pill ${threatBand(r.threat)}`, transform: `translate(${NW - 50} 8)` });
       pill.append(el("rect", { width: 42, height: 16, rx: 8 }));
-      pill.append(el("text", { x: 21, y: 12, "text-anchor": "middle" }, `${Math.round(r.threat * 100)}%`));
+      pill.append(el("text", { x: 21, y: 12, "text-anchor": "middle" }, r.threat === null ? "N/A" : `${Math.round(r.threat * 100)}%`));
       g.append(pill);
       const fly = el("g", { class: "fly", transform: `translate(${NW - 50} ${NH - 24})` });
       fly.append(el("rect", { width: 42, height: 16, rx: 2 }));
@@ -170,8 +170,8 @@ export class Board {
         rows.push(`<div class="curve-act">${esc(c.acts.find((a) => a.id === l.act)?.title ?? "(no act)")}</div>`);
         prevAct = l.act ?? "";
       }
-      const pct = Math.round(r.threat * 100);
-      rows.push(`<div class="curve-row${l.id === sel ? " sel" : ""}" data-id="${esc(l.id)}"><span class="cl">${esc(l.title)} <em>${l.type}</em></span><span class="bar"><i class="${threatBand(r.threat)}" style="width:${Math.min(100, r.threat * 66)}%"></i></span><span class="cv">${pct}%</span><span class="cm">${r.clearMin.toFixed(1)} min</span><span class="cs">${esc(SHIPS[r.ship]?.def.name ?? r.ship)}</span></div>`);
+      const pct = r.threat === null ? "N/A" : `${Math.round(r.threat * 100)}%`;
+      rows.push(`<div class="curve-row${l.id === sel ? " sel" : ""}" data-id="${esc(l.id)}"><span class="cl">${esc(l.title)} <em>${l.type}</em></span><span class="bar"><i class="${threatBand(r.threat)}" style="width:${Math.min(100, (r.threat ?? 0) * 66)}%"></i></span><span class="cv">${pct}</span><span class="cm">${r.clearMin.toFixed(1)} min</span><span class="cs">${esc(SHIPS[r.ship]?.def.name ?? r.ship)}</span></div>`);
     }
     this.curve.innerHTML = rows.join("");
     for (const row of this.curve.querySelectorAll<HTMLElement>(".curve-row")) row.onclick = () => this.o.select(row.dataset.id!);

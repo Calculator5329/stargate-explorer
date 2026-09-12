@@ -1,0 +1,44 @@
+[
+  {
+    "name": "Interceptor",
+    "id": "interceptor",
+    "state": [
+      "2,504 triangles · 8 draws · static art study"
+    ]
+  },
+  {
+    "name": "Gunboat",
+    "id": "gunboat",
+    "state": [
+      "4,016 triangles · 10 draws · static art study"
+    ]
+  },
+  {
+    "name": "Racer",
+    "id": "racer",
+    "state": [
+      "3,144 triangles · 8 draws · static art study"
+    ]
+  },
+  {
+    "name": "F-21 Broadsword",
+    "id": "heavy",
+    "state": [
+      "5,064 triangles · 12 draws · static art study"
+    ]
+  },
+  {
+    "name": "F-19 Dart",
+    "id": "dart",
+    "state": [
+      "4,008 triangles · 12 draws · static art study"
+    ]
+  },
+  {
+    "name": "Ace",
+    "id": "ace",
+    "state": [
+      "2,504 triangles · 8 draws · static art study"
+    ]
+  }
+]

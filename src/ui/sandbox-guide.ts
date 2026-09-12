@@ -24,7 +24,7 @@ export class SandboxGuide {
   update(flight: Flight, input: Input): void {
     if (!this.active) return;
     // the bind table changes from the menu, not per frame: check it four times a second, not 240
-    const signature = this.frame++ % 15 === 0 || !this.signature ? JSON.stringify([flight.moves.map(m => [m.id, m.name, m.trigger]), input.moveBinds, input.binds]) : this.signature;
+    const signature = this.frame++ % 15 === 0 || !this.signature ? JSON.stringify([flight.moves.map(m => [m.id, m.name, m.trigger, m.cost, m.duration]), input.moveBinds, input.binds]) : this.signature;
     if (signature !== this.signature) {
       this.signature = signature;
       this.el.replaceChildren();
@@ -40,7 +40,7 @@ export class SandboxGuide {
         const name = document.createElement('span');
         name.textContent = move.name;
         const chord = document.createElement('small');
-        chord.textContent = `or ${chordName(move, directions).replace(' + ', ' then ')}`;
+        chord.textContent = `${Math.round(move.cost * 100)}% boost · ${move.duration.toFixed(1)} s · or ${chordName(move, directions).replace(' + ', ' then ')}`;
         name.append(chord);
         const state = document.createElement('b');
         row.append(key, name, state);
@@ -48,13 +48,14 @@ export class SandboxGuide {
         this.rows.set(move.id, { row, state });
       }
       const help = document.createElement('p');
-      help.textContent = 'Esc → Flight & move keys to rebind. Restart resets your position.';
+      help.textContent = 'Tap a shortcut once. Each move spends boost, then the sandbox refills it. Engine trails show the flight path. Esc → Flight & move keys to rebind.';
       this.el.append(help);
     }
     for (const [id, {row, state}] of this.rows) {
       const running = flight.move?.id === id;
       row.classList.toggle('active', running);
-      const label = running ? 'RUNNING' : flight.move ? 'WAIT' : 'READY';
+      const cost = flight.moves.find(m => m.id === id)?.cost ?? 0;
+      const label = running ? `${Math.round(flight.moveT / flight.move!.duration * 100)}%` : flight.move ? 'WAIT' : flight.boostEnergy < cost ? 'LOW BAR' : 'READY';
       if (state.textContent !== label) state.textContent = label;
     }
   }

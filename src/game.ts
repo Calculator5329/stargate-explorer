@@ -45,6 +45,9 @@ export class Game {
     this.enemies = new Enemies(world.asteroids, world.system.faction ? PALETTES[world.system.faction] : undefined);
     this.combat = new Combat(this.enemies, world.asteroids, ship, this.audio);
     this.combat.setShip(flight);
+    this.combat.player.pos.copy(flight.pos);
+    this.combat.player.vel.copy(flight.vel);
+    this.combat.player.fwd.set(0, 0, 1).applyQuaternion(flight.quat);
     this.flight = flight;
     this.replay.rocks = world.asteroids;
     this.combat.onKill = (pos, vel, scale, seed, victimId) => this.replay.markKill(pos, vel, this.flight, this.lastStick, scale, seed, victimId);
@@ -100,6 +103,7 @@ export class Game {
     this.lastStick.x = input.stick.x;
     this.lastStick.y = input.stick.y;
     this.replay.beginTick(dt);
+    this.mission.beforeCombat(dt);
     this.combat.tick(dt, flight, input);
     this.replay.record(dt, flight, this.enemies.list);
     this.mission.tick(dt);
@@ -139,6 +143,7 @@ export class Game {
       if (clear) break;
       _p.addScaledVector(_fwd, 120);
     }
+    this.mission.placeReturnGate(_p);
     this.gate.open(_p, _fwd);
     this.mission.marker = this.gate;
   }
@@ -148,12 +153,13 @@ export class Game {
     const mode = this.presentation;
     hud.setTravel(mode === "travel" || mode === "hub");
     hud.setReplay(mode === "replay");
-    if (mode === "paused") return;
-    const replaying = mode === "replay", flightVisible = mode === "flight";
+    const replaying = mode === "replay", flightVisible = mode === "flight" || mode === "paused";
     this.combat.group.visible = flightVisible || replaying;
     this.combat.shots.group.visible = this.combat.fx.group.visible = this.combat.missiles.group.visible = flightVisible;
     this.mission.group.visible = flightVisible || replaying;
     this.gate.group.visible = flightVisible && this.gate.alive;
+    // Arrival can end without pointer lock. Restore the scene before freezing animation.
+    if (mode === "paused") return;
     if (replaying) {
       for (const child of this.combat.ship.children) if (child.name === "muzzle-flash") child.visible = false;
       this.audio.setReplayRate(this.replay.playbackRate);
@@ -167,7 +173,7 @@ export class Game {
     this.audio.update(flight.speed / T.flight.boostSpeed, flight.boosting || flight.moveThrust);
     if (!this.mission.done) this.audio.setMood(this.enemies.aliveCount > 0 ? "combat" : "calm");
     hud.updateCombat(this.combat, this.mission, cam, this.combat.player.vel, this.replay.hasHighlight, this.gate.alive);
-    this.map.update(flight, this.enemies.list, this.mission.marker, dt);
+    this.map.update(flight, this.enemies.list, this.mission.marker, dt, this.combat.friendlies);
   }
 }
 
