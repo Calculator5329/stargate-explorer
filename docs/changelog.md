@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-12 — Tight grip and smoother Sidewinders
+
+Adopted Tight grip for normal flight and retained sandbox experiments. Sidewinders now bank, roll through one eased lateral displacement, recover and boost out; their costs and durations stay fixed. Added optional integrated smooth envelopes while preserving accepted Cobra/Vortex steps and audio. Build, five focused simulation/compatibility checks, actual browser shortcuts and full sequence review passed. [Evidence](evidence/2026-09-12-flight-lab.md).
+
 ## 2026-09-12 — Owner audio and flight verdict
 
 Ethan accepted the integrated sounds and Cobra/Vortex tricks. Recorded Tight grip as the preferred handling experiment so far and Sidewinder motion refinement as open work. No runtime change was needed to keep the new audio active.

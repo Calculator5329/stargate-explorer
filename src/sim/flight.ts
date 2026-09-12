@@ -3,7 +3,7 @@ import { T, clamp, lerp, moveToward } from "@/core/tunables";
 import type { Input } from "@/core/input";
 import type { ShipStats } from "@/ships/registry";
 import { handlingTurn, type Handling } from "@/sim/handling";
-import { MOVES, findMove, type MoveDef } from "@/sim/moves";
+import { MOVES, findMove, stepWeight, type MoveDef } from "@/sim/moves";
 
 const X = new Vector3(1, 0, 0);
 const Y = new Vector3(0, 1, 0);
@@ -131,7 +131,7 @@ export class Flight {
   turnGain(speedCoupled: boolean): number {
     const f = T.flight;
     return this.handling ? handlingTurn(this.handling, this.speed, this.stats.speed)
-      : speedCoupled ? lerp(f.turnSlowGain, f.turnFastGain, clamp((this.speed - f.minSpeed) / (f.boostSpeed - f.minSpeed), 0, 1)) : 1;
+      : handlingTurn(T.sandboxGrip, this.speed, this.stats.speed) * (speedCoupled ? lerp(f.turnSlowGain, f.turnFastGain, clamp((this.speed - f.minSpeed) / (f.boostSpeed - f.minSpeed), 0, 1)) : 1);
   }
 
   tick(dt: number, input: Input): void {
@@ -187,7 +187,7 @@ export class Flight {
     const S = this.stats;
     let targetSpeed = arcade ? f.cruiseSpeed : lerp(f.minSpeed, f.maxSpeed, this.throttle);
     let rate = f.accel;
-    if (this.braking) (targetSpeed = f.brakeSpeed), (rate = f.brakeDecel * (this.handling?.brake ?? 1));
+    if (this.braking) (targetSpeed = f.brakeSpeed), (rate = f.brakeDecel * (this.handling?.brake ?? T.sandboxGrip.brake));
     if (this.boosting) (targetSpeed = f.boostSpeed), (rate = f.boostAccel);
     targetSpeed *= S.speed;
     rate *= S.speed;
@@ -199,7 +199,7 @@ export class Flight {
       const t = this.moveT;
       for (const s of mv.steps) {
         // Integrate partial steps exactly, including their first/last fixed tick.
-        const weight = Math.max(0, Math.min(t, s.start + s.length) - Math.max(t - dt, s.start)) / dt;
+        const weight = stepWeight(s, t - dt, t);
         if (weight <= 0) continue;
         switch (s.kind) {
           case "brake":
@@ -249,7 +249,7 @@ export class Flight {
     const turnK = this.turnGain(input.scheme.speedTurn);
     const pitch = -(stickY * f.pitchRate * S.agility * turnK + snap) * dt;
     const yaw = -(stickX * f.yawRate * S.agility * turnK + moveYaw) * dt;
-    let roll = (rollKey * f.rollRate * S.agility * (this.handling?.roll ?? 1) + levelRoll + moveRoll) * dt;
+    let roll = (rollKey * f.rollRate * S.agility * (this.handling?.roll ?? T.sandboxGrip.roll) + levelRoll + moveRoll) * dt;
     if (moveHop !== 0) this.moveOffsetVel.addScaledVector(_right, moveHop);
     if (moveSlide !== 0) this.moveOffsetVel.addScaledVector(_n.copy(RIGHT).applyQuaternion(this.moveFrame), moveSlide);
     if (moveLift !== 0) this.moveOffsetVel.addScaledVector(_n.copy(Y).applyQuaternion(this.moveFrame), moveLift);
@@ -277,7 +277,7 @@ export class Flight {
         const decel = vf > targetSpeed && !this.braking && !moveBrake && !this.drifting ? f.coastDecel : rate;
         vf = moveToward(vf, targetSpeed, (vf > targetSpeed ? decel : rate) * dt);
         // a hard pull leaves the velocity behind for a moment, so the ship visibly slides through the turn
-        _lat.multiplyScalar(Math.exp(-f.latDamp * assistK * (mv ? 1 : this.handling?.grip ?? 1) * (snap !== 0 ? f.snapSlide : 1) * dt));
+        _lat.multiplyScalar(Math.exp(-f.latDamp * assistK * (mv ? 1 : this.handling?.grip ?? T.sandboxGrip.grip) * (snap !== 0 ? f.snapSlide : 1) * dt));
       } else {
         // drift mode: the nose is free, velocity only changes by thrust
         if (input.boost && this.boostEnergy > 0) vf += f.thrust * 2 * dt;

@@ -29,6 +29,18 @@ export interface MoveStep {
   start: number;
   length: number;
   amount: number;
+  /** Smooth onset and recovery, preserving the integrated step amount. Omitted = constant rate. */
+  ease?: "smooth";
+}
+
+/** Average step strength over a simulation interval; the smooth pulse integrates to one. */
+export function stepWeight(step: MoveStep, from: number, to: number): number {
+  if (step.ease !== "smooth") return Math.max(0, Math.min(to, step.start + step.length) - Math.max(from, step.start)) / (to - from);
+  if (step.length <= 0) return 0;
+  const a = Math.max(0, Math.min(1, (from - step.start) / step.length));
+  const b = Math.max(0, Math.min(1, (to - step.start) / step.length));
+  const area = b * b * (3 - 2 * b) - a * a * (3 - 2 * a);
+  return area * step.length / (to - from);
 }
 
 export interface MoveDef {
