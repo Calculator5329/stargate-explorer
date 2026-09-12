@@ -1,4 +1,8 @@
-# STATUS.md — as of 2026-09-08
+# STATUS.md — as of 2026-09-11
+
+## Episode graphics studies · 2026-09-11
+
+Nine new procedural ship models and twelve staged SG-1 episode concepts are available at `/episode-fleet.html`, with Antarctica first. This is an art review surface: campaign order, objectives, balance and level integration are deferred by Ethan. The current gameplay registry is unchanged. Build and real geometry checks pass; all nine hulls were captured in four views and all twelve scenes rendered in the in-app browser. [Review, captures and limits](evidence/2026-09-11-episode-fleet.md).
 
 ## Sandbox controls · 2026-09-08
 

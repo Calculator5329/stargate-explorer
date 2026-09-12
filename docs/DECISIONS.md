@@ -325,3 +325,7 @@ owns the bloom pass. Anything that wants to switch a render feature at runtime h
 it is in a program's cache key; if it is, the answer is a quality tier chosen at load, not an adaptive
 step. Tests of the controller must stop the render loop, because its own frames otherwise land in the
 window being fed and the reading is of a mixture.
+
+## 2026-09-11 — Episode art before mission integration
+
+Ethan requested episode-based ship and level graphics, with Antarctica as the centerpiece, and deferred order and implementation. Agent judgment: keep this pass in a separate Vite entry (`episode-fleet.html`) using the existing procedural Three.js geometry/material approach. Missing hulls live in `episode-earth.ts`, `episode-alien.ts` and `episode-machine.ts`; scene props live in `episode-scenes.ts`. The review composes these with existing ships without changing gameplay registries. Source facts, approximated shapes and proposed objectives are labeled separately. Ship sizes are review units, never canon measurements. This is revisitable art structure, not a new campaign format.

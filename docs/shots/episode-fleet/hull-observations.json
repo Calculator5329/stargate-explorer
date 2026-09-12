@@ -1,0 +1,794 @@
+[
+  {
+    "id": "carrier",
+    "angle": "perspective",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "10,560 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "BC-304",
+    "file": "docs/shots/episode-fleet/carrier-perspective.png"
+  },
+  {
+    "id": "carrier",
+    "angle": "top",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "10,560 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "BC-304",
+    "file": "docs/shots/episode-fleet/carrier-top.png"
+  },
+  {
+    "id": "carrier",
+    "angle": "side",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "10,560 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "BC-304",
+    "file": "docs/shots/episode-fleet/carrier-side.png"
+  },
+  {
+    "id": "carrier",
+    "angle": "rear",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "10,560 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "BC-304",
+    "file": "docs/shots/episode-fleet/carrier-rear.png"
+  },
+  {
+    "id": "cargo",
+    "angle": "perspective",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "1,832 triangles \u00b7 8 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "Tel\u2019tak",
+    "file": "docs/shots/episode-fleet/cargo-perspective.png"
+  },
+  {
+    "id": "cargo",
+    "angle": "top",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "1,832 triangles \u00b7 8 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "Tel\u2019tak",
+    "file": "docs/shots/episode-fleet/cargo-top.png"
+  },
+  {
+    "id": "cargo",
+    "angle": "side",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "1,832 triangles \u00b7 8 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "Tel\u2019tak",
+    "file": "docs/shots/episode-fleet/cargo-side.png"
+  },
+  {
+    "id": "cargo",
+    "angle": "rear",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "1,832 triangles \u00b7 8 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "Tel\u2019tak",
+    "file": "docs/shots/episode-fleet/cargo-rear.png"
+  },
+  {
+    "id": "hammer",
+    "angle": "perspective",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "1,752 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "Asgard O\u2019Neill class",
+    "file": "docs/shots/episode-fleet/hammer-perspective.png"
+  },
+  {
+    "id": "hammer",
+    "angle": "top",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "1,752 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "Asgard O\u2019Neill class",
+    "file": "docs/shots/episode-fleet/hammer-top.png"
+  },
+  {
+    "id": "hammer",
+    "angle": "side",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "1,752 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "Asgard O\u2019Neill class",
+    "file": "docs/shots/episode-fleet/hammer-side.png"
+  },
+  {
+    "id": "hammer",
+    "angle": "rear",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "1,752 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "Asgard O\u2019Neill class",
+    "file": "docs/shots/episode-fleet/hammer-rear.png"
+  },
+  {
+    "id": "science",
+    "angle": "perspective",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "2,720 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "Daniel Jackson class",
+    "file": "docs/shots/episode-fleet/science-perspective.png"
+  },
+  {
+    "id": "science",
+    "angle": "top",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "2,720 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "Daniel Jackson class",
+    "file": "docs/shots/episode-fleet/science-top.png"
+  },
+  {
+    "id": "science",
+    "angle": "side",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "2,720 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "Daniel Jackson class",
+    "file": "docs/shots/episode-fleet/science-side.png"
+  },
+  {
+    "id": "science",
+    "angle": "rear",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "2,720 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "title": "Daniel Jackson class",
+    "file": "docs/shots/episode-fleet/science-rear.png"
+  },
+  {
+    "id": "ring",
+    "angle": "perspective",
+    "error": null,
+    "rect": {
+      "bottom": 590.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 68.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 68.234375
+    },
+    "render": "4,948 triangles \u00b7 11 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      36
+    ],
+    "title": "Ori warship",
+    "file": "docs/shots/episode-fleet/ring-perspective.png"
+  },
+  {
+    "id": "ring",
+    "angle": "top",
+    "error": null,
+    "rect": {
+      "bottom": 590.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 68.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 68.234375
+    },
+    "render": "4,948 triangles \u00b7 11 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      36
+    ],
+    "title": "Ori warship",
+    "file": "docs/shots/episode-fleet/ring-top.png"
+  },
+  {
+    "id": "ring",
+    "angle": "side",
+    "error": null,
+    "rect": {
+      "bottom": 590.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 68.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 68.234375
+    },
+    "render": "4,948 triangles \u00b7 11 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      36
+    ],
+    "title": "Ori warship",
+    "file": "docs/shots/episode-fleet/ring-side.png"
+  },
+  {
+    "id": "ring",
+    "angle": "rear",
+    "error": null,
+    "rect": {
+      "bottom": 590.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 68.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 68.234375
+    },
+    "render": "4,948 triangles \u00b7 11 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      36
+    ],
+    "title": "Ori warship",
+    "file": "docs/shots/episode-fleet/ring-rear.png"
+  },
+  {
+    "id": "flagship",
+    "angle": "perspective",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "2,404 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Anubis\u2019s flagship",
+    "file": "docs/shots/episode-fleet/flagship-perspective.png"
+  },
+  {
+    "id": "flagship",
+    "angle": "top",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "2,404 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Anubis\u2019s flagship",
+    "file": "docs/shots/episode-fleet/flagship-top.png"
+  },
+  {
+    "id": "flagship",
+    "angle": "side",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "2,404 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Anubis\u2019s flagship",
+    "file": "docs/shots/episode-fleet/flagship-side.png"
+  },
+  {
+    "id": "flagship",
+    "angle": "rear",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "2,404 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Anubis\u2019s flagship",
+    "file": "docs/shots/episode-fleet/flagship-rear.png"
+  },
+  {
+    "id": "superweapon",
+    "angle": "perspective",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "8,704 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Anubis\u2019s superweapon ship",
+    "file": "docs/shots/episode-fleet/superweapon-perspective.png"
+  },
+  {
+    "id": "superweapon",
+    "angle": "top",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "8,704 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Anubis\u2019s superweapon ship",
+    "file": "docs/shots/episode-fleet/superweapon-top.png"
+  },
+  {
+    "id": "superweapon",
+    "angle": "side",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "8,704 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Anubis\u2019s superweapon ship",
+    "file": "docs/shots/episode-fleet/superweapon-side.png"
+  },
+  {
+    "id": "superweapon",
+    "angle": "rear",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "8,704 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Anubis\u2019s superweapon ship",
+    "file": "docs/shots/episode-fleet/superweapon-rear.png"
+  },
+  {
+    "id": "civilian",
+    "angle": "perspective",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "4,048 triangles \u00b7 9 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Seberus",
+    "file": "docs/shots/episode-fleet/civilian-perspective.png"
+  },
+  {
+    "id": "civilian",
+    "angle": "top",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "4,048 triangles \u00b7 9 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Seberus",
+    "file": "docs/shots/episode-fleet/civilian-top.png"
+  },
+  {
+    "id": "civilian",
+    "angle": "side",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "4,048 triangles \u00b7 9 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Seberus",
+    "file": "docs/shots/episode-fleet/civilian-side.png"
+  },
+  {
+    "id": "civilian",
+    "angle": "rear",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "4,048 triangles \u00b7 9 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Seberus",
+    "file": "docs/shots/episode-fleet/civilian-rear.png"
+  },
+  {
+    "id": "machine",
+    "angle": "perspective",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "48,816 triangles \u00b7 4 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Replicator craft study",
+    "file": "docs/shots/episode-fleet/machine-perspective.png"
+  },
+  {
+    "id": "machine",
+    "angle": "top",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "48,816 triangles \u00b7 4 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Replicator craft study",
+    "file": "docs/shots/episode-fleet/machine-top.png"
+  },
+  {
+    "id": "machine",
+    "angle": "side",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "48,816 triangles \u00b7 4 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Replicator craft study",
+    "file": "docs/shots/episode-fleet/machine-side.png"
+  },
+  {
+    "id": "machine",
+    "angle": "rear",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "48,816 triangles \u00b7 4 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "title": "Replicator craft study",
+    "file": "docs/shots/episode-fleet/machine-rear.png"
+  }
+]

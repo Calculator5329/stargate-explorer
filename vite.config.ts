@@ -37,5 +37,7 @@ export default defineConfig({
   plugins: [contentStore()],
   resolve: { alias: { "@": "/src" } },
   server: { port: 5187, strictPort: false },
-  build: { target: "es2022", sourcemap: false },
+  build: { target: "es2022", sourcemap: false,
+    rollupOptions: { input: { game: resolve(__dirname, 'index.html'), episodeFleet: resolve(__dirname, 'episode-fleet.html') } },
+  },
 });
