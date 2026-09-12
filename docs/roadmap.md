@@ -311,3 +311,6 @@ Multiplayer, mobile/touch, VR, mod support, story/dialogue system.
 - [x] Sandbox handling experiments: distinct presets, turn curves, grip/brake/roll tuning, saved current/experiment comparison and paid trick practice. 2026-09-12 — build, CPU motion checks and in-app UI/free-flight checks pass; normal pointer-lock feel awaits owner play.
 
 - [x] (2026-09-12) Replace default audio with a layered free-source/local-synthesis bank; add sound comparison and saved mix controls. Build, decoded assets, runtime lifecycle and native UI checks pass; human listening remains open. [Evidence](evidence/2026-09-12-audio-upgrade.md).
+
+- [x] (2026-09-12) Owner listening review: new layered sounds accepted; retain the already-integrated bank. Cobra/Vortex accepted; Tight grip preferred so far.
+- [ ] Refine Sidewinder left/right (3/4) motion animation. Ethan accepts the concepts but calls the current motion “meh” (2026-09-12). Preserve accepted Cobra/Vortex and compare the revised full motion in the sandbox.
