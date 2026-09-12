@@ -100,6 +100,19 @@ export class Menu {
       u.searchParams.delete("quality");
       location.href = u.toString();
     });
+    const audioSettings = document.createElement('details');
+    audioSettings.className = 'audio-settings';
+    audioSettings.innerHTML = '<summary>Sound mix</summary><div class="audio-sliders"></div><p><a href="/audio-preview.html">LISTEN TO THE SOUND PREVIEW ↗</a></p>';
+    const sliders = audioSettings.querySelector<HTMLElement>('.audio-sliders')!;
+    for (const [key, label] of [['masterVolume', 'Master volume'], ['effectsVolume', 'Weapons & effects'], ['engineVolume', 'Engine volume'], ['musicVolume', 'Ambient music']] as const) {
+      const row = document.createElement('label'), caption = document.createElement('span'), value = document.createElement('output'), control = document.createElement('input');
+      caption.textContent = label;
+      control.type = 'range'; control.min = '0'; control.max = '1'; control.step = '.01'; control.value = String(s[key]); control.setAttribute('aria-label', label);
+      const refresh = () => { value.value = `${Math.round(s[key] * 100)}%`; control.style.setProperty('--fill', `${s[key] * 100}%`); };
+      control.addEventListener('input', () => { s[key] = Number(control.value); refresh(); writeSave(save); hooks.apply(s); });
+      refresh(); row.append(caption, value, control); sliders.append(row);
+    }
+    q(root, '.binds').before(audioSettings);
     this.buildBinds(root, save, hooks);
     const fly = () => {
       if (!s.onboarded) {

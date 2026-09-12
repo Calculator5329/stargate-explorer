@@ -71,3 +71,6 @@ Ethan still had not seen the promised paid shortcut stunts. A table or a passing
 
 ## Sandbox flight experiments · Ethan, 2026-09-12
 Ethan wants the existing sandbox to try different flight upgrades and improvements, potentially informed by other games: faster turns when slow, sharper turns, easier flying and cool manoeuvres, including the shortcut tricks. Provide distinct selectable setups and editable response rather than silently selecting a new campaign flight model. Preserve his fixed control scheme; experiment with handling.
+
+## Audio quality · Ethan, 2026-09-12
+Ethan says the game sounds too default and requests much better audio, allowing local generation or free online sources. This explicitly authorizes replacing the synth-only placeholder palette with suitable original or properly licensed samples. Build an audible review, preserve scene/pause/replay coherence, and do not describe passing waveform checks as proof the sound is pleasing.

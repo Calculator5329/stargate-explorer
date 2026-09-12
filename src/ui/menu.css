@@ -57,3 +57,10 @@
 #menu button.fly:hover { background:#f5d9ac; }
 #menu .keys { margin:13px 0 0; font-size:9px; color:#85a0b0; line-height:1.6; }
 @media(max-width:580px) { #menu .menu-header { padding:20px; } #menu .menu-body { padding:0 20px; } #menu .menu-footer { padding:15px 20px; } #menu .settings-columns { grid-template-columns:1fr; gap:14px; } #menu .title { font-size:22px; } #menu .eyebrow span { display:none; } #menu .row button.fly { flex-basis:100%; } }
+
+#menu .audio-settings { border-top:1px solid #a3c3d326; padding:14px 0; font-size:11px; }
+#menu .audio-settings summary { color:#e9c895; cursor:pointer; }
+#menu .audio-settings .audio-sliders { display:grid; grid-template-columns:1fr 1fr; gap:6px 24px; padding-top:12px; }
+#menu .audio-settings label { display:grid; grid-template-columns:1fr auto; }
+#menu .audio-settings output { color:#e8c18a; }
+#menu .audio-settings a { color:#e8c18a; font-size:10px; }

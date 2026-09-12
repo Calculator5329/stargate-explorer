@@ -1,0 +1,1 @@
+PASS: decoded sample and synth fallback paths, 27 assets, mix/mute persistence, scene isolation, pause/resume, sampled replay timing, variation, one cue per trick, replaced engine beds, 48-voice bound, failed downloads and corrupt saved mix. Scheduling mock does not establish acoustic quality.

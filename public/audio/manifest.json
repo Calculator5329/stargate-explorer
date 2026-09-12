@@ -1,0 +1,191 @@
+{
+  "cannon-0": {
+    "seconds": 0.91,
+    "peak": 0.7,
+    "rms": 0.08190499295803935,
+    "bytes": 16052,
+    "loop": false
+  },
+  "hit-0": {
+    "seconds": 0.85,
+    "peak": 0.57,
+    "rms": 0.0582481852941697,
+    "bytes": 14333,
+    "loop": false
+  },
+  "explosion-0": {
+    "seconds": 2.9,
+    "peak": 0.86,
+    "rms": 0.13276462706055275,
+    "bytes": 36704,
+    "loop": false
+  },
+  "cannon-1": {
+    "seconds": 0.91,
+    "peak": 0.7,
+    "rms": 0.10677880974273625,
+    "bytes": 15754,
+    "loop": false
+  },
+  "hit-1": {
+    "seconds": 0.85,
+    "peak": 0.57,
+    "rms": 0.04491982811403767,
+    "bytes": 13847,
+    "loop": false
+  },
+  "explosion-1": {
+    "seconds": 2.9,
+    "peak": 0.86,
+    "rms": 0.14361353343874023,
+    "bytes": 37955,
+    "loop": false
+  },
+  "cannon-2": {
+    "seconds": 0.91,
+    "peak": 0.7,
+    "rms": 0.08925191300973134,
+    "bytes": 16434,
+    "loop": false
+  },
+  "hit-2": {
+    "seconds": 0.85,
+    "peak": 0.57,
+    "rms": 0.04499208792219647,
+    "bytes": 12965,
+    "loop": false
+  },
+  "explosion-2": {
+    "seconds": 2.9,
+    "peak": 0.86,
+    "rms": 0.12629612893683131,
+    "bytes": 38753,
+    "loop": false
+  },
+  "damage": {
+    "seconds": 1.1,
+    "peak": 0.78,
+    "rms": 0.1351517060276404,
+    "bytes": 12902,
+    "loop": false
+  },
+  "missile": {
+    "seconds": 1.4,
+    "peak": 0.78,
+    "rms": 0.10921456893839401,
+    "bytes": 23174,
+    "loop": false
+  },
+  "ui": {
+    "seconds": 0.42,
+    "peak": 0.35,
+    "rms": 0.07749993349608929,
+    "bytes": 9249,
+    "loop": false
+  },
+  "lock": {
+    "seconds": 0.83,
+    "peak": 0.52,
+    "rms": 0.0968596578037047,
+    "bytes": 11835,
+    "loop": false
+  },
+  "ring": {
+    "seconds": 0.83,
+    "peak": 0.52,
+    "rms": 0.09098967018524182,
+    "bytes": 12340,
+    "loop": false
+  },
+  "chevron": {
+    "seconds": 0.83,
+    "peak": 0.52,
+    "rms": 0.07459112013508493,
+    "bytes": 13705,
+    "loop": false
+  },
+  "chevron-lock": {
+    "seconds": 1.4,
+    "peak": 0.78,
+    "rms": 0.13335466700854326,
+    "bytes": 13803,
+    "loop": false
+  },
+  "win": {
+    "seconds": 3.0,
+    "peak": 0.58,
+    "rms": 0.10422298505081586,
+    "bytes": 25220,
+    "loop": false
+  },
+  "lose": {
+    "seconds": 3.0,
+    "peak": 0.58,
+    "rms": 0.0955356987702995,
+    "bytes": 22030,
+    "loop": false
+  },
+  "gate-open": {
+    "seconds": 3.8,
+    "peak": 0.86,
+    "rms": 0.1428443585743215,
+    "bytes": 47941,
+    "loop": false
+  },
+  "wormhole": {
+    "seconds": 4.55,
+    "peak": 0.76,
+    "rms": 0.19035971900501902,
+    "bytes": 52773,
+    "loop": false
+  },
+  "engine": {
+    "seconds": 4.8500226757369616,
+    "peak": 0.48,
+    "rms": 0.2156356128072238,
+    "bytes": 56358,
+    "loop": true
+  },
+  "boost": {
+    "seconds": 4.8500226757369616,
+    "peak": 0.48,
+    "rms": 0.2592623786438772,
+    "bytes": 74657,
+    "loop": true
+  },
+  "boost-start": {
+    "seconds": 1.0,
+    "peak": 0.67,
+    "rms": 0.10190345597458983,
+    "bytes": 14635,
+    "loop": false
+  },
+  "move-cobra": {
+    "seconds": 2.45,
+    "peak": 0.65,
+    "rms": 0.1460572724678944,
+    "bytes": 27384,
+    "loop": false
+  },
+  "move-vortex": {
+    "seconds": 2.25,
+    "peak": 0.65,
+    "rms": 0.13829543498385588,
+    "bytes": 25463,
+    "loop": false
+  },
+  "move-sidewinder-left": {
+    "seconds": 2.65,
+    "peak": 0.65,
+    "rms": 0.11847492949927975,
+    "bytes": 29823,
+    "loop": false
+  },
+  "move-sidewinder-right": {
+    "seconds": 2.65,
+    "peak": 0.65,
+    "rms": 0.11912177384298461,
+    "bytes": 29589,
+    "loop": false
+  }
+}

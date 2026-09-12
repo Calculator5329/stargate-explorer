@@ -170,6 +170,7 @@ export class Game {
     this.combat.render(alpha, dt, cam.position);
     this.mission.render(dt, alpha);
     this.gate.render(dt);
+    this.audio.move(flight.move?.id ?? null);
     this.audio.update(flight.speed / T.flight.boostSpeed, flight.boosting || flight.moveThrust);
     if (!this.mission.done) this.audio.setMood(this.enemies.aliveCount > 0 ? "combat" : "calm");
     hud.updateCombat(this.combat, this.mission, cam, this.combat.player.vel, this.replay.hasHighlight, this.gate.alive);
