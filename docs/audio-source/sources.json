@@ -1,0 +1,23 @@
+{
+  "pack": "Kenney Sci-Fi Sounds 1.0",
+  "license": "CC0-1.0",
+  "url": "https://opengameart.org/sites/default/files/sci-fi_sounds.zip",
+  "sourceFiles": {
+    "laserLarge_000.ogg": "a56d95794cd732d6c2d66ce488c14cf557fe526c282897c9a77675c2bd9b77e6",
+    "laserLarge_001.ogg": "e678aca631495b7dfef4ac625f0349875ccac81a60f538d530e072241af3e4bd",
+    "laserLarge_002.ogg": "e5e0b6ccc4d5720c8174a3e5b7cc6f9be3057352a89cbb2e99a00efc6fe5cc11",
+    "explosionCrunch_000.ogg": "4b597d658d0ae101f0a030fbeea5fc3a4292ab85f017470a8254a8e7959cbd69",
+    "explosionCrunch_001.ogg": "fdd04d6f0032d4d57c134ad37f3587d2d00e58c9572715275bd8cf4f43593576",
+    "explosionCrunch_002.ogg": "be2b8ddc62e4a24c91e2e77793de98549ce216faf2f323a917e7d6f34321ff97",
+    "lowFrequency_explosion_000.ogg": "3cb48d86dab63140cfb9aaeea4d4a6846abaca5831d157d8adbec0490da26343",
+    "impactMetal_000.ogg": "956c6612a256aa1a67a2327fffe2454f6b1d82e4c1c2be28fd66916335d5b1d6",
+    "impactMetal_001.ogg": "4a2b76f20052819c6ace57cc5ba55ec58deffcf74e3ed30694d619c582cc8e8e",
+    "impactMetal_002.ogg": "0c1bb4db8a4d48b2b8c2e65a175d9056b845f1063837599995d81be1c5957d2c",
+    "spaceEngineLow_000.ogg": "d7deee8d7217ce63aab802ad7365a59cacfd243392dc1bd03b0a9d454aa494df",
+    "spaceEngineLarge_000.ogg": "885aeda16116b715be5e8fd03d0d77959761015e1ca5823fd3b53d4fd965107f",
+    "thrusterFire_000.ogg": "0fdc474d93f209debf1fc4ea77765a669dcb7676db31b4d8a0a509685bccf374",
+    "engineCircular_000.ogg": "8ab85f9fa85e9e692287f98acb36b9ac3ba15313b007c039055e286b736f4e3a"
+  },
+  "generator": "scripts/build-audio.py",
+  "sampleRate": 44100
+}

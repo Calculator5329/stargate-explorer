@@ -1,3 +1,7 @@
+## Layered sound bank · 2026-09-12
+
+27 CC0-texture/local-synthesis sounds now drive combat, engines, gate travel and powered moves. Esc → Sound mix saves four independent levels. `/audio-preview.html` compares the new bank with the original synthesis using the game runtime. Build, asset, audio lifecycle, handling and episode checks pass; browser decoded all sounds and confirmed mix persistence. Human listening and preferred balance remain unverified. [Evidence and playable showcase](evidence/2026-09-12-audio-upgrade.md). No deployment.
+
 ## Sandbox flight lab · 2026-09-12
 
 The existing proving ground opens with a flight lab: Tight grip, Brake & turn, Sweet spot and Loose drift presets; six handling sliders; slower-is-tighter or middle-speed turn curves; retained current/experiment comparison and reset flight position. Custom handling saves in this browser independently of campaign progress. Leaving sandbox removes the Flight override, including in-page gate travel. Classic/cursor/raw mouse and assist 0.9 remain fixed. Paid shortcut tricks retain their authored trajectories and costs. The HUD shows the selected setup, speed, steering gain and actual nose-versus-velocity angle; narrow layouts keep the guide above the ship.

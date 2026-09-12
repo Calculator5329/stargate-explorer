@@ -1,3 +1,4 @@
+import { T } from "@/core/tunables";
 import { DEFAULT_MOVE_BINDS, mergeMoveBinds, type MoveBinds } from "@/core/move-binds";
 import type { SchemeName, SteerMode } from "@/core/scheme";
 import type { DifficultyName } from "@/core/difficulty";
@@ -27,6 +28,10 @@ export interface Settings {
   sens: number;
   difficulty: DifficultyName;
   mute: boolean;
+  masterVolume: number;
+  effectsVolume: number;
+  engineVolume: number;
+  musicVolume: number;
   /** mouse / pad Y axis flipped: push forward to dive */
   invertY: boolean;
   /** render tier; `?quality=` on the URL still wins for one page */
@@ -65,7 +70,7 @@ const KEY = "stargate-explorer.save.v1";
 export const FLIGHT_PROFILE = { scheme: "classic", steer: "cursor", rawMouse: true, assist: true, assistStrength: 0.9 } as const;
 
 export const DEFAULT_SAVE: Save = {
-  settings: { ...FLIGHT_PROFILE, invertY: false, speedTurn: false, sens: 1, difficulty: "normal", mute: false, quality: "med", dynamicRes: true, eventLighting: false, binds: { ...DEFAULT_BINDS }, moveBinds: { ...DEFAULT_MOVE_BINDS }, onboarded: false },
+  settings: { ...FLIGHT_PROFILE, invertY: false, speedTurn: false, sens: 1, difficulty: "normal", mute: false, masterVolume: T.audio.master, effectsVolume: T.audio.effects, engineVolume: T.audio.engines, musicVolume: T.audio.music, quality: "med", dynamicRes: true, eventLighting: false, binds: { ...DEFAULT_BINDS }, moveBinds: { ...DEFAULT_MOVE_BINDS }, onboarded: false },
   progress: { ship: "f11", unlocked: ["f11"], missions: {} },
 };
 
@@ -97,6 +102,10 @@ function sanitise(raw: Partial<Settings> | undefined): Partial<Settings> {
     speedTurn: bool(raw.speedTurn, d.speedTurn),
     rawMouse: bool(raw.rawMouse, d.rawMouse),
     mute: bool(raw.mute, d.mute),
+    masterVolume: num(raw.masterVolume, 0, 1, d.masterVolume),
+    effectsVolume: num(raw.effectsVolume, 0, 1, d.effectsVolume),
+    engineVolume: num(raw.engineVolume, 0, 1, d.engineVolume),
+    musicVolume: num(raw.musicVolume, 0, 1, d.musicVolume),
     invertY: bool(raw.invertY, d.invertY),
     dynamicRes: bool(raw.dynamicRes, d.dynamicRes),
     eventLighting: bool(raw.eventLighting, d.eventLighting),

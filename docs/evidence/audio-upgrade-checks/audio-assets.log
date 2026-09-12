@@ -1,0 +1,192 @@
+[
+  {
+    "sound": "cannon-0",
+    "peak": 0.7095,
+    "rms": 0.082,
+    "seconds": 0.907,
+    "loopEdge": null
+  },
+  {
+    "sound": "hit-0",
+    "peak": 0.5729,
+    "rms": 0.0587,
+    "seconds": 0.847,
+    "loopEdge": null
+  },
+  {
+    "sound": "explosion-0",
+    "peak": 0.8782,
+    "rms": 0.1306,
+    "seconds": 2.9,
+    "loopEdge": null
+  },
+  {
+    "sound": "cannon-1",
+    "peak": 0.7536,
+    "rms": 0.1074,
+    "seconds": 0.907,
+    "loopEdge": null
+  },
+  {
+    "sound": "hit-1",
+    "peak": 0.5635,
+    "rms": 0.045,
+    "seconds": 0.847,
+    "loopEdge": null
+  },
+  {
+    "sound": "explosion-1",
+    "peak": 0.8721,
+    "rms": 0.1423,
+    "seconds": 2.9,
+    "loopEdge": null
+  },
+  {
+    "sound": "cannon-2",
+    "peak": 0.7146,
+    "rms": 0.089,
+    "seconds": 0.907,
+    "loopEdge": null
+  },
+  {
+    "sound": "hit-2",
+    "peak": 0.5685,
+    "rms": 0.0449,
+    "seconds": 0.847,
+    "loopEdge": null
+  },
+  {
+    "sound": "explosion-2",
+    "peak": 0.8964,
+    "rms": 0.126,
+    "seconds": 2.9,
+    "loopEdge": null
+  },
+  {
+    "sound": "damage",
+    "peak": 0.7708,
+    "rms": 0.1355,
+    "seconds": 1.1,
+    "loopEdge": null
+  },
+  {
+    "sound": "missile",
+    "peak": 0.814,
+    "rms": 0.1081,
+    "seconds": 1.4,
+    "loopEdge": null
+  },
+  {
+    "sound": "ui",
+    "peak": 0.3462,
+    "rms": 0.0778,
+    "seconds": 0.417,
+    "loopEdge": null
+  },
+  {
+    "sound": "lock",
+    "peak": 0.5307,
+    "rms": 0.0973,
+    "seconds": 0.827,
+    "loopEdge": null
+  },
+  {
+    "sound": "ring",
+    "peak": 0.524,
+    "rms": 0.0903,
+    "seconds": 0.852,
+    "loopEdge": null
+  },
+  {
+    "sound": "chevron",
+    "peak": 0.5248,
+    "rms": 0.074,
+    "seconds": 0.852,
+    "loopEdge": null
+  },
+  {
+    "sound": "chevron-lock",
+    "peak": 0.7866,
+    "rms": 0.1337,
+    "seconds": 1.4,
+    "loopEdge": null
+  },
+  {
+    "sound": "win",
+    "peak": 0.5842,
+    "rms": 0.1046,
+    "seconds": 3.0,
+    "loopEdge": null
+  },
+  {
+    "sound": "lose",
+    "peak": 0.5889,
+    "rms": 0.096,
+    "seconds": 3.0,
+    "loopEdge": null
+  },
+  {
+    "sound": "gate-open",
+    "peak": 0.9186,
+    "rms": 0.1418,
+    "seconds": 3.8,
+    "loopEdge": null
+  },
+  {
+    "sound": "wormhole",
+    "peak": 0.8762,
+    "rms": 0.1859,
+    "seconds": 4.55,
+    "loopEdge": null
+  },
+  {
+    "sound": "engine",
+    "peak": 0.4932,
+    "rms": 0.2154,
+    "seconds": 4.85,
+    "loopEdge": 0.0147
+  },
+  {
+    "sound": "boost",
+    "peak": 0.5007,
+    "rms": 0.2598,
+    "seconds": 4.85,
+    "loopEdge": 0.0153
+  },
+  {
+    "sound": "boost-start",
+    "peak": 0.695,
+    "rms": 0.1003,
+    "seconds": 0.997,
+    "loopEdge": null
+  },
+  {
+    "sound": "move-cobra",
+    "peak": 0.6544,
+    "rms": 0.1439,
+    "seconds": 2.45,
+    "loopEdge": null
+  },
+  {
+    "sound": "move-vortex",
+    "peak": 0.6384,
+    "rms": 0.1365,
+    "seconds": 2.25,
+    "loopEdge": null
+  },
+  {
+    "sound": "move-sidewinder-left",
+    "peak": 0.6744,
+    "rms": 0.1168,
+    "seconds": 2.65,
+    "loopEdge": null
+  },
+  {
+    "sound": "move-sidewinder-right",
+    "peak": 0.657,
+    "rms": 0.1172,
+    "seconds": 2.65,
+    "loopEdge": null
+  }
+]
+PASS: all 27 shipped OGG assets decode, contain finite stereo PCM, stay below full scale, have non-silent RMS, expected duration and bounded edge discontinuity. This is not an acoustic quality verdict.

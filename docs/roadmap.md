@@ -309,3 +309,5 @@ Multiplayer, mobile/touch, VR, mod support, story/dialogue system.
 - [x] (2026-09-12) After both levels, investigate reachable sandbox/build/keys and improve the visible paid stunts; verify actual shortcut activation, boost cost and full animation. [Mechanics, captures and limits](evidence/2026-09-12-playable-episodes.md).
 
 - [x] Sandbox handling experiments: distinct presets, turn curves, grip/brake/roll tuning, saved current/experiment comparison and paid trick practice. 2026-09-12 — build, CPU motion checks and in-app UI/free-flight checks pass; normal pointer-lock feel awaits owner play.
+
+- [x] (2026-09-12) Replace default audio with a layered free-source/local-synthesis bank; add sound comparison and saved mix controls. Build, decoded assets, runtime lifecycle and native UI checks pass; human listening remains open. [Evidence](evidence/2026-09-12-audio-upgrade.md).

@@ -60,6 +60,7 @@ const sandboxGuide = new SandboxGuide(document.getElementById("hud")!);
 const perf = new PerfOverlay(document.querySelector<HTMLElement>("#hud .perf")!);
 const audio = new Audio();
 audio.setMute(S.mute);
+audio.setMix({master:S.masterVolume, effects:S.effectsVolume, engines:S.engineVolume, music:S.musicVolume});
 audio.onMuteChanged = (muted) => { S.mute = muted; menu?.syncMute(muted); writeSave(save); };
 const eventLighting = new EventLighting(r.scene);
 const _levelUp = new Vector3(0, 1, 0);
@@ -192,6 +193,7 @@ menu = new Menu(document.getElementById("menu")!, canvas, save, {
     setDifficulty(s.difficulty);
     r.dynamic = s.dynamicRes;
     audio.setMute(s.mute);
+    audio.setMix({master:s.masterVolume, effects:s.effectsVolume, engines:s.engineVolume, music:s.musicVolume});
   },
   restart: () => location.reload(),
   hub: () => { menu?.close(); hub?.show(); },

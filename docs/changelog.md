@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-12 — Layered game audio
+
+Added 27 stereo sounds for combat, engines, gates and powered tricks, authored from CC0 Kenney textures and local synthesis. Repeated shots/hits/explosions vary; engine pitch follows speed, boost has ignition and a sustained bed. Preserved scene/replay cancellation and procedural fallback; added compressor, four saved mix sliders and a runtime old/new sound room. Build and focused asset/runtime/compatibility checks pass, and native browser verified buffer decoding and settings persistence. [Evidence and listening sample](evidence/2026-09-12-audio-upgrade.md).
+
 ## 2026-09-12 — Antarctica and Fallen playable operations
 
 Added a surface-defense mission and a mothership strike mission to the normal campaign/hub/save flow. Antarctica includes detailed ice terrain, mesh-aligned swept collision, moving cargo escort, carrier covering fire, allied fighter interception, bomber target priorities, outpost defense and a real damaging drone finale. Fallen includes a collidable deck, jump corridor and controlled shield-bypass hop, cooling vent and deck guns damaged by normal weapons, enemy escorts, allied cover and a separately timed escape.

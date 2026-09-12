@@ -4,6 +4,17 @@
  * `T` at use time so live edits take effect immediately. Units: m, s, rad.
  */
 export const T = {
+  audio: { master: .65, effects: .85, engines: .6, music: .35, maxVoices: 48,
+    compressorThreshold: -10, compressorRatio: 5, compressorKnee: 16,
+    compressorAttack: .004, compressorRelease: .18,
+    sampleShotGain: .62, sampleHitGain: .42, sampleExplosionGain: .8,
+    sampleDamageGain: .7, sampleMissileGain: .7, sampleRockGain: .55,
+    sampleCueGain: .55, sampleLockGain: .5, sampleOutcomeGain: .6, sampleMoveGain: .6,
+    sampleGateGain: .85, sampleWormholeGain: .7, sampleChevronGain: .6, sampleChevronLockGain: .7,
+    shotPitchMin: .96, shotPitchRange: .08, chevronPitchStep: .02,
+    boostIdleRate: .9, boostSpeedRate: .2, musicReflectionGain: .24, musicReflectionPan: .65,
+    engineIdleRate: .75, engineSpeedRate: .6, engineIdleGain: .35, engineSpeedGain: .22,
+    boostBedGain: .65, boostStartGain: .6, musicWidthSeconds: .023 },
   sandboxGrip: { turn: 1.5, slow: 1, fast: 1, grip: 2.4, brake: 1.7, roll: 1, sweet: 0 },
   sandboxBrake: { turn: 1.25, slow: 2.2, fast: .7, grip: 1.8, brake: 2.5, roll: 1.2, sweet: 0 },
   sandboxSweet: { turn: 1.3, slow: 1.9, fast: .65, grip: 1.8, brake: 1.8, roll: 1.15, sweet: 1 },

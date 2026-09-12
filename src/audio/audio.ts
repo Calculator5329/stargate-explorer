@@ -1,7 +1,11 @@
+import { T, clamp } from '@/core/tunables';
+import { SoundBank, type SoundId } from '@/audio/bank';
+export interface AudioMix { master: number; effects: number; engines: number; music: number }
+
 export type AudioScene = "flight" | "travel" | "replay" | "paused" | "hub";
 type SoundBus = "flight" | "travel" | "replay" | "ui";
 type Voice = { source: AudioScheduledSourceNode; gain: GainNode; nodes: AudioNode[]; bus: SoundBus;
-  remaining: number; at: number; rate: number; level: number; pitch: AudioParam | undefined };
+  remaining: number; at: number; rate: number; level: number; pitch: AudioParam | undefined; sampled: boolean };
 
 export type Mood = "calm" | "combat" | "win" | "lost";
 
@@ -18,13 +22,97 @@ const CHORDS: Record<Mood, number[]> = {
 };
 
 /**
- * Minimal synthesized sound (no assets, per the code-driven content pillar):
+ * Layered CC0/authored sample bank with a lightweight synthesis fallback:
  * an engine drone that follows speed, cannon pops, impact clicks, filtered-noise
  * explosions, a boost whoosh, and a four-voice ambient pad whose chord follows
- * the mission mood (the "music stub"). Everything hangs off one master gain; M
+ * the mission mood. Separate engine, music and effects mixes feed a protected master; M
  * mutes. The context is created on the first pointer-lock click (autoplay policy).
  */
 export class Audio {
+  readonly bank = new SoundBank();
+  private cinematic = true;
+  private mix: AudioMix = { master: T.audio.master, effects: T.audio.effects, engines: T.audio.engines, music: T.audio.music };
+  private effects!: Record<SoundBus, GainNode>;
+  private engineMix!: GainNode;
+  private musicMix!: GainNode;
+  private engineBed: AudioBufferSourceNode | null = null;
+  private boostBed: AudioBufferSourceNode | null = null;
+  private engineBedGain!: GainNode;
+  private boostBedGain!: GainNode;
+  private shotVariant = 0;
+  private hitVariant = 0;
+  private explosionVariant = 0;
+  private lastMove: string | null = null;
+
+  setMix(mix: AudioMix): void {
+    for (const key of ['master', 'effects', 'engines', 'music'] as const) this.mix[key] = clamp(mix[key], 0, 1);
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.master.gain.setTargetAtTime(this.muted ? 0 : this.mix.master, t, .04);
+    this.engineMix.gain.setTargetAtTime(this.mix.engines, t, .04);
+    this.musicMix.gain.setTargetAtTime(this.mix.music, t, .04);
+    for (const node of Object.values(this.effects)) node.gain.setTargetAtTime(this.mix.effects, t, .04);
+  }
+
+  /** Sound comparison only; ordinary gameplay always uses the new bank when loaded. */
+  setCinematic(value: boolean): void {
+    this.cinematic = value;
+    this.lastSpeedFrac = -1;
+    this.update(0, false);
+  }
+
+  private startBeds(): void {
+    if (!this.ctx) return;
+    const start = (id: SoundId, gain: GainNode) => {
+      const buffer = this.bank.buffers.get(id);
+      if (!buffer) return null;
+      const src = this.ctx!.createBufferSource(); src.buffer = buffer; src.loop = true;
+      src.connect(gain).connect(this.engineMix); src.start(); return src;
+    };
+    this.engineBedGain = this.ctx.createGain(); this.engineBedGain.gain.value = 0;
+    this.boostBedGain = this.ctx.createGain(); this.boostBedGain.gain.value = 0;
+    this.engineBed = start('engine', this.engineBedGain);
+    this.boostBed = start('boost', this.boostBedGain);
+    const speed = Math.max(0, this.lastSpeedFrac), boost = this.lastBoosting;
+    this.lastSpeedFrac = -1; this.update(speed, boost);
+  }
+
+  private sample(id: SoundId, level: number, bus: SoundBus = 'flight', pitch = 1, duration?: number): boolean {
+    if (!this.cinematic) return false;
+    const buffer = this.bank.buffers.get(id);
+    if (!this.ctx || !buffer) return false;
+    if (this.scene === 'paused' || (bus !== 'ui' && this.scene !== bus)) return true;
+    const ctx = this.ctx, at = ctx.currentTime, rate = bus === 'replay' ? this.replayRate : 1;
+    const source = ctx.createBufferSource(), gain = ctx.createGain();
+    source.buffer = buffer;
+    const speed = duration ? clamp(buffer.duration / duration, .8, 1.25) : pitch;
+    source.playbackRate.value = speed;
+    gain.gain.value = level;
+    source.connect(gain).connect(this.effects[bus]);
+    const seconds = duration ?? buffer.duration / speed;
+    const offset = duration ? Math.max(0, buffer.duration - seconds * speed) : 0;
+    if (duration) {
+      source.loop = seconds * speed > buffer.duration;
+      gain.gain.setValueAtTime(.0001, at);
+      gain.gain.linearRampToValueAtTime(level, at + Math.min(.08, seconds / 4));
+      gain.gain.setValueAtTime(level, at + Math.max(.08, seconds - .12));
+      gain.gain.linearRampToValueAtTime(.0001, at + seconds);
+    }
+    this.track(source, gain, [gain], bus, seconds, level, at, source.detune, true);
+    source.start(at, offset); source.stop(at + seconds / rate + .02);
+    return true;
+  }
+
+  /** A one-shot power cue per move activation, sharing normal scene ownership. */
+  move(id: string | null): void {
+    if (id === this.lastMove) return;
+    this.lastMove = id;
+    if (!id) return;
+    const name: SoundId = id === 'cobra' ? 'move-cobra' : id === 'lunge' ? 'move-vortex'
+      : id === 'scissor-left' ? 'move-sidewinder-left' : 'move-sidewinder-right';
+    this.sample(name, T.audio.sampleMoveGain);
+  }
+
   private pad: OscillatorNode[] = [];
   private padGain!: GainNode;
   private padFilter!: BiquadFilterNode;
@@ -63,13 +151,24 @@ export class Audio {
     }
     const ctx = (this.ctx = new AudioContext());
     this.master = ctx.createGain();
-    this.master.gain.value = this.muted ? 0 : 0.5;
-    this.master.connect(ctx.destination);
+    this.master.gain.value = this.muted ? 0 : this.mix.master;
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.value = T.audio.compressorThreshold; compressor.ratio.value = T.audio.compressorRatio;
+    compressor.knee.value = T.audio.compressorKnee; compressor.attack.value = T.audio.compressorAttack;
+    compressor.release.value = T.audio.compressorRelease;
+    this.master.connect(compressor).connect(ctx.destination);
     this.buses = { flight: ctx.createGain(), travel: ctx.createGain(), replay: ctx.createGain(), ui: ctx.createGain() };
     for (const [name, bus] of Object.entries(this.buses)) {
       bus.gain.value = name === "ui" || name === (this.scene === "paused" ? this.pausedFrom : this.scene) ? 1 : 0;
       bus.connect(this.master);
     }
+
+    this.effects = { flight: ctx.createGain(), travel: ctx.createGain(), replay: ctx.createGain(), ui: ctx.createGain() };
+    for (const name of ['flight', 'travel', 'replay', 'ui'] as const) this.effects[name].connect(this.buses[name]);
+    this.engineMix = ctx.createGain(); this.engineMix.connect(this.buses.flight);
+    this.musicMix = ctx.createGain(); this.musicMix.connect(this.buses.flight);
+    this.setMix(this.mix);
+    void this.bank.load(ctx).then(() => this.startBeds());
 
     // noise buffer for explosions/whoosh
     const len = ctx.sampleRate * 2;
@@ -89,7 +188,7 @@ export class Audio {
     this.engine2.type = "sawtooth";
     this.engine.connect(this.engineFilter);
     this.engine2.connect(this.engineFilter);
-    this.engineFilter.connect(this.engineGain).connect(this.buses.flight);
+    this.engineFilter.connect(this.engineGain).connect(this.engineMix);
     this.engine.start();
     this.engine2.start();
 
@@ -103,7 +202,7 @@ export class Audio {
     bp.Q.value = 0.7;
     this.boostGain = ctx.createGain();
     this.boostGain.gain.value = 0;
-    src.connect(bp).connect(this.boostGain).connect(this.buses.flight);
+    src.connect(bp).connect(this.boostGain).connect(this.engineMix);
     src.start();
 
     // pad: four triangle voices, slow attack, through a gently moving lowpass
@@ -113,7 +212,11 @@ export class Audio {
     this.padFilter.Q.value = 0.6;
     this.padGain = ctx.createGain();
     this.padGain.gain.value = 0;
-    this.padFilter.connect(this.padGain).connect(this.buses.flight);
+    this.padFilter.connect(this.padGain).connect(this.musicMix);
+    // A quiet delayed reflection gives the sustained bed space without smearing weapon transients.
+    const reflection = ctx.createDelay(.1), reflectionGain = ctx.createGain(), pan = ctx.createStereoPanner();
+    reflection.delayTime.value = T.audio.musicWidthSeconds; reflectionGain.gain.value = T.audio.musicReflectionGain; pan.pan.value = T.audio.musicReflectionPan;
+    this.padGain.connect(reflection).connect(reflectionGain).connect(pan).connect(this.musicMix);
     const lfo = ctx.createOscillator();
     lfo.frequency.value = 0.07;
     const lfoGain = ctx.createGain();
@@ -146,7 +249,7 @@ export class Audio {
     gated.gain.value = 0;
     gate.connect(gateGain).connect(gated.gain);
     gateBias.connect(gated.gain);
-    this.pulse.connect(gated).connect(this.pulseGain).connect(this.buses.flight);
+    this.pulse.connect(gated).connect(this.pulseGain).connect(this.musicMix);
     gate.start();
     gateBias.start();
     this.pulse.start();
@@ -192,7 +295,7 @@ export class Audio {
   toggleMute(): void {
     this.muted = !this.muted;
     this.onMuteChanged?.(this.muted);
-    if (this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : 0.5, this.ctx.currentTime, 0.05);
+    if (this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : this.mix.master, this.ctx.currentTime, 0.05);
   }
 
   private lastSpeedFrac = -1;
@@ -202,15 +305,28 @@ export class Audio {
   update(speedFrac: number, boosting: boolean): void {
     if (!this.ctx) return;
     if (Math.abs(speedFrac - this.lastSpeedFrac) < 0.002 && boosting === this.lastBoosting) return;
+    const ignition = boosting && !this.lastBoosting;
     this.lastSpeedFrac = speedFrac;
     this.lastBoosting = boosting;
     const t = this.ctx.currentTime;
+    if (ignition) this.sample('boost-start', T.audio.boostStartGain);
+    const sampledEngine = this.cinematic && this.engineBed !== null;
+    const sampledBoost = this.cinematic && this.boostBed !== null;
+    const v = clamp(speedFrac, 0, 2);
+    if (this.engineBed) {
+      this.engineBed.playbackRate.setTargetAtTime(T.audio.engineIdleRate + T.audio.engineSpeedRate * v, t, .18);
+      this.engineBedGain.gain.setTargetAtTime(sampledEngine ? T.audio.engineIdleGain + T.audio.engineSpeedGain * v : 0, t, .16);
+    }
+    if (this.boostBed) {
+      this.boostBed.playbackRate.setTargetAtTime(T.audio.boostIdleRate + v * T.audio.boostSpeedRate, t, .15);
+      this.boostBedGain.gain.setTargetAtTime(sampledBoost && boosting ? T.audio.boostBedGain : 0, t, boosting ? .12 : .35);
+    }
     const f = 42 + 90 * speedFrac;
     this.engine.frequency.setTargetAtTime(f, t, 0.1);
     this.engine2.frequency.setTargetAtTime(f * 1.007 + 1.5, t, 0.1);
     this.engineFilter.frequency.setTargetAtTime(220 + 900 * speedFrac, t, 0.15);
-    this.boostGain.gain.setTargetAtTime(boosting ? 0.18 : 0, t, boosting ? 0.15 : 0.4);
-    this.engineGain.gain.setTargetAtTime(0.12, t, 0.25);
+    this.boostGain.gain.setTargetAtTime(boosting && !sampledBoost ? 0.18 : 0, t, boosting ? 0.15 : 0.4);
+    this.engineGain.gain.setTargetAtTime(sampledEngine ? 0 : 0.12, t, 0.25);
   }
 
   /** One scene owns sound at a time; cancel outgoing tails as well as silencing beds. */
@@ -235,6 +351,7 @@ export class Audio {
     for (const voice of [...this.voices]) {
       if (voice.bus !== scene) this.stopVoice(voice);
     }
+    this.lastMove = null;
     const t = this.ctx.currentTime;
     for (const bus of ["flight", "travel", "replay"] as const) {
       this.buses[bus].gain.cancelScheduledValues(t);
@@ -256,13 +373,13 @@ export class Audio {
     for (const voice of this.voices) {
       if (voice.bus !== "replay") continue;
       const elapsed = Math.max(0, t - voice.at) * voice.rate;
-      voice.level *= Math.pow(0.001 / voice.level, Math.min(1, elapsed / voice.remaining));
+      if (!voice.sampled) voice.level *= Math.pow(0.001 / voice.level, Math.min(1, elapsed / voice.remaining));
       voice.remaining = Math.max(0.001, voice.remaining - elapsed);
       voice.at = t;
       voice.rate = next;
       voice.gain.gain.cancelScheduledValues(t);
       voice.gain.gain.setValueAtTime(Math.max(0.001, voice.level), t);
-      voice.gain.gain.exponentialRampToValueAtTime(0.001, t + voice.remaining / next);
+      if (!voice.sampled) voice.gain.gain.exponentialRampToValueAtTime(0.001, t + voice.remaining / next);
       voice.pitch?.setValueAtTime(1200 * Math.log2(next), t);
       voice.source.stop(t + voice.remaining / next + 0.02);
     }
@@ -270,12 +387,14 @@ export class Audio {
 
   replayShot(rate = 1): void {
     this.setReplayRate(rate);
+    if (this.sample('cannon-0', T.audio.sampleShotGain, 'replay')) return;
     this.blip(660, 0.18, 0.07, "square", "replay");
     this.burst(2400, 1.2, 0.12, 0.06, "highpass", "replay");
   }
 
   replayExplosion(size: number, rate = 1): void {
     this.setReplayRate(rate);
+    if (this.sample('explosion-1', T.audio.sampleExplosionGain, 'replay', 1 / Math.sqrt(clamp(size, .5, 2)))) return;
     this.burst(180 * size, 0.6, 0.7, 0.9 + 0.4 * size, "lowpass", "replay");
     this.burst(900, 1.5, 0.3, 0.25, "bandpass", "replay");
   }
@@ -288,9 +407,13 @@ export class Audio {
   }
 
   private track(source: AudioScheduledSourceNode, gain: GainNode, nodes: AudioNode[], bus: SoundBus,
-    duration: number, level: number, at: number, pitch?: AudioParam): void {
+    duration: number, level: number, at: number, pitch?: AudioParam, sampled = false): void {
     const rate = bus === "replay" ? this.replayRate : 1;
-    const voice: Voice = { source, gain, nodes, bus, remaining: duration, at, rate, level, pitch };
+    if (this.voices.size >= T.audio.maxVoices) {
+      const oldest = this.voices.values().next().value;
+      if (oldest) this.stopVoice(oldest);
+    }
+    const voice: Voice = { source, gain, nodes, bus, remaining: duration, at, rate, level, pitch, sampled };
     this.voices.add(voice);
     source.onended = () => {
       source.disconnect();
@@ -307,6 +430,7 @@ export class Audio {
    */
   wormhole(dur: number): void {
     if (!this.ctx || this.scene !== "travel") return;
+    if (this.sample('wormhole', T.audio.sampleWormholeGain, 'travel', 1, Math.max(.2, dur))) return;
     const ctx = this.ctx, t = ctx.currentTime;
     const src = ctx.createBufferSource();
     src.buffer = this.noise;
@@ -322,7 +446,7 @@ export class Audio {
     g.gain.exponentialRampToValueAtTime(0.42, t + 0.35);
     g.gain.setValueAtTime(0.42, t + dur * 0.6);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    src.connect(lp).connect(g).connect(this.buses.travel);
+    src.connect(lp).connect(g).connect(this.effects.travel);
     this.track(src, g, [lp, g], "travel", dur, 0.42, t);
     src.start(t);
     src.stop(t + dur + 0.05);
@@ -337,7 +461,7 @@ export class Audio {
     og.gain.exponentialRampToValueAtTime(0.3, t + 0.5);
     og.gain.setValueAtTime(0.3, t + dur * 0.7);
     og.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(og).connect(this.buses.travel);
+    o.connect(og).connect(this.effects.travel);
     this.track(o, og, [og], "travel", dur, 0.3, t);
     o.start(t);
     o.stop(t + dur + 0.05);
@@ -352,7 +476,7 @@ export class Audio {
       sg.gain.setValueAtTime(0.0001, t);
       sg.gain.exponentialRampToValueAtTime(0.045, t + 0.6);
       sg.gain.exponentialRampToValueAtTime(0.001, t + dur);
-      s.connect(sg).connect(this.buses.travel);
+      s.connect(sg).connect(this.effects.travel);
       this.track(s, sg, [sg], "travel", dur, 0.045, t);
       s.start(t);
       s.stop(t + dur + 0.05);
@@ -361,6 +485,7 @@ export class Audio {
 
   /** The event horizon opens: a bass thump and a splash of noise. */
   kawoosh(): void {
+    if (this.sample('gate-open', T.audio.sampleGateGain, 'travel')) return;
     this.burst(240, 0.9, 0.5, 0.7, "lowpass", "travel");
     this.blip(55, 0.25, 0.6, "sine", "travel");
   }
@@ -380,7 +505,7 @@ export class Audio {
     const rate = bus === "replay" ? this.replayRate : 1;
     g.gain.setValueAtTime(gain, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur / rate);
-    src.connect(flt).connect(g).connect(this.buses[bus]);
+    src.connect(flt).connect(g).connect(this.effects[bus]);
     this.track(src, g, [flt, g], bus, dur, gain, t, src.detune);
     src.start(t, Math.random());
     src.stop(t + dur / rate + 0.05);
@@ -398,33 +523,41 @@ export class Audio {
     const g = ctx.createGain();
     g.gain.setValueAtTime(gain, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur / rate);
-    o.connect(g).connect(this.buses[bus]);
+    o.connect(g).connect(this.effects[bus]);
     this.track(o, g, [g], bus, dur, gain, t, o.detune);
     o.start(t);
     o.stop(t + dur / rate + 0.02);
   }
 
   cannon(): void {
+    const id = ['cannon-0', 'cannon-1', 'cannon-2'] as const;
+    if (this.sample(id[this.shotVariant++ % 3]!, T.audio.sampleShotGain, 'flight', T.audio.shotPitchMin + Math.random() * T.audio.shotPitchRange)) return;
     this.blip(620 + Math.random() * 80, 0.18, 0.07);
     this.burst(2400, 1.2, 0.12, 0.06, "highpass");
   }
 
   hit(): void {
+    const id = ['hit-0', 'hit-1', 'hit-2'] as const;
+    if (this.sample(id[this.hitVariant++ % 3]!, T.audio.sampleHitGain)) return;
     this.burst(1800, 3, 0.2, 0.08);
   }
 
   damage(): void {
+    if (this.sample('damage', T.audio.sampleDamageGain)) return;
     this.burst(400, 1, 0.35, 0.18, "lowpass");
     this.blip(140, 0.2, 0.15, "sine");
   }
 
   explosion(size: number): void {
+    const id = ['explosion-0', 'explosion-1', 'explosion-2'] as const;
+    if (this.sample(id[this.explosionVariant++ % 3]!, T.audio.sampleExplosionGain, 'flight', 1 / Math.sqrt(clamp(size, .5, 2)))) return;
     this.burst(180 * size, 0.6, 0.7, 0.9 + 0.4 * size, "lowpass");
     this.burst(900, 1.5, 0.3, 0.25);
   }
 
   /** A rock breaking: a dull low crack, a gravel rattle, no fireball. `size` ~ radius / 10. */
   crunch(size: number): void {
+    if (this.sample('damage', T.audio.sampleRockGain, 'flight', 1 / Math.sqrt(clamp(size, .5, 2)))) return;
     const s = Math.min(2.5, Math.max(0.3, size));
     this.burst(90 + 40 / s, 0.9, 0.45 + 0.15 * s, 0.22 + 0.12 * s, "lowpass");
     this.burst(1600, 4, 0.16, 0.12 + 0.06 * s, "bandpass");
@@ -433,21 +566,25 @@ export class Audio {
   }
 
   lock(): void {
+    if (this.sample('lock', T.audio.sampleLockGain)) return;
     this.blip(1320, 0.12, 0.09, "square");
     this.blip(1320, 0.12, 0.09, "square", "flight", 0.09);
   }
 
   launch(): void {
+    if (this.sample('missile', T.audio.sampleMissileGain)) return;
     this.burst(600, 0.8, 0.4, 0.5, "bandpass");
     this.blip(220, 0.15, 0.4, "sawtooth");
   }
 
   ui(): void {
+    if (this.sample('ui', T.audio.sampleCueGain, 'ui')) return;
     this.blip(880, 0.08, 0.12, "sine", "ui");
   }
 
   /** A short rising tone pair for each note of the root triad, staggered: the ring pass. */
   ring(): void {
+    if (this.sample('ring', T.audio.sampleCueGain)) return;
     const base = 440 * Math.pow(2, (this.root + 24 - 69) / 12);
     this.tone(base, 0.1, 0.16);
     this.tone(base * 1.5, 0.1, 0.22, "sine", 0.07);
@@ -456,6 +593,7 @@ export class Audio {
   /** Mission won: an ascending arpeggio of the win chord. */
   win(): void {
     this.setMood("win");
+    if (this.sample('win', T.audio.sampleOutcomeGain)) return;
     const chord = CHORDS.win;
     chord.forEach((semi, i) => this.tone(440 * Math.pow(2, (this.root + 24 + semi - 69) / 12), 0.14, 0.5, "sine", i * 0.11));
   }
@@ -463,6 +601,7 @@ export class Audio {
   /** Mission lost: two low descending tones and the pad goes dark. */
   lose(): void {
     this.setMood("lost");
+    if (this.sample('lose', T.audio.sampleOutcomeGain)) return;
     const r = 440 * Math.pow(2, (this.root + 12 - 69) / 12);
     this.tone(r, 0.16, 0.7, "sawtooth");
     this.tone(r * 0.84, 0.16, 1.1, "sawtooth", 0.42);
@@ -470,6 +609,7 @@ export class Audio {
 
   /** Gate dial: a chevron encodes (rising click), the seventh locks (heavier). */
   chevron(index: number, last: boolean): void {
+    if (this.sample(last ? 'chevron-lock' : 'chevron', last ? T.audio.sampleChevronLockGain : T.audio.sampleChevronGain, 'travel', 1 + index * T.audio.chevronPitchStep)) return;
     this.blip(420 + index * 40, 0.06, 0.08, "triangle", "travel");
     this.burst(last ? 260 : 1400, 2, last ? 0.3 : 0.07, last ? 0.35 : 0.05, last ? "lowpass" : "bandpass", "travel");
   }
@@ -486,7 +626,7 @@ export class Audio {
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(gain, t + 0.03);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g).connect(this.buses.flight);
+    o.connect(g).connect(this.effects.flight);
     this.track(o, g, [g], "flight", dur, gain, t);
     o.start(t);
     o.stop(t + dur + 0.02);
