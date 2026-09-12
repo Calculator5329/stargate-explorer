@@ -68,3 +68,6 @@ Antarctica then a second episode are now authorized for actual gameplay, includi
 ## Paid move visibility · 2026-09-12
 
 Ethan still had not seen the promised paid shortcut stunts. A table or a passing trajectory test alone does not close that complaint: verify the reachable sandbox with the actual bound keys, expose each cost and progress, and explain a rejected press. Existing large trajectories are Cobra reversal, Vortex drive and mirrored Sidewinders; do not call them newly created when only their visibility/feedback changed. The local preview and deployed build must be distinguished in delivery.
+
+## Sandbox flight experiments · Ethan, 2026-09-12
+Ethan wants the existing sandbox to try different flight upgrades and improvements, potentially informed by other games: faster turns when slow, sharper turns, easier flying and cool manoeuvres, including the shortcut tricks. Provide distinct selectable setups and editable response rather than silently selecting a new campaign flight model. Preserve his fixed control scheme; experiment with handling.

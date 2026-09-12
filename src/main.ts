@@ -1,5 +1,6 @@
 import { MoveTrails } from "@/fx/move-trails";
 import { timed } from "@/core/timing";
+import { SandboxLab } from "@/ui/sandbox-lab";
 import { SandboxGuide } from "@/ui/sandbox-guide";
 import { Color, Quaternion, Vector3 } from "three";
 import { Loop } from "@/core/loop";
@@ -106,6 +107,7 @@ function build(params: URLSearchParams): Sortie {
   if (inspect) hud.hideAll();
   hud.reset();
   sandboxGuide.setActive(level.type === "sandbox");
+  sandboxLab?.setActive(level.type === "sandbox");
   const game = inspect ? null : timed("build.game", () => new Game(r.scene, world, rig.root, canvas, flight, save, level, audio));
   if (game) {
     game.onWeapon = (pos) => eventLighting.weapon(pos);
@@ -130,6 +132,7 @@ function teardown(s: Sortie): void {
   s.world.dispose(r.scene);
 }
 
+let sandboxLab: SandboxLab | null = null;
 let hub: Hub | null = null, menu: Menu | null = null, travel: Travel | null = null, editor: EditorHandle | null = null;
 let review: SceneReview | null = null;
 const edit = boot.get("edit") === "1";
@@ -198,6 +201,14 @@ menu = new Menu(document.getElementById("menu")!, canvas, save, {
   hasReplay: () => sortie.game?.replay.hasHighlight ?? false,
   canOpen: () => !travel?.holding && !hub?.active,
 }, sortie.game !== null && !input.freeLock && !edit, sortie.level.title);
+sandboxLab = new SandboxLab(document.querySelector<HTMLElement>("#menu .menu-body")!, flight, () => {
+  flight.reset();
+  input.setEnabled(false);
+  chase.reset();
+  sortie.trails.clear();
+});
+sandboxLab.setActive(sortie.level.type === "sandbox");
+if (sortie.level.type === "sandbox" && !input.freeLock && !edit) menu.show();
 Object.assign(window, { __flight: flight, __input: input, __travel: travel, __hub: hub, __T: T, __renderer: r, __audio: audio });
 // headless tests (scripts/_*.mjs) drive the game through these
 createDebugPanel();

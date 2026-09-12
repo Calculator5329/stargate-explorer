@@ -210,6 +210,8 @@ export class Menu {
     refresh();
   }
 
+  show(): void { this.set(true); }
+
   /** Close from outside (the gate is dialing). */
   close(): void {
     this.set(false);

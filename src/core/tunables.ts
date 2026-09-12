@@ -4,6 +4,10 @@
  * `T` at use time so live edits take effect immediately. Units: m, s, rad.
  */
 export const T = {
+  sandboxGrip: { turn: 1.5, slow: 1, fast: 1, grip: 2.4, brake: 1.7, roll: 1, sweet: 0 },
+  sandboxBrake: { turn: 1.25, slow: 2.2, fast: .7, grip: 1.8, brake: 2.5, roll: 1.2, sweet: 0 },
+  sandboxSweet: { turn: 1.3, slow: 1.9, fast: .65, grip: 1.8, brake: 1.8, roll: 1.15, sweet: 1 },
+  sandboxDrift: { turn: 1.8, slow: 1.1, fast: .9, grip: .35, brake: 1.4, roll: 1.5, sweet: 0 },
   episode: {
     avoidSeconds: 1.8,
     avoidMargin: 24,

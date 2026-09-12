@@ -1,3 +1,9 @@
+## Sandbox flight lab · 2026-09-12
+
+The existing proving ground opens with a flight lab: Tight grip, Brake & turn, Sweet spot and Loose drift presets; six handling sliders; slower-is-tighter or middle-speed turn curves; retained current/experiment comparison and reset flight position. Custom handling saves in this browser independently of campaign progress. Leaving sandbox removes the Flight override, including in-page gate travel. Classic/cursor/raw mouse and assist 0.9 remain fixed. Paid shortcut tricks retain their authored trajectories and costs. The HUD shows the selected setup, speed, steering gain and actual nose-versus-velocity angle; narrow layouts keep the guide above the ship.
+
+Build and four focused CPU checks pass; native UI verified presets, custom persistence, comparison, normal gate travel out, and steering/paid Vortex in free flight. Native pointer lock remains unavailable in the agent browser, so normal mouse feel and the preferred handling setup need Ethan's play. No deployment. Start with [the local sandbox](http://127.0.0.1:5207/?mission=proving-ground). [Evidence and limits](evidence/2026-09-12-flight-lab.md).
+
 # STATUS.md — as of 2026-09-12
 
 ## Playable episode operations · 2026-09-12

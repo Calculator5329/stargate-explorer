@@ -20,7 +20,7 @@ export class SandboxMission extends Mission {
   }
 
   private list(): string {
-    return "SANDBOX · Invulnerable · Bar refills between moves · Esc to customize keys";
+    return "SANDBOX · Invulnerable · Bar refills between moves · Esc for flight lab & trick keys";
   }
 
   protected run(dt: number): void {

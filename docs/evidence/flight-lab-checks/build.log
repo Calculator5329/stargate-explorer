@@ -1,0 +1,23 @@
+
+> stargate-explorer@0.0.1 build
+> tsc --noEmit && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 146 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/episode-fleet.html                 6.87 kB │ gzip:   2.79 kB
+dist/index.html                        19.40 kB │ gzip:   5.34 kB
+dist/assets/game-BPmHEhVn.css           8.95 kB │ gzip:   2.69 kB
+dist/assets/scene-review-C_fQ1bZ5.js    3.92 kB │ gzip:   1.69 kB
+dist/assets/episodeFleet-rG5qSU0q.js   52.09 kB │ gzip:  17.78 kB
+dist/assets/index-DvfriOL4.js          70.28 kB │ gzip:  23.27 kB
+dist/assets/game-I7tuBRpl.js          302.37 kB │ gzip: 100.60 kB
+dist/assets/dispose-BNoTE1Dn.js       624.84 kB │ gzip: 167.31 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.48s

@@ -307,3 +307,5 @@ Multiplayer, mobile/touch, VR, mod support, story/dialogue system.
 - [x] (2026-09-12) Fallen: solid capital-ship map, shield-bypass approach, vulnerable cooling target, turrets/escort fighters and escape phase.
 - [x] (2026-09-12) Give the new episode fleet accessible ship samples from the normal game and integrate mission craft.
 - [x] (2026-09-12) After both levels, investigate reachable sandbox/build/keys and improve the visible paid stunts; verify actual shortcut activation, boost cost and full animation. [Mechanics, captures and limits](evidence/2026-09-12-playable-episodes.md).
+
+- [x] Sandbox handling experiments: distinct presets, turn curves, grip/brake/roll tuning, saved current/experiment comparison and paid trick practice. 2026-09-12 — build, CPU motion checks and in-app UI/free-flight checks pass; normal pointer-lock feel awaits owner play.

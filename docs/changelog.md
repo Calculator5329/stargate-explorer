@@ -419,3 +419,6 @@ Ethan flew the overnight build: "quite good". Five asks, four landed here, the f
 - Parametric ship builder (superellipse loft, tapered slab wings/fins with root-pivot dihedral, nacelles + glow discs) and the F-11 Halberd def (`ships/`). Unused glTF loader hook kept.
 - ACES + UnrealBloom post stack, `?quality=` tiers, `?view=` inspection modes, perf overlay, lil-gui tunables panel, DOM HUD.
 - M0 items satisfied by construction: wiring-only `main.ts` (59 lines), no per-frame allocations, perf overlay, quality tiers, no private lil-gui field.
+
+## 2026-09-12 — Sandbox flight lab
+Added four handling experiments to the existing sandbox, six live response sliders, current-handling comparison, local experiment persistence and reset flight position. Actual speed/steering/slide telemetry and compact narrow-screen move hints make the result inspectable. Normal missions retain the selected campaign handling; all paid move trajectories remain unchanged. Verification: build, sandbox handling/controls, powered moves and episode compatibility checks plus native UI/free-flight inspection.
