@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-09-11 — Episode fleet and scene studies
+
+Added nine procedural ships: BC-304, Tel’tak, O’Neill class, Daniel Jackson class, Ori warship, Anubis’s Lost City flagship, his earlier Fallen superweapon ship, Seberus and a Replicator craft interpretation. Added polar terrain, drilling-site scenery, drone paths, Supergate and twelve staged episode compositions. `/episode-fleet.html` presents source-linked ideas, five camera views, silhouette/rotation controls and browser-local feedback. These are graphics studies; mission integration remains deferred.
+
+Build and geometry checks pass. Captured nine hulls in four views and twelve scenes in the in-app browser; verified silhouette, rotation and saved notes. Export download completion and narrow viewport behavior remain unverified in that browser. [Evidence and review](evidence/2026-09-11-episode-fleet.md).
+
 ## 2026-09-08 — Six defects two exploration agents found in the deployed build
 
 Ethan asked for exploration to catch bugs. Two agents drove the live site, one through menus, hub and

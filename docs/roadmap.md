@@ -294,3 +294,9 @@ Multiplayer, mobile/touch, VR, mod support, story/dialogue system.
 - [x] <!-- workspace:id=work:9a726fe2-0718-50ed-b968-05db03d1e217 --> (2026-09-06) Author one editable Blender death-glider benchmark, export GLB, verify it in isolated Three.js and deliver an offline comparison without changing playable ships. [Benchmark](design/blender-glider/README.md). Adoption remains owner-directed.
 
 - [ ] <!-- workspace:id=work:0af31dd7-c61c-52f8-a18a-e1c934d4ff51 --> Refine the new explosion animation after the approved replay deployment. Ethan, 2026-09-08: the animation is not great; delivery takes priority.
+
+## Episode graphics expansion · 2026-09-11
+
+- [x] <!-- workspace:id=work:ca03efe6-c434-4cc2-a3de-d899a41bf60b --> (2026-09-11) Research SG-1 episode level candidates, author nine missing ship types and twelve staged scene studies, with Antarctica as the centerpiece. [Review and evidence](evidence/2026-09-11-episode-fleet.md).
+- [ ] <!-- workspace:id=work:95d29b28-2c07-4078-abac-ddb255c47182 --> **Named, not built — episode missions.** Ethan will discuss order and implementation after reviewing the graphics. No campaign wiring, combat balance, scripted episode events or level-specific collision work is authorized by this art pass.
+- [ ] <!-- workspace:id=work:46b93b34-0326-448d-99d9-d437e5db4e2d --> **Found, unresolved — art refinement.** Review the new ship likenesses and scene compositions with Ethan. Replicator silhouette is an interpretation; Dakara installation, decoy pursuers, mission-scale VFX and moving formations remain separate work after the review.

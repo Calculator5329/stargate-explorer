@@ -55,3 +55,7 @@ Ethan rejected the modest Cobra/Lunge/Scissor set as not cool or complicated eno
 
 ## Cemented flight choices and menu · 2026-09-08
 Ethan selected classic controls, cursor mouse steering, raw mouse on, flight assist on at 0.9. Remove their settings controls and hidden keyboard/gamepad/URL switches that contradict those fixed choices. Keep sensitivity, invert Y (a switch, off by default: "invert stays a switcher defaulting to no", later the same day), speed-coupled turning, difficulty, quality, dynamic resolution, event lighting, mute and key bindings adjustable. Slim and restyle the menu to fit the game's flight-system/gate-control visual language.
+
+## Episode expansion scope · Ethan, 2026-09-11
+
+“Specifically ones modeled after actual episodes in Stargate SG-1.” Antarctica is “a really huge one.” Build the new ship and level graphics first; “then we'll talk about the order and how to implement these levels later.” The art pass must distinguish researched episode facts from proposed fighter objectives and scene placements. Preserve the preferred existing fleet while introducing missing types. The autonomous window is one hour, with a hard stop by 23:30 America/Chicago on September 11; this session used the earlier elapsed-hour cutoff, 23:27.

@@ -1,0 +1,278 @@
+[
+  {
+    "id": "antarctica",
+    "episode": "Lost City, Part 2 \u00b7 S7 E22",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "44,916 triangles \u00b7 337 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "source": "https://rdanderson.com/stargate/episodes/episodes/07-21lost.htm",
+    "title": "The Antarctic defense",
+    "file": "docs/shots/episode-fleet/scene-antarctica.png"
+  },
+  {
+    "id": "new-order",
+    "episode": "New Order \u00b7 S8 E1\u20132",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "129,500 triangles \u00b7 31 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "source": "https://www.rdanderson.com/stargate/episodes/episodes/08-01neworder.htm",
+    "title": "The fragments still matter",
+    "file": "docs/shots/episode-fleet/scene-new-order.png"
+  },
+  {
+    "id": "space-race",
+    "episode": "Space Race \u00b7 S7 E8",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "13,432 triangles \u00b7 26 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "source": "https://www.rdanderson.com/stargate/episodes/episodes/07-08spacerace.htm",
+    "title": "The Loop of Kon Garat",
+    "file": "docs/shots/episode-fleet/scene-space-race.png"
+  },
+  {
+    "id": "camelot",
+    "episode": "Camelot \u00b7 S9 E20",
+    "error": null,
+    "rect": {
+      "bottom": 626.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 104.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 104.234375
+    },
+    "render": "50,634 triangles \u00b7 270 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      0
+    ],
+    "source": "https://rdanderson.com/stargate/episodes/episodes/09-20camelot.htm",
+    "title": "The Supergate opens",
+    "file": "docs/shots/episode-fleet/scene-camelot.png"
+  },
+  {
+    "id": "unending",
+    "episode": "Unending \u00b7 S10 E20",
+    "error": null,
+    "rect": {
+      "bottom": 585.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 63.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 63.234375
+    },
+    "render": "32,360 triangles \u00b7 33 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      41
+    ],
+    "source": "https://rdanderson.com/stargate/episodes/episodes/10-20unending.htm",
+    "title": "The last gift",
+    "file": "docs/shots/episode-fleet/scene-unending.png"
+  },
+  {
+    "id": "fallen",
+    "episode": "Fallen \u00b7 S7 E1",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "18,576 triangles \u00b7 32 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "source": "https://rdanderson.com/stargate/episodes/episodes/07-01fallen.htm",
+    "title": "Under the shield",
+    "file": "docs/shots/episode-fleet/scene-fallen.png"
+  },
+  {
+    "id": "small-victories",
+    "episode": "Small Victories \u00b7 S4 E1",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "1,752 triangles \u00b7 10 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "source": "https://rdanderson.com/stargate/episodes/episodes/04-01victories.htm",
+    "title": "The unfinished decoy",
+    "file": "docs/shots/episode-fleet/scene-small-victories.png"
+  },
+  {
+    "id": "tangent",
+    "episode": "Tangent \u00b7 S4 E12",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "12,912 triangles \u00b7 17 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "source": "https://rdanderson.com/stargate/episodes/episodes/04-12tangent.htm",
+    "title": "Beyond the rescue window",
+    "file": "docs/shots/episode-fleet/scene-tangent.png"
+  },
+  {
+    "id": "exodus",
+    "episode": "Exodus \u00b7 S4 E22",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "15,858 triangles \u00b7 117 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "source": "https://rdanderson.com/stargate/episodes/episodes/04-22exodus.htm",
+    "title": "Outrun the star",
+    "file": "docs/shots/episode-fleet/scene-exodus.png"
+  },
+  {
+    "id": "enemies",
+    "episode": "Enemies \u00b7 S5 E1",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "71,890 triangles \u00b7 120 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "source": "https://rdanderson.com/stargate/episodes/episodes/05-01enemies.htm",
+    "title": "A ship that is no longer ours",
+    "file": "docs/shots/episode-fleet/scene-enemies.png"
+  },
+  {
+    "id": "fail-safe",
+    "episode": "Fail Safe \u00b7 S5 E17",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "13,996 triangles \u00b7 21 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "source": "https://rdanderson.com/stargate/episodes/episodes/05-17failsafe.htm",
+    "title": "The asteroid that will not break",
+    "file": "docs/shots/episode-fleet/scene-fail-safe.png"
+  },
+  {
+    "id": "reckoning",
+    "episode": "Reckoning \u00b7 S8 E16\u201317",
+    "error": null,
+    "rect": {
+      "bottom": 522.234375,
+      "height": 522,
+      "left": 255,
+      "right": 1350,
+      "top": 0.234375,
+      "width": 1095,
+      "x": 255,
+      "y": 0.234375
+    },
+    "render": "30,326 triangles \u00b7 302 draws \u00b7 static art study",
+    "scroll": [
+      0,
+      104
+    ],
+    "source": "https://rdanderson.com/stargate/episodes/episodes/08-16reckoning.htm",
+    "title": "Hold above Dakara",
+    "file": "docs/shots/episode-fleet/scene-reckoning.png"
+  }
+]
