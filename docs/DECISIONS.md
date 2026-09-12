@@ -343,3 +343,7 @@ Ethan requested episode-based ship and level graphics, with Antarctica as the ce
 
 
 **Arrival visibility stream check.** This pass found one paused-arrival failure in the shared presentation path; earlier presentation decisions already make `mode` authoritative. The failure is in the stream: the travel stage hides mission groups, then the paused stage returns before deriving visibility from its new mode. Carry that same mode through visibility assignment before the pause early return; keep animation and mission clocks frozen. No terrain-specific visibility override or new guard is added. A CPU regression exercises travel → paused and verifies restored scenery with an unchanged mission clock.
+
+## 2026-09-12 — Sandbox handling experiments
+
+REFINE: extend the existing proving ground and pause menu with live handling presets, a retained custom setup and a current-handling comparison. A separate simulator would duplicate movement and could make a preferred setup impossible to transfer. The likely failure is impressive nose rotation that still slides past the target; expose velocity grip separately and measure slip as well as turn gain. “Sandbox” and “handling” retain their existing meanings. Keep classic/cursor/raw mouse and assist 0.9; vary physical response on the Flight instance only in sandbox. Leaving sandbox clears the override; do not mutate global mission tuning. Save experiments separately from campaign progress. No new dependencies or deployment. Paid move tables remain authoritative and bypass ordinary handling multipliers while running.

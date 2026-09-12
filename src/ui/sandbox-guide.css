@@ -9,3 +9,11 @@
 #hud .sandbox-guide .active b { color:#ffd9a8; }
 #hud .sandbox-guide p { font-size:10px; color:#abb9c7; line-height:1.5; margin:10px 0 0; }
 @media(max-width:750px) { #hud .sandbox-guide { left:12px; top:155px; width:245px; padding:8px; } }
+
+@media(max-width:750px) {
+  #hud .sandbox-guide { top:120px; width:215px; }
+  #hud .sandbox-guide > div { grid-template-columns:30px 1fr 38px; gap:5px; padding:5px 0; font-size:11px; }
+  #hud .sandbox-guide .chord-fallback, #hud .sandbox-guide > p:last-child { display:none; }
+  #hud .sandbox-guide h2 { margin-bottom:6px; }
+  #hud .sandbox-guide p { margin:6px 0; }
+}

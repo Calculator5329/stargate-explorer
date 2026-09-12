@@ -2,6 +2,7 @@ import { Quaternion, Vector3 } from "three";
 import { T, clamp, lerp, moveToward } from "@/core/tunables";
 import type { Input } from "@/core/input";
 import type { ShipStats } from "@/ships/registry";
+import { handlingTurn, type Handling } from "@/sim/handling";
 import { MOVES, findMove, type MoveDef } from "@/sim/moves";
 
 const X = new Vector3(1, 0, 0);
@@ -35,6 +36,8 @@ const _lat = new Vector3();
  * Keeps the previous tick's pose so render can interpolate via `sample()`.
  */
 export class Flight {
+  /** Sandbox-only experiment; reset clears it before every sortie. */
+  handling: Handling | null = null;
   readonly pos = new Vector3();
   readonly quat = new Quaternion();
   readonly prevPos = new Vector3();
@@ -78,6 +81,7 @@ export class Flight {
 
   /** Back to the launch state at the origin: the gate swap reuses one Flight across systems. */
   reset(): void {
+    this.handling = null;
     this.pos.set(0, 0, 0);
     this.quat.identity();
     this.prevPos.set(0, 0, 0);
@@ -122,6 +126,12 @@ export class Flight {
   /** top speed this hull can hold (boost) */
   get topSpeed(): number {
     return T.flight.boostSpeed * this.stats.speed;
+  }
+
+  turnGain(speedCoupled: boolean): number {
+    const f = T.flight;
+    return this.handling ? handlingTurn(this.handling, this.speed, this.stats.speed)
+      : speedCoupled ? lerp(f.turnSlowGain, f.turnFastGain, clamp((this.speed - f.minSpeed) / (f.boostSpeed - f.minSpeed), 0, 1)) : 1;
   }
 
   tick(dt: number, input: Input): void {
@@ -177,7 +187,7 @@ export class Flight {
     const S = this.stats;
     let targetSpeed = arcade ? f.cruiseSpeed : lerp(f.minSpeed, f.maxSpeed, this.throttle);
     let rate = f.accel;
-    if (this.braking) (targetSpeed = f.brakeSpeed), (rate = f.brakeDecel);
+    if (this.braking) (targetSpeed = f.brakeSpeed), (rate = f.brakeDecel * (this.handling?.brake ?? 1));
     if (this.boosting) (targetSpeed = f.boostSpeed), (rate = f.boostAccel);
     targetSpeed *= S.speed;
     rate *= S.speed;
@@ -236,10 +246,10 @@ export class Flight {
     // Rotations below are about local axes; signs follow from +X being port:
     //   +X rotation drops the nose, +Y rotation yaws the nose to port, +Z rotation rolls right.
     // speed-coupled turn rate (menu toggle): nimble at low speed, stiff at boost
-    const turnK = input.scheme.speedTurn ? lerp(f.turnSlowGain, f.turnFastGain, clamp((this.speed - f.minSpeed) / (f.boostSpeed - f.minSpeed), 0, 1)) : 1;
+    const turnK = this.turnGain(input.scheme.speedTurn);
     const pitch = -(stickY * f.pitchRate * S.agility * turnK + snap) * dt;
     const yaw = -(stickX * f.yawRate * S.agility * turnK + moveYaw) * dt;
-    let roll = (rollKey * f.rollRate * S.agility + levelRoll + moveRoll) * dt;
+    let roll = (rollKey * f.rollRate * S.agility * (this.handling?.roll ?? 1) + levelRoll + moveRoll) * dt;
     if (moveHop !== 0) this.moveOffsetVel.addScaledVector(_right, moveHop);
     if (moveSlide !== 0) this.moveOffsetVel.addScaledVector(_n.copy(RIGHT).applyQuaternion(this.moveFrame), moveSlide);
     if (moveLift !== 0) this.moveOffsetVel.addScaledVector(_n.copy(Y).applyQuaternion(this.moveFrame), moveLift);
@@ -267,7 +277,7 @@ export class Flight {
         const decel = vf > targetSpeed && !this.braking && !moveBrake && !this.drifting ? f.coastDecel : rate;
         vf = moveToward(vf, targetSpeed, (vf > targetSpeed ? decel : rate) * dt);
         // a hard pull leaves the velocity behind for a moment, so the ship visibly slides through the turn
-        _lat.multiplyScalar(Math.exp(-f.latDamp * assistK * (snap !== 0 ? f.snapSlide : 1) * dt));
+        _lat.multiplyScalar(Math.exp(-f.latDamp * assistK * (mv ? 1 : this.handling?.grip ?? 1) * (snap !== 0 ? f.snapSlide : 1) * dt));
       } else {
         // drift mode: the nose is free, velocity only changes by thrust
         if (input.boost && this.boostEnergy > 0) vf += f.thrust * 2 * dt;
