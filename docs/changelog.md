@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-12 — Owner audio and flight verdict
+
+Ethan accepted the integrated sounds and Cobra/Vortex tricks. Recorded Tight grip as the preferred handling experiment so far and Sidewinder motion refinement as open work. No runtime change was needed to keep the new audio active.
+
 ## 2026-09-12 — Layered game audio
 
 Added 27 stereo sounds for combat, engines, gates and powered tricks, authored from CC0 Kenney textures and local synthesis. Repeated shots/hits/explosions vary; engine pitch follows speed, boost has ignition and a sustained bed. Preserved scene/replay cancellation and procedural fallback; added compressor, four saved mix sliders and a runtime old/new sound room. Build and focused asset/runtime/compatibility checks pass, and native browser verified buffer decoding and settings persistence. [Evidence and listening sample](evidence/2026-09-12-audio-upgrade.md).

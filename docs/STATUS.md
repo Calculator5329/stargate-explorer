@@ -1,6 +1,10 @@
+## Owner play verdict · 2026-09-12
+
+New audio accepted and retained in the normal game. Cobra reversal (1) and Vortex drive (2) accepted. Sidewinders (3/4) have an accepted concept but unsatisfactory motion animation; refine those next while preserving 1/2. Tight grip is Ethan’s preferred flight experiment so far, and the reference for further handling work. Campaign-wide handling adoption has not been requested. No deployment in this feedback pass.
+
 ## Layered sound bank · 2026-09-12
 
-27 CC0-texture/local-synthesis sounds now drive combat, engines, gate travel and powered moves. Esc → Sound mix saves four independent levels. `/audio-preview.html` compares the new bank with the original synthesis using the game runtime. Build, asset, audio lifecycle, handling and episode checks pass; browser decoded all sounds and confirmed mix persistence. Human listening and preferred balance remain unverified. [Evidence and playable showcase](evidence/2026-09-12-audio-upgrade.md). No deployment.
+27 CC0-texture/local-synthesis sounds now drive combat, engines, gate travel and powered moves. Esc → Sound mix saves four independent levels. `/audio-preview.html` compares the new bank with the original synthesis using the game runtime. Build, asset, audio lifecycle, handling and episode checks pass; browser decoded all sounds and confirmed mix persistence. Ethan accepted the new sounds on 2026-09-12: “new sounds are great lets implement and keep.” [Evidence and playable showcase](evidence/2026-09-12-audio-upgrade.md). No deployment.
 
 ## Sandbox flight lab · 2026-09-12
 
