@@ -42,8 +42,15 @@ assert(slip(grip)<slip(loose)*.6,'grip actually reduces velocity lag under the s
 const brake=makeInput();brake.space=true;
 const oldBrake=makeFlight(null,240),strongBrake=makeFlight(T.sandboxBrake,240);
 for(let n=0;n<20;n++){oldBrake.tick(1/60,brake);strongBrake.tick(1/60,brake);}
-assert(strongBrake.speed<oldBrake.speed-50,'strong brake reaches low speed sooner');
-const original=makeFlight(null);assert.equal(original.turnGain(false),1);original.speed=T.flight.minSpeed;assert.equal(original.turnGain(true),T.flight.turnSlowGain);
+assert(strongBrake.speed<oldBrake.speed-20,'strong brake reaches low speed sooner');
+const adopted=makeFlight(null),selected=makeFlight(T.sandboxGrip),adoptionInput=makeInput();
+for(let n=0;n<180;n++){
+ adoptionInput.stick.x=.5;adoptionInput.stick.y=.2;adoptionInput.space=n>90;adoptionInput.roll=n<30?.3:0;
+ adopted.tick(1/60,adoptionInput);selected.tick(1/60,adoptionInput);
+ assert(adopted.pos.distanceTo(selected.pos)<1e-8&&adopted.quat.angleTo(selected.quat)<1e-7,'campaign exactly matches selected Tight grip through turning, roll and braking');
+}
+adopted.handling={...T.sandboxDrift};adopted.reset();assert.equal(adopted.turnGain(false),T.sandboxGrip.turn,'new sortie restores adopted handling');
+const original=makeFlight(null);assert.equal(original.turnGain(false),T.sandboxGrip.turn);original.speed=T.flight.minSpeed;assert.equal(original.turnGain(true),T.sandboxGrip.turn*T.flight.turnSlowGain);
 for(const move of MOVES) for(const preset of HANDLING_PRESETS){
  const base=makeFlight(null),lab=makeFlight(preset.values),input=makeInput();
  base.startMove(move.id);lab.startMove(move.id);

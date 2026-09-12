@@ -1,0 +1,31 @@
+{
+  "scriptedProbe": {
+    "grip": {
+      "speed": 140.99721685061795,
+      "slideDegrees": 6.818415502081714,
+      "turnGain": 1.5
+    },
+    "brake": {
+      "speed": 143.98217916823,
+      "slideDegrees": 13.506714744750644,
+      "turnGain": 2.2369300369988654
+    },
+    "sweet": {
+      "speed": 144.7242681339763,
+      "slideDegrees": 14.679888303360633,
+      "turnGain": 2.442582372436745
+    },
+    "drift": {
+      "speed": 160.28549730363244,
+      "slideDegrees": 46.58153358364633,
+      "turnGain": 1.8660453183439274
+    }
+  },
+  "gripSlide": 7.335509735195336,
+  "looseSlide": 35.573563425734754,
+  "brakeSpeeds": [
+    149.33333333333337,
+    106.6666666666668
+  ]
+}
+PASS: actual Flight traces, slow/sweet curves, hull normalization, grip, brake strength, reset isolation, all 16 preset/move trajectories, saved comparison/custom setup and corrupt/unavailable storage.

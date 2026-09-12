@@ -1,6 +1,10 @@
+## Tight grip adopted; Sidewinders refined · 2026-09-12
+
+Tight grip is now normal game handling, including after sortie resets and gate swaps. Sandbox experiments remain available. Sidewinder 3/4 now ease into a single lateral roll, recover level and boost out; accepted Cobra/Vortex and audio remain intact. Build and five focused checks pass; native browser shortcuts, full sequence captures and baseline comparison reviewed. [Evidence and limits](evidence/2026-09-12-flight-lab.md#autonomous-adoption-and-sidewinder-refinement--2026-09-12). Local preview: http://127.0.0.1:5209/?mission=proving-ground . No deployment; revised Sidewinder motion is ready for owner play.
+
 ## Owner play verdict · 2026-09-12
 
-New audio accepted and retained in the normal game. Cobra reversal (1) and Vortex drive (2) accepted. Sidewinders (3/4) have an accepted concept but unsatisfactory motion animation; refine those next while preserving 1/2. Tight grip is Ethan’s preferred flight experiment so far, and the reference for further handling work. Campaign-wide handling adoption has not been requested. No deployment in this feedback pass.
+New audio accepted and retained in the normal game. Cobra reversal (1) and Vortex drive (2) accepted. The original Sidewinder motion was rejected; the revised animation is delivered above while preserving 1/2. Tight grip is Ethan’s preferred flight experiment so far, and the reference for further handling work. Later in this session Ethan authorized autonomous implementation; Tight grip adoption and Sidewinder refinement are delivered above. No deployment in this feedback pass.
 
 ## Layered sound bank · 2026-09-12
 

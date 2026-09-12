@@ -97,41 +97,61 @@
         {
           "kind": "coast",
           "start": 0.2,
-          "length": 1.8,
+          "length": 1.6,
           "amount": 1
         },
         {
           "kind": "roll",
           "start": 0,
-          "length": 0.4,
-          "amount": -3.0543261909900763,
-          "ease": "smooth"
+          "length": 0.25,
+          "amount": -4.1887902047863905
+        },
+        {
+          "kind": "yaw",
+          "start": 0.25,
+          "length": 0.3,
+          "amount": -3.490658503988659
         },
         {
           "kind": "roll",
           "start": 0.6,
-          "length": 1,
-          "amount": -6.283185307179586,
-          "ease": "smooth"
+          "length": 0.8,
+          "amount": -7.853981633974483
+        },
+        {
+          "kind": "yaw",
+          "start": 1.45,
+          "length": 0.3,
+          "amount": 3.490658503988659
         },
         {
           "kind": "roll",
-          "start": 1.65,
-          "length": 0.4,
-          "amount": 3.0543261909900763,
-          "ease": "smooth"
+          "start": 1.75,
+          "length": 0.25,
+          "amount": 4.1887902047863905
         },
         {
           "kind": "slide",
-          "start": 0.25,
-          "length": 1.65,
-          "amount": -200,
-          "ease": "smooth"
+          "start": 0.1,
+          "length": 0.45,
+          "amount": -240
+        },
+        {
+          "kind": "slide",
+          "start": 0.85,
+          "length": 0.3,
+          "amount": 180
+        },
+        {
+          "kind": "slide",
+          "start": 1.5,
+          "length": 0.3,
+          "amount": -180
         },
         {
           "kind": "boost",
-          "start": 2.05,
-          "length": 0.45,
+          "start": 1.8,
+          "length": 0.7,
           "amount": 700
         }
       ]
@@ -155,41 +175,61 @@
         {
           "kind": "coast",
           "start": 0.2,
-          "length": 1.8,
+          "length": 1.6,
           "amount": 1
         },
         {
           "kind": "roll",
           "start": 0,
-          "length": 0.4,
-          "amount": 3.0543261909900763,
-          "ease": "smooth"
+          "length": 0.25,
+          "amount": 4.1887902047863905
+        },
+        {
+          "kind": "yaw",
+          "start": 0.25,
+          "length": 0.3,
+          "amount": 3.490658503988659
         },
         {
           "kind": "roll",
           "start": 0.6,
-          "length": 1,
-          "amount": 6.283185307179586,
-          "ease": "smooth"
+          "length": 0.8,
+          "amount": 7.853981633974483
+        },
+        {
+          "kind": "yaw",
+          "start": 1.45,
+          "length": 0.3,
+          "amount": -3.490658503988659
         },
         {
           "kind": "roll",
-          "start": 1.65,
-          "length": 0.4,
-          "amount": -3.0543261909900763,
-          "ease": "smooth"
+          "start": 1.75,
+          "length": 0.25,
+          "amount": -4.1887902047863905
         },
         {
           "kind": "slide",
-          "start": 0.25,
-          "length": 1.65,
-          "amount": 200,
-          "ease": "smooth"
+          "start": 0.1,
+          "length": 0.45,
+          "amount": 240
+        },
+        {
+          "kind": "slide",
+          "start": 0.85,
+          "length": 0.3,
+          "amount": -180
+        },
+        {
+          "kind": "slide",
+          "start": 1.5,
+          "length": 0.3,
+          "amount": 180
         },
         {
           "kind": "boost",
-          "start": 2.05,
-          "length": 0.45,
+          "start": 1.8,
+          "length": 0.7,
           "amount": 700
         }
       ]

@@ -313,4 +313,7 @@ Multiplayer, mobile/touch, VR, mod support, story/dialogue system.
 - [x] (2026-09-12) Replace default audio with a layered free-source/local-synthesis bank; add sound comparison and saved mix controls. Build, decoded assets, runtime lifecycle and native UI checks pass; human listening remains open. [Evidence](evidence/2026-09-12-audio-upgrade.md).
 
 - [x] (2026-09-12) Owner listening review: new layered sounds accepted; retain the already-integrated bank. Cobra/Vortex accepted; Tight grip preferred so far.
-- [ ] Refine Sidewinder left/right (3/4) motion animation. Ethan accepts the concepts but calls the current motion “meh” (2026-09-12). Preserve accepted Cobra/Vortex and compare the revised full motion in the sandbox.
+- [x] (2026-09-12) Refined Sidewinder left/right (3/4) motion animation with smooth bank, lateral roll, recovery and boost-out; CPU and full browser sequence checks passed, owner verdict pending. Original ask: Ethan accepts the concepts but calls the current motion “meh” (2026-09-12). Preserve accepted Cobra/Vortex and compare the revised full motion in the sandbox.
+
+- [x] (2026-09-12) Adopt owner-preferred Tight grip in ordinary game flight while preserving sandbox experiments, fixed controls and accepted moves/sounds.
+- [ ] Fix inspection camera framing for missions whose launch position is away from the origin. Bare `?view=side|rear` can show empty sky; `mission=proving-ground` is a working explicit inspection route (found 2026-09-12).

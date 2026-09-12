@@ -18,7 +18,7 @@ export class SandboxLab {
   constructor(root: HTMLElement, private readonly flight: Flight, reset: () => void) {
     this.el.className = 'sandbox-lab';
     this.el.setAttribute('aria-label', 'Sandbox flight lab');
-    this.el.innerHTML = '<h2>SANDBOX / FLIGHT LAB</h2><p>Pick a feel, fly it, then press Esc to adjust. Saved here only; missions keep your current handling.</p>';
+    this.el.innerHTML = '<h2>SANDBOX / FLIGHT LAB</h2><p>Pick a feel, fly it, then press Esc to adjust. Saved here only; missions use Tight grip.</p>';
     const choices = document.createElement('div');
     choices.className = 'lab-presets';
     for (const preset of HANDLING_PRESETS) {
@@ -61,7 +61,7 @@ export class SandboxLab {
     }
     const actions = document.createElement('div');
     actions.className = 'lab-actions';
-    this.baseline.textContent = 'Current handling';
+    this.baseline.textContent = 'Current · Tight grip';
     this.experiment.textContent = 'My experiment';
     this.baseline.addEventListener('click', () => { this.draft.current = true; this.commit(); });
     this.experiment.addEventListener('click', () => { this.draft.current = false; this.commit(); });
@@ -94,11 +94,11 @@ export class SandboxLab {
   }
 
   private refresh(): void {
-    const h = this.draft.values;
+    const h = this.draft.current ? HANDLING_PRESETS[0].values : this.draft.values;
     const match = HANDLING_PRESETS.findIndex(p => Object.keys(h).every(key => Reflect.get(p.values, key) === Reflect.get(h, key)));
     this.presets.forEach((b, i) => b.setAttribute('aria-pressed', String(!this.draft.current && i === match)));
     this.description.textContent = this.draft.current
-      ? 'Current campaign handling, including your speed-coupled turning setting. Your experiment is kept for comparison.'
+      ? 'Tight grip campaign handling, including your speed-coupled turning setting. Your experiment is kept for comparison.'
       : `${HANDLING_PRESETS[match]?.note ?? 'Custom handling. Compare with current handling, or pick a preset to start again.'}`;
     this.baseline.setAttribute('aria-pressed', String(this.draft.current));
     this.experiment.setAttribute('aria-pressed', String(!this.draft.current));

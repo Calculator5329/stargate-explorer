@@ -78,3 +78,6 @@ Ethan says the game sounds too default and requests much better audio, allowing 
 ## Audio, tricks and handling verdict · Ethan, 2026-09-12
 
 “new sounds are great lets implement and keep.” Keep the integrated layered bank as normal game audio; the listening review is accepted. “1 and 2 are great”: preserve Cobra reversal and Vortex drive. Sidewinder left/right (3 and 4) are good concepts, but “the motion animation is meh”; their current animation is not accepted and needs refinement. “Tight grip is best flight expirement sof ar”: use Tight grip as the preferred handling reference for further experiments. This is a preference so far, not a direction to force a new campaign handling profile or remove other experiments.
+
+## Autonomous adoption · Ethan, 2026-09-12
+“implement all autonomoslu” authorizes implementing the preceding verdicts: keep new audio and Cobra/Vortex, adopt Tight grip for normal flight, and refine both Sidewinders. This supersedes the earlier campaign-adoption deferral. Preserve the fixed classic/cursor/raw/assist-0.9 controls and sandbox experiments.
